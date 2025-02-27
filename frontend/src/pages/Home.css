@@ -1,0 +1,179 @@
+:root {
+  /* Original spacing variables */
+  --spacing-unit: 0px;
+  --section-gap: 0px;
+  --card-gap: var(--spacing-unit);
+  --border-radius: 0px;
+
+  /* Additional variables for new sections */
+  --additional-spacing: 0px;
+  --additional-section-gap: 0px; /* Default gap (20px) for mobile/tablet */
+  --additional-card-gap: 0px;
+  --additional-border-radius: 8px;
+
+  /* Desktop override (optional variable) */
+  --desktop-section-gap: 0px; /* Smaller gap on desktop */
+}
+
+/* -------------------------------------
+   RECOMMENDED SECTIONS (2×2 grids)
+   (Existing, unchanged)
+-------------------------------------- */
+.recommended-sections {
+  display: flex;
+  gap: var(--section-gap);
+  padding: var(--spacing-unit);
+  margin-bottom: var(--section-gap);
+  overflow-x: auto; /* Horizontal scroll if too wide */
+  scrollbar-width: none;
+}
+
+.recommended-section {
+  flex: 0 0 300px;
+  background: white;
+  padding: var(--spacing-unit);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 2×2 grid for recommended products */
+.recommended-grid {
+  display: grid;
+  gap: var(--card-gap);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.product-card-vertical {
+  padding: var(--spacing-unit);
+  border: 1px solid #eee;
+  border-radius: var(--border-radius);
+  margin-bottom: var(--card-gap);
+}
+
+/* -------------------------------------
+   CATEGORIES SECTION (4×4 grid)
+   (Existing, unchanged)
+-------------------------------------- */
+.categories-section {
+  padding: var(--spacing-unit);
+  margin: var(--section-gap) 0;
+}
+
+.categories-grid {
+  display: grid;
+  gap: var(--card-gap);
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.category-card {
+  padding: var(--spacing-unit);
+  margin-bottom: var(--card-gap);
+  border-radius: var(--border-radius);
+}
+
+/* -------------------------------------
+   ADDITIONAL SECTIONS (Wholesale & Most Visited)
+   Reflow approach (3×3 on desktop, fewer columns on smaller screens)
+-------------------------------------- */
+
+/* Container for Wholesale and Most Visited sections */
+.additional-section-container {
+  display: flex;
+  flex-wrap: wrap; /* ALLOWS reflow on smaller screens */
+  gap: var(--additional-section-gap); /* Default gap = 20px */
+  margin-top: var(--additional-section-gap);
+  justify-content: space-between; /* side-by-side on desktop */
+}
+
+/* Each additional section (Wholesale, MostVisited) */
+.additional-section {
+  background: white;
+  padding: var(--additional-spacing);
+  border-radius: var(--additional-border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* On large screens, 2 sections side by side => each ~50% width */
+  flex: 1 1 calc(50% - var(--additional-section-gap));
+  box-sizing: border-box;
+  margin-bottom: 0px; /* optional spacing at bottom */
+}
+
+/* 3×3 grid for products on large screens */
+.additional-grid {
+  display: grid;
+  gap: var(--additional-card-gap);
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: var(--additional-spacing);
+}
+
+/* Product card (no forced max-width => fluid) */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: 100%;
+  max-width: none;
+}
+
+.product-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+  background-color: #f9f9f9;
+}
+
+/* -------------------------------------
+   RESPONSIVE BREAKPOINTS for new sections
+   Reflow from 3 columns -> 2 -> 1
+-------------------------------------- */
+
+/* Tablet: 2 columns in each grid, 2 sections side by side */
+@media (max-width: 1024px) {
+  .additional-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile: 1 column in each grid, sections stack vertically */
+@media (max-width: 600px) {
+  .additional-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  .additional-section {
+    flex: 1 1 100%;
+  }
+}
+
+/* -------------------------------------
+   DESKTOP OVERRIDE FOR GAP
+   (Reduce space ONLY for screens > 1024px)
+-------------------------------------- */
+@media (min-width: 1025px) {
+  .additional-section-container {
+    gap: var(--desktop-section-gap); /* 10px on desktop */
+    margin-top: var(--desktop-section-gap);
+  }
+  .additional-section {
+    flex: 1 1 calc(50% - var(--desktop-section-gap));
+  }
+}
+
+/* -------------------------------------
+   UNIVERSAL RESET
+-------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}

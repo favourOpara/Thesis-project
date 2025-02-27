@@ -1,0 +1,121 @@
+/* Root styles (optional if you need them) */
+:root {
+  /* Keep any custom variables you need here */
+  --spacing-unit: 0px;
+  --section-gap: calc(var(--spacing-unit) * 2);
+  --card-gap: var(--spacing-unit);
+  --border-radius: 0px;
+}
+
+/* Homepage section container (if used for your recommended sections) */
+.homepage-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 0px;
+  margin: 0px auto;
+  flex-wrap: wrap; /* Allows sections to shrink on smaller screens */
+}
+
+/* Each product section (e.g., recommended, styling, gym, etc.) */
+.product-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 0px;
+  flex: 1;
+  min-width: 280px; /* Prevents sections from being too narrow */
+  max-width: 33%;   /* Ensures three sections in a row if you want 3 side-by-side */
+  text-align: center;
+}
+
+/* Section title */
+.section-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* 2x2 Grid Layout (for recommended sections) */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* Product Card */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  /* Removed any forced max-width so it can scale to the grid cell */
+  width: 100%;
+  max-width: none;
+}
+
+/* Hover effect */
+.product-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Product image inside the card */
+.product-card-image img {
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+  background-color: #f9f9f9;
+}
+
+/* Pricing, titles, etc. can be styled if you want */
+.product-card-title {
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+.product-card-pricing {
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+}
+.line-through {
+  margin-left: 5px;
+  font-size: 0.75rem;
+}
+
+/* Mobile: keep the same layout, no forced max-width on product-card */
+@media (max-width: 1024px) {
+  .homepage-section {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .product-section {
+    max-width: 48%; /* If you want 2 sections per row on ~tablet size */
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-section {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .product-section {
+    max-width: 100%; /* Each section takes full width on smaller screens */
+  }
+  .section-title {
+    font-size: 0.9rem;
+  }
+  .product-grid {
+    /* Still 2 columns, scale to screen width */
+    grid-template-columns: repeat(2, minmax(80px, 1fr));
+  }
+  .product-card {
+    width: 100%;
+    max-width: 140px; /* Ensure no forced width on mobile */
+  }
+}

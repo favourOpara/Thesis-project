@@ -1,0 +1,85 @@
+/* Default header styles (Desktop) */
+.fixed-header .navbar {
+  position: fixed;
+  width: 100%;
+  z-index: 1030;
+}
+
+@media (max-width: 991px) {
+  /* Hamburger icon */
+  .navbar-toggler {
+    display: block;
+  }
+
+  /* Hide the search bar and show the search icon on mobile */
+  .d-lg-none {
+    display: block;
+  }
+
+  .d-lg-block {
+    display: none !important;
+  }
+
+  /* Mobile search input box when search icon is clicked */
+  .search-bar-mobile {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    z-index: 1000;
+    padding: 10px;
+  }
+
+  /* Align the search, profile, and cart icons to the right */
+  .navbar .d-flex {
+    justify-content: flex-end;
+  }
+
+  /* Add spacing between the icons (search, profile, cart) */
+  .navbar .d-flex > * {
+    margin-left: -10px; /* Adjust this value to maintain the spacing */
+  }
+
+  /* Search icon should not be at the beginning on mobile, but at the end */
+  .search-animated.d-lg-none {
+    margin-left: auto; /* Ensure it's on the right end */
+  }
+
+  .navbar-brand {
+    margin-left: auto;
+  }
+
+  .sidebar-wrapper {
+    /* Default styles for closed sidebar */
+    width: 80px; /* or any size */
+    transition: width 0.3s;
+  }
+  
+  .sidebar-wrapper.open {
+    width: 250px; /* Width when open */
+  }
+  
+  .sidebar-wrapper.closed {
+    width: 0px; /* Width when closed */
+  }
+}
+
+/* Larger screens (default) */
+@media (min-width: 991px) {
+  .navbar .d-flex > * {
+    margin-left: 3px; /* Adjust this value for wider screens if needed */
+  }
+}
+
+/* Hide button on larger screens (e.g., desktop) */
+.mobile-menu-button {
+  display: none;
+}
+
+/* Show button on screens smaller than 768px (tablet and mobile) */
+@media (max-width: 991px) {
+  .mobile-menu-button {
+    display: flex; /* Show the button on smaller screens */
+  }
+}

@@ -1,0 +1,65 @@
+/* -----------------------------------------------------
+   Additional Section Container
+   ----------------------------------------------------- */
+.additional-section-container {
+  display: flex;
+  gap: 0px;
+  margin-top: 0px;
+  justify-content: flex-start;
+  flex-wrap: nowrap; /* On desktop, sections remain side-by-side */
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Each Additional Section (Wholesale & Most Visited) */
+.additional-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 0px;
+  flex: 1; /* Two sections side-by-side on desktop */
+  max-width: calc(50% - 0px);
+  text-align: center;
+  margin-bottom: 0px;
+  box-shadow: none;
+}
+
+/* Section title: same as in ProductSection.css */
+.additional-section .section-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+
+/* -----------------------------------------------------
+   Additional Product Grid (for a 3x3 layout)
+   ----------------------------------------------------- */
+.additional-grid {
+  display: grid;
+  gap: 0px;
+  grid-template-columns: repeat(3, 160px);
+  grid-auto-rows: 220px;
+  margin-top: 0px;
+}
+
+/* -----------------------------------------------------
+   RESPONSIVE BREAKPOINTS
+   On desktop, keep 3 columns; on mobile, also force 3 columns.
+   ----------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Stack sections vertically on mobile */
+  .additional-section-container {
+    flex-direction: column;
+    gap: 0px;
+  }
+  .additional-section {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  /* Force a 3-column grid even on mobile */
+  .additional-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

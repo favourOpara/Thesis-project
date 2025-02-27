@@ -1,0 +1,86 @@
+import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
+
+// Create the AuthContext
+const AuthContext = createContext();
+
+// Custom hook to access AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
+
+// AuthProvider component
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null); // Store user data
+  const [loading, setLoading] = useState(true); // Track loading state
+  const [error, setError] = useState(null); // Track errors
+
+  // Function to fetch user data
+  const fetchUserData = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setLoading(false); // No token, stop loading
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/user-info/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data); // Set user data
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch user data");
+    } finally {
+      setLoading(false); // Set loading to false
+    }
+  };
+
+  // Function to handle login
+  const login = async (accessToken, refreshToken) => {
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+
+    // Fetch user data after login
+    await fetchUserData();
+  };
+
+  // Function to handle logout
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setUser(null); // Clear user data
+  };
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{ user, setUser, loading, error, login, logout }}
+    >
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
+          <ClipLoader color="#3b7bf8" size={50} />
+        </div>
+      ) : (
+        children
+      )}
+    </AuthContext.Provider>
+  );
+};

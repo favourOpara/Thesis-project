@@ -1,0 +1,53 @@
+.scrolling-banner-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    background-color: #fff; /* or your preferred color */
+  }
+  
+  .banner-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  
+  /* The wrapper holds two identical tracks */
+  .scroll-track-wrapper {
+    display: flex;
+    width: 200%; /* twice the width of one track */
+  }
+  
+  /* Each track takes full width and scrolls left */
+  .scroll-track {
+    display: flex;
+    width: 100%;
+    animation: scrollLeft 50s linear infinite;
+  }
+  
+  /* Images: remove any gap between them */
+  .scroll-track img {
+    width: 300px; /* your desired width */
+    height: auto;
+    margin-right: 0;  /* no gap */
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  /* Optional: Ensure no extra margin on the last image */
+  .scroll-track img:last-child {
+    margin-right: 0;
+  }
+  
+  /* Keyframes for seamless endless scroll */
+  @keyframes scrollLeft {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
