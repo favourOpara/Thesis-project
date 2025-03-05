@@ -14,6 +14,49 @@ const SellerProductListTest = () => {
     navigate("/add-product"); // Navigate to the /add-product page
   };
 
+  const handleViewProduct = (productId) => {
+    axios
+      .get(`http://127.0.0.1:8000/api/owner-products/${productId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        alert(`Product Details:\n\n${JSON.stringify(response.data, null, 2)}`);
+      })
+      .catch((error) => {
+        console.error("Error fetching product details:", error);
+      });
+  };
+  
+  const handleEditProduct = (productId) => {
+    navigate(`/edit-product/${productId}`); // Redirect to edit page
+  };
+  
+  const handleDeleteProduct = async (productId) => {
+    const token = localStorage.getItem("accessToken");
+  
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return; // Stop if user cancels
+    }
+  
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/owner-products/${productId}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      // Update state: Remove deleted product from the list
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => product.id !== productId)
+      );
+  
+      console.log("Product deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };  
+  
+
   const ProductStockBadge = ({ quantity }) => {
     if (quantity > 0) {
       return <span className="badge badge-success">In Stock</span>;
@@ -103,7 +146,7 @@ const SellerProductListTest = () => {
 
   return (
     <>
-      <h3 style={{ marginTop: "80px", marginLeft: "10px", fontWeight: "bold" }}>
+      <h3 style={{ marginTop: "100px", marginLeft: "0px", fontWeight: "bold" }}>
         Dashboard
       </h3>
       <div style={buttonContainerStyle}>
@@ -192,20 +235,17 @@ const SellerProductListTest = () => {
                             aria-labelledby="dropdownMenuLink25"
                           >
                             <a
-                              className="dropdown-item"
-                              href="javascript:void(0);"
+                              className="dropdown-item" onClick={() => handleViewProduct(product.id)}
                             >
                               View
                             </a>
                             <a
-                              className="dropdown-item"
-                              href="javascript:void(0);"
+                              className="dropdown-item" onClick={() => handleEditProduct(product.id)}
                             >
                               Edit
                             </a>
                             <a
-                              className="dropdown-item"
-                              href="javascript:void(0);"
+                              className="dropdown-item" href="javascript:void(0);" onClick={() => handleDeleteProduct(product.id)}
                             >
                               Delete
                             </a>

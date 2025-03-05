@@ -16,7 +16,7 @@ from .serializers import (
 )
 
 
-### ✅ SHOP VIEWSET
+# SHOP VIEWSET
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
@@ -31,14 +31,14 @@ class ShopViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-### ✅ CATEGORY VIEWSET
+# CATEGORY VIEWSET
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-### ✅ PRODUCT VIEWSET (Supports Image Uploads)
+# PRODUCT VIEWSET (Supports Image Uploads)
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -56,7 +56,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-### ✅ PRODUCT IMAGE VIEWSET (Handles Image Uploads)
+# PRODUCT IMAGE VIEWSET (Handles Image Uploads)
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
@@ -67,7 +67,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 
-### ✅ OWNER PRODUCT VIEWSET (For Seller's Products)
+# OWNER PRODUCT VIEWSET (For Seller's Products)
 class OwnerProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -108,7 +108,7 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-### ✅ ORDER VIEWSET
+# ORDER VIEWSET
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -133,21 +133,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Item added successfully.'}, status=status.HTTP_201_CREATED)
 
 
-### ✅ ORDER ITEM VIEWSET
+# ORDER ITEM VIEWSET
 class OrderItemViewSet(viewsets.ModelViewSet):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-### ✅ SHIPPING ADDRESS VIEWSET
+# SHIPPING ADDRESS VIEWSET
 class ShippingAddressViewSet(viewsets.ModelViewSet):
     queryset = ShippingAddress.objects.all()
     serializer_class = ShippingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-### ✅ PAYMENT VIEWSET
+# PAYMENT VIEWSET
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer

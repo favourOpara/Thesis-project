@@ -20,7 +20,7 @@ const ProductCard = ({ product }) => {
       <Link to={`/product/${product.id}`} className="product-card-details">
         <div className="product-card-image">
           <img
-            src={product.main_image_url || "/default-product.png"} 
+            src={product.main_image_url || "/OIP.jpg"} 
             alt={product.name}
             onError={(e) => { e.target.src = "/default-product.png"; }} // Handle broken images
             style={{ transition: "opacity 0.3s ease-in-out" }}

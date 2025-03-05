@@ -13,6 +13,8 @@ import "../layouts/horizontal-light-menu/css/dark/plugins.css";
 import "./assets/css/light/components/media_object.css";
 import "./assets/css/dark/components/media_object.css";
 
+import EditProduct from "./components/EditProduct";
+import SellerProductListTest from "./components/SellerProductListTest";
 import Home from "./pages/Home";
 import SignIn from "./pages/Signin";
 import SignUp from "./pages/SignUp";
@@ -51,6 +53,8 @@ const App = () => {
                 <Route path="/edit-profile" element={<UpdateProfile />} />
                 <Route path="/add-product" element={<AddProduct />} />
                 <Route path="/coming-soon" element={<ComingSoon />} />
+                <Route path="/seller-dashboard" element={<SellerProductListTest />} />
+                <Route path="/edit-product/:id" element={<EditProduct />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

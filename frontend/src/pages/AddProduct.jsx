@@ -4,6 +4,7 @@ import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const AddProduct = () => {
     gender: "",
   });
 
+  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,7 +28,7 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // ✅ Clear error message after 4 seconds
+  //  Clear error message after 4 seconds
   useEffect(() => {
     if (errorMessage) {
       const timer = setTimeout(() => {
@@ -36,7 +38,7 @@ const AddProduct = () => {
     }
   }, [errorMessage]);
 
-  // ✅ Cleanup preview URL when imageFile changes or component unmounts
+  //  Cleanup preview URL when imageFile changes or component unmounts
   useEffect(() => {
     if (imageFile) {
       const url = URL.createObjectURL(imageFile);
@@ -336,6 +338,7 @@ const AddProduct = () => {
       });
       setImageFile(null);
       setInvalidFields({});
+      window.location.href = "http://localhost:5173";
     } catch (error) {
       console.error("Error adding product:", error);
       setErrorMessage("Failed to add the product. Please try again.");
@@ -346,7 +349,6 @@ const AddProduct = () => {
 
   return (
     <>
-      <Header />
 
       {errorMessage && (
         <div
@@ -544,7 +546,6 @@ const AddProduct = () => {
           </div>
         )}
       </div>
-      <Footer />
     </>
   );
 };
