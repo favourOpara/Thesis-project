@@ -7,22 +7,25 @@ const ProductCard = ({ product }) => {
   const { showNotification } = useContext(NotificationContext);
 
   const handleAddToCart = (e) => {
-    // Prevent the click event from bubbling up to the Link
     e.preventDefault();
     e.stopPropagation();
-    // Here you can add your logic to add the product to the cart
     showNotification("Added to cart");
   };
 
+  // Check if the product has images, fallback to default
+  const productImage =
+    product.main_image_url ||
+    (product.images && product.images.length > 0 ? product.images[0].image_url : "/OIP.png");
+  console.log("Product Image URL:", productImage);
+
   return (
     <div className="product-card">
-      {/* Clicking on these details navigates to the product page */}
       <Link to={`/product/${product.id}`} className="product-card-details">
         <div className="product-card-image">
           <img
-            src={product.main_image_url || "/OIP.jpg"} 
+            src={productImage}
             alt={product.name}
-            onError={(e) => { e.target.src = "/default-product.png"; }} // Handle broken images
+            onError={(e) => { e.target.src = "/OIP.png"; }}
             style={{ transition: "opacity 0.3s ease-in-out" }}
           />
         </div>
@@ -34,7 +37,6 @@ const ProductCard = ({ product }) => {
           </span>
         </div>
       </Link>
-      {/* Clicking this button adds the product to the cart and shows a notification */}
       <button type="button" className="badge badge-danger" onClick={handleAddToCart}>
         Add to cart
       </button>

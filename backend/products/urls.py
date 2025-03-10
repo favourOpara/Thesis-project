@@ -1,4 +1,6 @@
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     ShopViewSet,
     CategoryViewSet,
@@ -23,7 +25,6 @@ urlpatterns = [
     # Product URLs
     path('products/', ProductViewSet.as_view({'get': 'list'}), name='product-list'),
     path('products/<int:pk>/', ProductViewSet.as_view({'get': 'retrieve'}), name='product-detail'),
-    # path('products/<int:pk>/add-image/', ProductViewSet.as_view({'post': 'add_image'}), name='product-add-image'),
 
     path('owner-products/', OwnerProductViewSet.as_view({'get': 'list', 'post': 'create'}), name='owner-products-list-create'),
     path('owner-products/<int:pk>/', OwnerProductViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='owner-products-detail'),
@@ -49,3 +50,7 @@ urlpatterns = [
     path('payments/', PaymentViewSet.as_view({'get': 'list', 'post': 'create'}), name='payment-list'),
     path('payments/<int:pk>/', PaymentViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='payment-detail'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

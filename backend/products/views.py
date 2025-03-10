@@ -16,7 +16,6 @@ from .serializers import (
 )
 
 
-# SHOP VIEWSET
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
@@ -31,19 +30,17 @@ class ShopViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-# CATEGORY VIEWSET
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-# PRODUCT VIEWSET (Supports Image Uploads)
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
-    parser_classes = (MultiPartParser, FormParser)  # Allow image uploads
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -53,30 +50,38 @@ class ProductViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        product = serializer.save(owner=self.request.user)
+        images = self.request.FILES.getlist('images')  # Get multiple images
+
+        for image in images:
+            ProductImage.objects.create(product=product, image=image)
+
+    def perform_update(self, serializer):
+        product = serializer.save()
+        images = self.request.FILES.getlist('images')
+
+        if images:
+            product.images.all().delete()  # Delete old images
+            for image in images:
+                ProductImage.objects.create(product=product, image=image)
 
 
-# PRODUCT IMAGE VIEWSET (Handles Image Uploads)
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    parser_classes = (MultiPartParser, FormParser)  # Ensure images can be uploaded
+    parser_classes = (MultiPartParser, FormParser)
 
     def perform_create(self, serializer):
         serializer.save()
 
 
-# OWNER PRODUCT VIEWSET (For Seller's Products)
 class OwnerProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Product.objects.filter(owner=self.request.user)  # Filter by owner
-    
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+        return Product.objects.filter(owner=self.request.user)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset(), pk=self.kwargs['pk'])
@@ -88,7 +93,12 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=self.request.user)
+            product = serializer.save(owner=self.request.user)
+            images = request.FILES.getlist('images')  # Get multiple images
+
+            for image in images:
+                ProductImage.objects.create(product=product, image=image)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,8 +110,16 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         product = self.get_object()
         serializer = self.get_serializer(product, data=request.data, partial=True)
+
         if serializer.is_valid():
-            serializer.save()
+            product = serializer.save()
+            images = request.FILES.getlist('images')
+
+            if images:
+                product.images.all().delete()  # Remove old images
+                for image in images:
+                    ProductImage.objects.create(product=product, image=image)
+
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,7 +129,6 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# ORDER VIEWSET
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -130,27 +147,24 @@ class OrderViewSet(viewsets.ModelViewSet):
     def add_item(self, request, pk=None):
         order = self.get_object()
         product = get_object_or_404(Product, id=request.data.get('product'))
-        quantity = request.data.get('quantity', 1)
+        quantity = int(request.data.get('quantity', 1))
         order_item = OrderItem(order=order, product=product, quantity=quantity, price=product.price * quantity)
         order_item.save()
         return Response({'message': 'Item added successfully.'}, status=status.HTTP_201_CREATED)
 
 
-# ORDER ITEM VIEWSET
 class OrderItemViewSet(viewsets.ModelViewSet):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-# SHIPPING ADDRESS VIEWSET
 class ShippingAddressViewSet(viewsets.ModelViewSet):
     queryset = ShippingAddress.objects.all()
     serializer_class = ShippingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-# PAYMENT VIEWSET
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer

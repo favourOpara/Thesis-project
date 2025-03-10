@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
 
+
 class ShopSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
 
@@ -20,10 +21,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductImage
-        fields = ['id', 'image_url', 'alt_text']
+        fields = ['id', 'image', 'image_url', 'alt_text']
 
     def get_image_url(self, obj):
-        """Returns the full URL for the image."""
         request = self.context.get('request')
         if obj.image:
             return request.build_absolute_uri(obj.image.url) if request else obj.image.url
@@ -32,40 +32,58 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
-    
-    # ✅ Fetch all related images using the related_name 'images'
     images = ProductImageSerializer(many=True, read_only=True)
-
-    # ✅ Fetch the `main_image` URL if it exists
     main_image_url = serializers.SerializerMethodField()
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Product
         fields = [
-            'id',
-            'owner',
-            'name',
-            'category',
-            'sub_category',
-            'description',
-            'price',
-            'quantity',
-            'material_type',
-            'brand',
-            'size',
-            'is_active',
-            'created_at',
-            'updated_at',
-            'main_image_url',  # ✅ New field for main image
-            'images',  # ✅ List of additional images
+            'id', 'owner', 'name', 'category', 'sub_category', 'description',
+            'price', 'quantity', 'material_type', 'brand', 'size',
+            'is_active', 'created_at', 'updated_at', 'main_image_url', 
+            'images', 'uploaded_images'
         ]
 
     def get_main_image_url(self, obj):
-        """Returns the full URL of the main image."""
         request = self.context.get('request')
-        if obj.main_image:
-            return request.build_absolute_uri(obj.main_image.url) if request else obj.main_image.url
+        if obj.images.exists():
+            return request.build_absolute_uri(obj.images.first().image.url) if request else obj.images.first().image.url
         return None
+
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        product = Product.objects.create(**validated_data)
+
+        for image in uploaded_images:
+            ProductImage.objects.create(product=product, image=image)
+
+        return product
+
+    def update(self, instance, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', None)
+        instance.name = validated_data.get('name', instance.name)
+        instance.category = validated_data.get('category', instance.category)
+        instance.sub_category = validated_data.get('sub_category', instance.sub_category)
+        instance.description = validated_data.get('description', instance.description)
+        instance.price = validated_data.get('price', instance.price)
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.material_type = validated_data.get('material_type', instance.material_type)
+        instance.brand = validated_data.get('brand', instance.brand)
+        instance.size = validated_data.get('size', instance.size)
+        instance.is_active = validated_data.get('is_active', instance.is_active)
+        instance.save()
+
+        if uploaded_images:
+            instance.images.all().delete()
+            for image in uploaded_images:
+                ProductImage.objects.create(product=instance, image=image)
+
+        return instance
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -93,15 +111,8 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShippingAddress
         fields = [
-            'id',
-            'order',
-            'full_name',
-            'address',
-            'city',
-            'state',
-            'postal_code',
-            'country',
-            'phone_number'
+            'id', 'order', 'full_name', 'address', 'city',
+            'state', 'postal_code', 'country', 'phone_number'
         ]
 
 

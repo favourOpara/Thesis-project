@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import CustomUser  # Replace with your custom User model if applicable
+from accounts.models import CustomUser
 
 
 class Shop(models.Model):
@@ -47,9 +47,6 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-    
-    # ✅ Add a main image field (optional)
-    main_image = models.ImageField(upload_to='product_images/', null=True, blank=True)
 
     def __str__(self):
         return self.name

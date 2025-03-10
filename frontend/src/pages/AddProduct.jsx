@@ -332,7 +332,7 @@ const AddProduct = () => {
       });
       setImageFiles([]);
       setPreviewUrls([]);
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/"), 500);
     } catch (error) {
       console.error("Error adding product:", error);
       setErrorMessage(error.response?.data?.message || "Failed to add product");
