@@ -26,7 +26,7 @@ urlpatterns = [
     # path('products/<int:pk>/add-image/', ProductViewSet.as_view({'post': 'add_image'}), name='product-add-image'),
 
     path('owner-products/', OwnerProductViewSet.as_view({'get': 'list', 'post': 'create'}), name='owner-products-list-create'),
-    path('owner-products/<int:pk>/', OwnerProductViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='owner-products-detail'),
+    path('owner-products/<int:pk>/', OwnerProductViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='owner-products-detail'),
 
     # Product Image URLs
     path('product-images/', ProductImageViewSet.as_view({'get': 'list', 'post': 'create'}), name='product-image-list'),

@@ -21,35 +21,14 @@ const AddProduct = () => {
   });
 
   const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  //  Clear error message after 4 seconds
-  useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
-
-  //  Cleanup preview URL when imageFile changes or component unmounts
-  useEffect(() => {
-    if (imageFile) {
-      const url = URL.createObjectURL(imageFile);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(null);
-    }
-  }, [imageFile]);
-
-  // Dropdown options
+  // Category and Subcategory Options
   const categoryOptions = [
     { value: "Clothing materials", label: "Clothing materials" },
     { value: "Body accessories", label: "Body accessories" },
@@ -84,20 +63,20 @@ const AddProduct = () => {
     { value: "Shoes", label: "Shoes", category: "Clothing materials" },
     { value: "Slippers", label: "Slippers", category: "Clothing materials" },
     { value: "Jewelry", label: "Jewelry", category: "Clothing materials" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Clothing materials" },
+    { value: "Other", label: "Other (provide details)", category: "Clothing materials" },
     { value: "Handbags", label: "Handbags", category: "Body accessories" },
     { value: "Purses", label: "Purses", category: "Body accessories" },
     { value: "Wallets", label: "Wallets", category: "Body accessories" },
     { value: "Belts", label: "Belts", category: "Body accessories" },
     { value: "Handwears", label: "Handwears", category: "Body accessories" },
     { value: "Eyewear", label: "Eyewear", category: "Body accessories" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Body accessories" },
+    { value: "Other", label: "Other (provide details)", category: "Body accessories" },
     { value: "Kitchenware", label: "Kitchenware", category: "Household items" },
     { value: "Cookware", label: "Cookware", category: "Household items" },
     { value: "Plastic containers", label: "Plastic containers", category: "Household items" },
     { value: "Storage bins", label: "Storage bins", category: "Household items" },
     { value: "Cleaning supplies", label: "Cleaning supplies", category: "Household items" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Household items" },
+    { value: "Other", label: "Other (provide details)", category: "Household items" },
     { value: "Mobile phones", label: "Mobile phones", category: "Electronics and appliances" },
     { value: "Television", label: "Television", category: "Electronics and appliances" },
     { value: "DVD players", label: "DVD players", category: "Electronics and appliances" },
@@ -113,7 +92,7 @@ const AddProduct = () => {
     { value: "Headphones", label: "Headphones", category: "Electronics and appliances" },
     { value: "Digital watches", label: "Digital watches", category: "Electronics and appliances" },
     { value: "Video games", label: "Video games", category: "Electronics and appliances" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Electronics and appliances" },
+    { value: "Other", label: "Other (provide details)", category: "Electronics and appliances" },
     { value: "Fresh fruits", label: "Fresh fruits", category: "agriculture, food, and groceries" },
     { value: "Vegetables", label: "Vegetables", category: "agriculture, food, and groceries" },
     { value: "Grains", label: "Grains", category: "agriculture, food, and groceries" },
@@ -127,13 +106,13 @@ const AddProduct = () => {
     { value: "Fish", label: "Fish", category: "agriculture, food, and groceries" },
     { value: "Packaged foods", label: "Packaged foods", category: "agriculture, food, and groceries" },
     { value: "Buscuits", label: "Buscuits", category: "agriculture, food, and groceries" },
-    { value: "Other", label: "Other (provide more details in description)", category: "agriculture, food, and groceries" },
+    { value: "Other", label: "Other (provide details)", category: "agriculture, food, and groceries" },
     { value: "Skincare", label: "Skincare", category: "Cosmetic and beauty products" },
     { value: "Haircare", label: "Haircare", category: "Cosmetic and beauty products" },
     { value: "Mouthcare", label: "Mouthcare", category: "Cosmetic and beauty products" },
     { value: "Makeups", label: "Makeups", category: "Cosmetic and beauty products" },
     { value: "Perfumes", label: "Perfumes", category: "Cosmetic and beauty products" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Cosmetic and beauty products" },
+    { value: "Other", label: "Other (provide details)", category: "Cosmetic and beauty products" },
     { value: "Hancrafted sculptures", label: "Hancrafted sculptures", category: "Arts and craft" },
     { value: "Carvings", label: "Carvings", category: "Arts and craft" },
     { value: "Paintings", label: "Paintings", category: "Arts and craft" },
@@ -142,25 +121,25 @@ const AddProduct = () => {
     { value: "Beadworks", label: "Beadworks", category: "Arts and craft" },
     { value: "Traditional musical instruments", label: "Traditional musical instruments", category: "Arts and craft" },
     { value: "Flowers", label: "Flowers", category: "Arts and craft" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Arts and craft" },
+    { value: "Other", label: "Other (provide details)", category: "Arts and craft" },
     { value: "Writing materials", label: "Writing materials", category: "Stationery" },
     { value: "Office supplies", label: "Office supplies", category: "Stationery" },
     { value: "Art supplies", label: "Art supplies", category: "Stationery" },
     { value: "School supplies", label: "School supplies", category: "Stationery" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Stationery" },
-    { value: "Chairs", label: "Chairs", category: "Furnitures and home decor" },
-    { value: "Tables", label: "Tables", category: "Furnitures and home decor" },
-    { value: "Beds", label: "Beds", category: "Furnitures and home decor" },
-    { value: "Mattresses", label: "Mattresses", category: "Furnitures and home decor" },
-    { value: "Rugs", label: "Rugs", category: "Furnitures and home decor" },
-    { value: "Curtains", label: "Curtains", category: "Furnitures and home decor" },
-    { value: "Dining set", label: "Dining set", category: "Furnitures and home decor" },
-    { value: "Cupboards", label: "Cupboards", category: "Furnitures and home decor" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Furnitures and home decor" },
+    { value: "Other", label: "Other (provide details)", category: "Stationery" },
+    { value: "Chairs", label: "Chairs", category: "Furniture and home decor" },
+    { value: "Tables", label: "Tables", category: "Furniture and home decor" },
+    { value: "Beds", label: "Beds", category: "Furniture and home decor" },
+    { value: "Mattresses", label: "Mattresses", category: "Furniture and home decor" },
+    { value: "Rugs", label: "Rugs", category: "Furniture and home decor" },
+    { value: "Curtains", label: "Curtains", category: "Furniture and home decor" },
+    { value: "Dining set", label: "Dining set", category: "Furniture and home decor" },
+    { value: "Cupboards", label: "Cupboards", category: "Furniture and home decor" },
+    { value: "Other", label: "Other (provide details)", category: "Furniture and home decor" },
     { value: "Vehicle spare parts", label: "Vehicle spare parts", category: "Autoparts and accessories" },
     { value: "Car accessories", label: "Car accessories", category: "Autoparts and accessories" },
     { value: "Car repair tools", label: "Car repair tools", category: "Autoparts and accessories" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Autoparts and accessories" },
+    { value: "Other", label: "Other (provide details)", category: "Autoparts and accessories" },
     { value: "Cement", label: "Cement", category: "Building materials" },
     { value: "Sand", label: "Sand", category: "Building materials" },
     { value: "Gravel", label: "Gravel", category: "Building materials" },
@@ -170,20 +149,20 @@ const AddProduct = () => {
     { value: "Electric supplies", label: "Electric supplies", category: "Building materials" },
     { value: "Toilet building", label: "Toilet building", category: "Building materials" },
     { value: "Construction tools", label: "Construction tools", category: "Building materials" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Building materials" },
+    { value: "Other", label: "Other (provide details)", category: "Building materials" },
     { value: "Dolls", label: "Dolls", category: "Toys and children products" },
     { value: "Action figures", label: "Action figures", category: "Toys and children products" },
     { value: "Stuffed animals", label: "Stuffed animals", category: "Toys and children products" },
     { value: "Educational toys", label: "Educational toys", category: "Toys and children products" },
     { value: "Games", label: "Games", category: "Toys and children products" },
     { value: "Baby care products", label: "Baby care products", category: "Toys and children products" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Miscellaneous" },
+    { value: "Other", label: "Other (provide details)", category: "Miscellaneous" },
     { value: "Sex toys", label: "Sex toys", category: "Adult" },
     { value: "Lubricants", label: "Lubricants", category: "Adult" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Adult" },
+    { value: "Other", label: "Other (provide details)", category: "Adult" },
     { value: "Pets", label: "Pets", category: "Animal pets" },
     { value: "Pet food", label: "Pet food", category: "Animal pets" },
-    { value: "Other", label: "Other (provide more details in description)", category: "Animal pets" },
+    { value: "Other", label: "Other (provide details)", category: "Animal pets" },
   ];
 
   const genderOptions = [
@@ -212,91 +191,109 @@ const AddProduct = () => {
     }),
   };
 
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(""), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  const handleImageChange = (e) => {
+    setErrorMessage("");
+    const files = Array.from(e.target.files);
+    
+    if (files.length + imageFiles.length > 8) {
+      setErrorMessage("Maximum 8 images allowed");
+      e.target.value = null;
+      return;
+    }
+
+    const validFiles = [];
+    const invalidFiles = [];
+    
+    files.forEach((file) => {
+      if (file.size > 500 * 1024) {
+        invalidFiles.push(file.name);
+      } else if (file.type.startsWith("image/")) {
+        validFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      setErrorMessage(`Uh-oh, The file ${invalidFiles.join(", ")}  exceeds 500KB`);
+    }
+    
+
+    const newFiles = [...imageFiles, ...validFiles].slice(0, 8);
+    setImageFiles(newFiles);
+    setPreviewUrls(newFiles.map(file => URL.createObjectURL(file)));
+    e.target.value = null;
+  };
+
+  const removeImage = (index) => {
+    const newFiles = [...imageFiles];
+    const newUrls = [...previewUrls];
+    URL.revokeObjectURL(newUrls[index]);
+    newFiles.splice(index, 1);
+    newUrls.splice(index, 1);
+    setImageFiles(newFiles);
+    setPreviewUrls(newUrls);
+  };
+
   const handleSelectChange = (name, selectedOption) => {
     if (name === "category") {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        category: selectedOption ? selectedOption.value : "",
+        category: selectedOption?.value || "",
         sub_category: "",
         gender: ""
       }));
-      setInvalidFields((prev) => ({
+      setInvalidFields(prev => ({
         ...prev,
         category: false,
         sub_category: false,
         gender: false,
       }));
     } else {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        [name]: selectedOption ? selectedOption.value : "",
+        [name]: selectedOption?.value || ""
       }));
-      setInvalidFields((prev) => ({ ...prev, [name]: false }));
+      setInvalidFields(prev => ({ ...prev, [name]: false }));
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setInvalidFields((prev) => ({ ...prev, [name]: false }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setInvalidFields(prev => ({ ...prev, [name]: false }));
   };
-
-  const handleImageChange = (e) => {
-    setErrorMessage("");
-    setInvalidFields((prev) => ({ ...prev, image: false }));
-    const file = e.target.files[0];
-    if (file && file.size > 500 * 1024) {
-      setErrorMessage("Image must be less than 500KB.");
-      setInvalidFields((prev) => ({ ...prev, image: true }));
-      e.target.value = null;
-      setImageFile(null);
-    } else {
-      setImageFile(file || null);
-    }
-  };
-
-  const filteredSubCategories = subCategoryOptions.filter(
-    (option) => option.category === formData.category
-  );
-
-  const showGenderDropdown =
-    formData.category === "Clothing materials" ||
-    formData.category === "Body accessories" ||
-    formData.category === "Cosmetic and beauty products";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setSuccessMessage("");
     setErrorMessage("");
+    setInvalidFields({});
 
     const requiredFields = [
-      "category",
-      "sub_category",
-      "description",
-      "price",
-      "quantity",
-      "material_type",
-      "brand",
-      "size",
+      "name", "category", "sub_category", "description",
+      "price", "quantity", "material_type", "brand", "size"
     ];
-    let hasEmptyField = false;
-    const newInvalidFields = {};
 
-    requiredFields.forEach((field) => {
-      if (!formData[field]) {
-        hasEmptyField = true;
-        newInvalidFields[field] = true;
-      }
-    });
-    if (!imageFile) {
-      hasEmptyField = true;
-      newInvalidFields.image = true;
-    }
+    const newInvalidFields = requiredFields.reduce((acc, field) => {
+      if (!formData[field]) acc[field] = true;
+      return acc;
+    }, {});
 
-    if (hasEmptyField) {
-      setErrorMessage("Mandatory field not filled");
-      setInvalidFields(newInvalidFields);
+    if (Object.keys(newInvalidFields).length > 0 || imageFiles.length === 0) {
+      setInvalidFields({ ...newInvalidFields, images: imageFiles.length === 0 });
+      setErrorMessage("Please fill all required fields");
       setLoading(false);
       return;
     }
@@ -304,17 +301,14 @@ const AddProduct = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const dataToSend = new FormData();
-      dataToSend.append("name", formData.name);
-      dataToSend.append("category", formData.category);
-      dataToSend.append("sub_category", formData.sub_category);
-      dataToSend.append("description", formData.description);
-      dataToSend.append("price", parseFloat(formData.price));
-      dataToSend.append("quantity", formData.quantity);
-      dataToSend.append("material_type", formData.material_type);
-      dataToSend.append("brand", formData.brand);
-      dataToSend.append("size", formData.size);
-      dataToSend.append("gender", formData.gender);
-      dataToSend.append("image", imageFile);
+
+      Object.entries(formData).forEach(([key, value]) => {
+        dataToSend.append(key, value);
+      });
+
+      imageFiles.forEach(file => {
+        dataToSend.append("images", file);
+      });
 
       await axios.post("http://127.0.0.1:8000/api/owner-products/", dataToSend, {
         headers: {
@@ -336,49 +330,45 @@ const AddProduct = () => {
         size: "",
         gender: "",
       });
-      setImageFile(null);
-      setInvalidFields({});
-      window.location.href = "http://localhost:5173";
+      setImageFiles([]);
+      setPreviewUrls([]);
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       console.error("Error adding product:", error);
-      setErrorMessage("Failed to add the product. Please try again.");
+      setErrorMessage(error.response?.data?.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
   };
 
+  const filteredSubCategories = subCategoryOptions.filter(
+    option => option.category === formData.category
+  );
+
+  const showGenderDropdown = [
+    "Clothing materials",
+    "Body accessories",
+    "Cosmetic and beauty products"
+  ].includes(formData.category);
+
   return (
     <>
 
-      {errorMessage && (
-        <div
-          style={{
-            position: "fixed",
-            top: "60px",
-            right: "10px",
-            zIndex: 9999,
-          }}
-          className="alert alert-danger"
-        >
-          {errorMessage}
-        </div>
-      )}
+      <div className="container" style={{ marginTop: "10px", paddingBottom: "50px" }}>
+        <h2>Add Product</h2>
 
-      <div className="container">
-        <p>.</p>
-        <h2 style={{ marginTop: "60px" }}>Add Product</h2>
         <form onSubmit={handleSubmit}>
           {/* Product Name */}
           <div className="form-group mb-3">
             <label>Product Name</label>
             <input
               type="text"
-              className={`form-control ${invalidFields.name ? "border border-danger" : ""}`}
+              className={`form-control ${invalidFields.name ? "is-invalid" : ""}`}
               name="name"
               value={formData.name}
               onChange={handleInputChange}
             />
-            {invalidFields.name && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.name && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Category */}
@@ -386,14 +376,13 @@ const AddProduct = () => {
             <label>Category</label>
             <Select
               options={categoryOptions}
-              value={categoryOptions.find((option) => option.value === formData.category)}
+              value={categoryOptions.find(opt => opt.value === formData.category)}
               onChange={(selected) => handleSelectChange("category", selected)}
               styles={customStyles}
-              menuPlacement="auto"
               isSearchable
-              className={invalidFields.category ? "border border-danger" : ""}
+              className={invalidFields.category ? "is-invalid" : ""}
             />
-            {invalidFields.category && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.category && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Sub-Category */}
@@ -401,16 +390,14 @@ const AddProduct = () => {
             <div className="form-group mb-3">
               <label>Sub-Category</label>
               <Select
-                key={`sub-${formData.category}`}
                 options={filteredSubCategories}
-                value={filteredSubCategories.find((option) => option.value === formData.sub_category)}
+                value={filteredSubCategories.find(opt => opt.value === formData.sub_category)}
                 onChange={(selected) => handleSelectChange("sub_category", selected)}
                 styles={customStyles}
-                menuPlacement="auto"
                 isSearchable
-                className={invalidFields.sub_category ? "border border-danger" : ""}
+                className={invalidFields.sub_category ? "is-invalid" : ""}
               />
-              {invalidFields.sub_category && <div className="text-danger">Mandatory field</div>}
+              {invalidFields.sub_category && <div className="invalid-feedback">Required field</div>}
             </div>
           )}
 
@@ -419,16 +406,14 @@ const AddProduct = () => {
             <div className="form-group mb-3">
               <label>Gender</label>
               <Select
-                key={`gender-${formData.category}`}
                 options={genderOptions}
-                value={genderOptions.find((option) => option.value === formData.gender)}
+                value={genderOptions.find(opt => opt.value === formData.gender)}
                 onChange={(selected) => handleSelectChange("gender", selected)}
                 styles={customStyles}
-                menuPlacement="auto"
                 isSearchable
-                className={invalidFields.gender ? "border border-danger" : ""}
+                className={invalidFields.gender ? "is-invalid" : ""}
               />
-              {invalidFields.gender && <div className="text-danger">Mandatory field</div>}
+              {invalidFields.gender && <div className="invalid-feedback">Required field</div>}
             </div>
           )}
 
@@ -436,39 +421,39 @@ const AddProduct = () => {
           <div className="form-group mb-3">
             <label>Description</label>
             <textarea
-              className={`form-control ${invalidFields.description ? "border border-danger" : ""}`}
+              className={`form-control ${invalidFields.description ? "is-invalid" : ""}`}
               name="description"
               rows="3"
               value={formData.description}
               onChange={handleInputChange}
             ></textarea>
-            {invalidFields.description && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.description && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Price */}
           <div className="form-group mb-3">
-            <label>Price</label>
+            <label>Price (₦)</label>
             <input
-              type="text"
-              className={`form-control ${invalidFields.price ? "border border-danger" : ""}`}
+              type="number"
+              className={`form-control ${invalidFields.price ? "is-invalid" : ""}`}
               name="price"
               value={formData.price}
               onChange={handleInputChange}
             />
-            {invalidFields.price && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.price && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Quantity */}
           <div className="form-group mb-3">
             <label>Quantity</label>
             <input
-              type="text"
-              className={`form-control ${invalidFields.quantity ? "border border-danger" : ""}`}
+              type="number"
+              className={`form-control ${invalidFields.quantity ? "is-invalid" : ""}`}
               name="quantity"
               value={formData.quantity}
               onChange={handleInputChange}
             />
-            {invalidFields.quantity && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.quantity && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Material Type */}
@@ -476,12 +461,12 @@ const AddProduct = () => {
             <label>Material Type</label>
             <input
               type="text"
-              className={`form-control ${invalidFields.material_type ? "border border-danger" : ""}`}
+              className={`form-control ${invalidFields.material_type ? "is-invalid" : ""}`}
               name="material_type"
               value={formData.material_type}
               onChange={handleInputChange}
             />
-            {invalidFields.material_type && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.material_type && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Brand */}
@@ -489,12 +474,12 @@ const AddProduct = () => {
             <label>Brand</label>
             <input
               type="text"
-              className={`form-control ${invalidFields.brand ? "border border-danger" : ""}`}
+              className={`form-control ${invalidFields.brand ? "is-invalid" : ""}`}
               name="brand"
               value={formData.brand}
               onChange={handleInputChange}
             />
-            {invalidFields.brand && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.brand && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Size */}
@@ -502,50 +487,81 @@ const AddProduct = () => {
             <label>Size</label>
             <Select
               options={sizeOptions}
-              value={sizeOptions.find((option) => option.value === formData.size)}
+              value={sizeOptions.find(opt => opt.value === formData.size)}
               onChange={(selected) => handleSelectChange("size", selected)}
               styles={customStyles}
-              menuPlacement="auto"
               isSearchable
-              className={invalidFields.size ? "border border-danger" : ""}
+              className={invalidFields.size ? "is-invalid" : ""}
             />
-            {invalidFields.size && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.size && <div className="invalid-feedback">Required field</div>}
           </div>
 
           {/* Image Upload */}
           <div className="form-group mb-3">
-            <label>Product Image (Max 500KB)</label>
+            <label>Product Images (Max 8, 500KB each)</label>
             <input
               type="file"
+              multiple
               accept="image/*"
-              className={`form-control ${invalidFields.image ? "border border-danger" : ""}`}
+              className={`form-control ${invalidFields.images ? "is-invalid" : ""}`}
               onChange={handleImageChange}
             />
-            {invalidFields.image && <div className="text-danger">Mandatory field</div>}
+            {invalidFields.images && <div className="invalid-feedback">At least one image required</div>}
+            <small className="text-muted">
+              {imageFiles.length} images selected (Max 8)
+            </small>
           </div>
 
-          {/* Image Preview */}
-          {previewUrl && (
+          {/* Image Previews */}
+          {previewUrls.length > 0 && (
             <div className="mb-3">
-              <label>Image Preview:</label>
-              <div>
-                <img src={previewUrl} alt="Preview" style={{ maxWidth: "200px", marginTop: "10px" }} />
+              <label>Image Previews:</label>
+              <div className="d-flex flex-wrap gap-2 mt-2">
+                {previewUrls.map((url, index) => (
+                  <div key={url} className="position-relative">
+                    <img
+                      src={url}
+                      alt={`Preview ${index + 1}`}
+                      className="img-thumbnail"
+                      style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm position-absolute top-0 end-0"
+                      style={{ transform: "translate(30%, -30%)" }}
+                      onClick={() => removeImage(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
+          {errorMessage && (
+            <div className="alert alert-danger mb-3">{errorMessage}</div>
+          )}
 
-          {/* Submit Button */}
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: "10px" }}>
-            {loading ? "Adding..." : "Add Product"}
+          <button 
+            type="submit" 
+            className="btn btn-primary mt-3"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                Adding...
+              </>
+            ) : "Add Product"}
           </button>
         </form>
 
         {successMessage && (
-          <div className={`alert ${successMessage.includes("successfully") ? "alert-success" : "alert-danger"} mt-3`}>
-            {successMessage}
-          </div>
+          <div className="alert alert-success mt-3">{successMessage}</div>
         )}
       </div>
+
+      <Footer />
     </>
   );
 };

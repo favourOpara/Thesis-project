@@ -74,6 +74,9 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Product.objects.filter(owner=self.request.user)  # Filter by owner
+    
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset(), pk=self.kwargs['pk'])

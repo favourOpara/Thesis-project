@@ -99,7 +99,7 @@ const SellerProductListTest = () => {
       .toLocaleString("en-NG", {
         style: "currency",
         currency: "NGN",
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
       })
       .replace("₦", "")
       .trim();
@@ -117,7 +117,7 @@ const SellerProductListTest = () => {
     borderRadius: "15px", // Rounded buttons
   };
 
-  const buttonContainerStyle = { marginTop: "10px", marginLeft: "36%" };
+  const buttonContainerStyle = { display: "flex", justifyContent: "center", marginTop: "10px"};
 
   const token = localStorage.getItem("accessToken");
 
@@ -146,8 +146,8 @@ const SellerProductListTest = () => {
 
   return (
     <>
-      <h3 style={{ marginTop: "100px", marginLeft: "0px", fontWeight: "bold" }}>
-        Dashboard
+      <h3 style={{ marginTop: "90px", marginLeft: "0px", fontWeight: "bold" }}>
+        ...
       </h3>
       <div style={buttonContainerStyle}>
         <button style={buttonStyle} onClick={handleAddProductClick}>
