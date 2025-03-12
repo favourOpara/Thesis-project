@@ -36,13 +36,15 @@
 /* -----------------------------------------------------
    Additional Product Grid (for a 3x3 layout)
    ----------------------------------------------------- */
-.additional-grid {
-  display: grid;
-  gap: 0px;
-  grid-template-columns: repeat(3, 160px);
-  grid-auto-rows: 220px;
-  margin-top: 0px;
-}
+   .additional-grid {
+    display: grid;
+    gap: 10px; /* Adjust gap if needed */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Dynamic columns */
+    grid-auto-rows: minmax(220px, auto); /* Allows rows to expand as needed */
+    margin-top: 0px;
+    grid-auto-flow: row dense; /* Fills gaps efficiently */
+  }
+  
 
 /* -----------------------------------------------------
    RESPONSIVE BREAKPOINTS
