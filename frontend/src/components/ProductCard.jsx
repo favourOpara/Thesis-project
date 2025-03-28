@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { NotificationContext } from "../context/NotificationContext";
-import "./ProductSection.css";
+import "./ProductList.css";
 
 const ProductCard = ({ product }) => {
   const { showNotification } = useContext(NotificationContext);

@@ -174,11 +174,53 @@ const EditProduct = () => {
   ];
 
   const sizeOptions = [
-    { value: "S", label: "Small" },
-    { value: "M", label: "Medium" },
-    { value: "L", label: "Large" },
-    { value: "XL", label: "Extra Large" },
-    { value: "XXL", label: "Extra Extra Large" },
+    { value: "XS", label: "Extra Small" },
+  { value: "S", label: "Small" },
+  { value: "M", label: "Medium" },
+  { value: "L", label: "Large" },
+  { value: "XL", label: "Extra Large" },
+  { value: "XXL", label: "2XL" },
+  { value: "XXXL", label: "3XL" },
+  { value: "4XL", label: "4XL" },
+  { value: "5XL", label: "5XL" },
+  { value: "6XL", label: "6XL" },
+  { value: "Free Size", label: "Free Size" },
+
+  // Shoe Sizes
+  { value: "EU 36", label: "EU 36" },
+  { value: "EU 37", label: "EU 37" },
+  { value: "EU 38", label: "EU 38" },
+  { value: "EU 39", label: "EU 39" },
+  { value: "EU 40", label: "EU 40" },
+  { value: "EU 41", label: "EU 41" },
+  { value: "EU 42", label: "EU 42" },
+  { value: "EU 43", label: "EU 43" },
+  { value: "EU 44", label: "EU 44" },
+  { value: "EU 45", label: "EU 45" },
+  { value: "EU 46", label: "EU 46" },
+  { value: "US 6", label: "US 6" },
+  { value: "US 7", label: "US 7" },
+  { value: "US 8", label: "US 8" },
+  { value: "US 9", label: "US 9" },
+  { value: "US 10", label: "US 10" },
+  { value: "US 11", label: "US 11" },
+  { value: "US 12", label: "US 12" },
+
+  // Kids Sizes
+  { value: "0-3M", label: "0-3 Months" },
+  { value: "3-6M", label: "3-6 Months" },
+  { value: "6-12M", label: "6-12 Months" },
+  { value: "1-2Y", label: "1-2 Years" },
+  { value: "2-3Y", label: "2-3 Years" },
+  { value: "3-4Y", label: "3-4 Years" },
+  { value: "4-5Y", label: "4-5 Years" },
+  { value: "5-6Y", label: "5-6 Years" },
+  { value: "6-7Y", label: "6-7 Years" },
+  { value: "7-8Y", label: "7-8 Years" },
+  { value: "8-9Y", label: "8-9 Years" },
+  { value: "9-10Y", label: "9-10 Years" },
+
+  { value: "Custom", label: "Custom (Specify in Description)" },
   ];
 
   const customStyles = {
@@ -288,12 +330,14 @@ const EditProduct = () => {
         sub_category: "",
         gender: ""
       }));
-      setInvalidFields(prev => ({
+    } else if (name === "size") {
+      // Handle multi-select for size
+      const values = selectedOption ? selectedOption.map(opt => opt.value) : [];
+      setFormData(prev => ({
         ...prev,
-        category: false,
-        sub_category: false,
-        gender: false,
+        [name]: values
       }));
+      setInvalidFields(prev => ({ ...prev, [name]: false }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -321,7 +365,7 @@ const EditProduct = () => {
     ];
 
     const newInvalidFields = requiredFields.reduce((acc, field) => {
-      if (!formData[field]) acc[field] = true;
+      if (!formData[field] || (field === "size" && formData[field].length === 0)) acc[field] = true;
       return acc;
     }, {});
 
@@ -336,8 +380,21 @@ const EditProduct = () => {
       const token = localStorage.getItem("accessToken");
       const dataToSend = new FormData();
 
+      // Append all regular fields
       Object.entries(formData).forEach(([key, value]) => {
-        dataToSend.append(key, value);
+        if (key !== "size") {
+          dataToSend.append(key, value);
+        }
+      });
+
+      // Append sizes correctly
+      formData.size.forEach(size => {
+        dataToSend.append("size", size);
+      });
+
+      // Append images
+      imageFiles.forEach(file => {
+        dataToSend.append("images", file);
       });
 
       imageFiles.forEach(file => {
@@ -366,7 +423,7 @@ const EditProduct = () => {
       });
       setImageFiles([]);
       setPreviewUrls([]);
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/"), 500);
     } catch (error) {
       console.error("Error updating product:", error);
       setErrorMessage(error.response?.data?.message || "Failed to update product");
@@ -520,7 +577,8 @@ const EditProduct = () => {
             <label>Size</label>
             <Select
               options={sizeOptions}
-              value={sizeOptions.find(opt => opt.value === formData.size)}
+              isMulti
+              value={sizeOptions.filter(opt => formData.size.includes(opt.value))}
               onChange={(selected) => handleSelectChange("size", selected)}
               styles={customStyles}
               isSearchable

@@ -20,7 +20,6 @@ import StayPrettyWithAbatrades from "../components/StayPrettyWithAbatrades";
 import GameWithAbatrades from  "../components/GameWithAbatrades";
 import TechWithAbatrades from "../components/TechWithAbatrades";
 import TopPicksInYourRegion from "../components/TopPicksInYourRegion";
-/* Import the new ScrollingBanner */
 import ScrollingBanner from "../components/ScrollingBanner";
 
 const Home = () => {

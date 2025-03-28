@@ -43,7 +43,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().filter(quantity__gt=0)
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(name__icontains=search)

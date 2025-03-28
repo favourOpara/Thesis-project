@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
 
-
 class ShopSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
 
@@ -9,12 +8,10 @@ class ShopSerializer(serializers.ModelSerializer):
         model = Shop
         fields = ['id', 'owner', 'name', 'description', 'created_at', 'updated_at']
 
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'created_at', 'updated_at']
-
 
 class ProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -29,10 +26,10 @@ class ProductImageSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image.url) if request else obj.image.url
         return None
 
-
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
     images = ProductImageSerializer(many=True, read_only=True)
+    size = serializers.MultipleChoiceField(choices=Product.SIZE_CHOICES)  # Changed to MultipleChoiceField
     main_image_url = serializers.SerializerMethodField()
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
@@ -66,18 +63,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', None)
-        instance.name = validated_data.get('name', instance.name)
-        instance.category = validated_data.get('category', instance.category)
-        instance.sub_category = validated_data.get('sub_category', instance.sub_category)
-        instance.description = validated_data.get('description', instance.description)
-        instance.price = validated_data.get('price', instance.price)
-        instance.quantity = validated_data.get('quantity', instance.quantity)
-        instance.material_type = validated_data.get('material_type', instance.material_type)
-        instance.brand = validated_data.get('brand', instance.brand)
-        instance.size = validated_data.get('size', instance.size)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
-        instance.save()
-
+        instance = super().update(instance, validated_data)
+        
         if uploaded_images:
             instance.images.all().delete()
             for image in uploaded_images:
@@ -85,7 +72,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return instance
 
-
+# Keep other serializers the same
 class OrderSerializer(serializers.ModelSerializer):
     buyer = serializers.ReadOnlyField(source='buyer.username')
     shop = serializers.PrimaryKeyRelatedField(queryset=Shop.objects.all())
@@ -95,7 +82,6 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'buyer', 'shop', 'order_date', 'status', 'total_price', 'items']
 
-
 class OrderItemSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
@@ -103,7 +89,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ['id', 'order', 'product', 'quantity', 'price']
-
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
@@ -114,7 +99,6 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
             'id', 'order', 'full_name', 'address', 'city',
             'state', 'postal_code', 'country', 'phone_number'
         ]
-
 
 class PaymentSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())

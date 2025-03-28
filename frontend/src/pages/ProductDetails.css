@@ -76,4 +76,12 @@
   .product-description h2 {
     margin-top: 20px;
   }
-  
+  /* Removes spinner (dial) from number inputs */
+.custom-input::-webkit-outer-spin-button,
+.custom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.custom-input {
+  -moz-appearance: textfield; /* Firefox fix */
+}

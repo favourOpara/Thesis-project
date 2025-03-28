@@ -33,7 +33,7 @@ const Hero = () => {
 
   const overlayTextStyle = {
     position: "absolute",
-    bottom: "100px", // Position the greeting text just above the buttons
+    bottom: "90px", // Position the greeting text just above the buttons
     left: "50%",
     transform: "translateX(-50%)", // Center horizontally
     fontSize: "12px", // Slightly larger for better readability
@@ -103,24 +103,7 @@ const Hero = () => {
           <>Good {getGreeting()}, Guest!</>
         )}
       </div>
-      {/* Buttons */}
-      <div style={buttonContainerStyle}>
-        <button
-          style={buttonStyle}
-          onMouseEnter={(e) => Object.assign(e.target.style, hoverStyle)}
-          onMouseLeave={(e) => Object.assign(e.target.style, buttonStyle)}
-        >
-          Wholesale
-        </button>
-        <button
-          style={buttonStyle}
-          onMouseEnter={(e) => Object.assign(e.target.style, hoverStyle)}
-          onMouseLeave={(e) => Object.assign(e.target.style, buttonStyle)}
-        >
-          Retail
-        </button>
-      </div>
-    </div>
+     </div>
   );
 };
 

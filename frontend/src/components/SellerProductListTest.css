@@ -1,0 +1,128 @@
+/* Ensure styles apply only to SellerProductList */
+.seller-product-list {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table Styling */
+.seller-product-list .table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.seller-product-list .product-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  table-layout: fixed;
+}
+
+/* Sticky Product Column */
+.seller-product-list .fixed-column {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  min-width: 200px;
+  max-width: 200px;
+  text-align: left;
+}
+/* Push "Your Products" title down */
+.seller-product-list .title {
+  margin-top: 120px;
+  font-weight: bold;
+  text-align: center;
+}
+
+
+/* Table Rows */
+.seller-product-list .product-table th,
+.seller-product-list .product-table td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+/* Product Image */
+.seller-product-list .product-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seller-product-list .product-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+.badge-success {
+  background-color: #25c74b; /* Green */
+  color: white;
+  padding: 0px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.badge-danger {
+  background-color: #ff0019; /* Red */
+  color: white;
+  padding: 0px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+
+/* Action Buttons */
+.seller-product-list .action-buttons button {
+  border: none;
+  padding: 4px 8px;
+  margin: 2px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 10px;
+  transition: 0.3s ease-in-out;
+}
+
+.seller-product-list .view-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.seller-product-list .edit-btn {
+  background-color: #ffc107;
+  color: black;
+}
+
+.seller-product-list .delete-btn {
+  background-color: red;
+  color: white;
+}
+
+/* Add Product Button */
+.seller-product-list .button-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.seller-product-list .add-product-btn {
+  padding: 5px 20px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.seller-product-list .add-product-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive Fix */
+@media screen and (max-width: 768px) {
+  .seller-product-list .fixed-column {
+    min-width: 150px;
+  }
+}
