@@ -1,22 +1,23 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { NotificationContext } from "../context/NotificationContext";
+import { useCart } from "../context/CartContext.jsx";
+import { NotificationContext } from "../context/NotificationContext.jsx";
 import "./ProductList.css";
 
 const ProductCard = ({ product }) => {
   const { showNotification } = useContext(NotificationContext);
+  const { addToCart } = useCart();
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    await addToCart(product);
     showNotification("Added to cart");
   };
 
-  // Check if the product has images, fallback to default
   const productImage =
     product.main_image_url ||
-    (product.images && product.images.length > 0 ? product.images[0].image_url : "/OIP.png");
-  console.log("Product Image URL:", productImage);
+    (product.images?.length > 0 ? product.images[0].image_url : "/OIP.png");
 
   return (
     <div className="product-card">
@@ -26,7 +27,6 @@ const ProductCard = ({ product }) => {
             src={productImage}
             alt={product.name}
             onError={(e) => { e.target.src = "/OIP.png"; }}
-            style={{ transition: "opacity 0.3s ease-in-out" }}
           />
         </div>
         <h5 className="product-card-title">{product.name}</h5>
@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
           </span>
         </div>
       </Link>
-      <button type="button" className="badge badge-danger" onClick={handleAddToCart}>
+      <button className="badge badge-danger" onClick={handleAddToCart}>
         Add to cart
       </button>
     </div>

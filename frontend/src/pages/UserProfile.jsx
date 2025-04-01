@@ -108,14 +108,6 @@ const Profile = () => {
                   className="card-header text-center"
                   style={{ backgroundColor: "#3b7bf8", color: "white" }}
                 >
-                  <img
-                    src={`https://eu.ui-avatars.comhttp://127.0.0.1:8000/api/?name=${user.first_name}+${user.last_name}&size=100`}
-                    alt={`${user.first_name || "User"} ${
-                      user.last_name || "Avatar"
-                    }`}
-                    className="rounded-circle mb-3"
-                    style={{ width: "100px", height: "100px" }}
-                  />
                   <h3>{`${user.first_name || "N/A"} ${
                     user.last_name || ""
                   }`}</h3>

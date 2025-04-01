@@ -23,24 +23,31 @@ export const AuthProvider = ({ children }) => {
   // Function to fetch user data
   const fetchUserData = async () => {
     const token = localStorage.getItem("accessToken");
+    console.log("AuthContext - Access Token:", token); // Debugging
     if (!token) {
-      setLoading(false); // No token, stop loading
+      setLoading(false);
       return;
     }
-
+  
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/user-info/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUser(response.data); // Set user data
+  
+      console.log("AuthContext - User Data from API:", response.data); // Debugging
+      setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data)); // **Store user in localStorage**
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch user data");
+      console.error("AuthContext - Error fetching user:", err);
+      setUser(null);
+      localStorage.removeItem("user"); // **Remove user if request fails**
     } finally {
-      setLoading(false); // Set loading to false
+      setLoading(false);
     }
   };
+  
 
   // Function to handle login
   const login = async (accessToken, refreshToken) => {
