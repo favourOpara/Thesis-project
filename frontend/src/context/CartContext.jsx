@@ -5,17 +5,17 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-
+  
   console.log("CartContext - User from Auth:", user);
 
   const userId = user?.email
     ? user.email.replace(/[^a-zA-Z0-9]/g, "_")
-    : "guest"; // ✅ Keep "guest" as default
+    : "guest"; // Assign a unique key for guests & logged-in users
 
   console.log("CartContext - Cart Key:", `cart_${userId}`);
 
-  // ✅ Load cart directly from localStorage on first render
-  const getInitialCart = () => {
+  // Function to load cart from localStorage
+  const loadCart = () => {
     try {
       const storedCart = localStorage.getItem(`cart_${userId}`);
       return storedCart ? JSON.parse(storedCart) : [];
@@ -25,34 +25,24 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const [cartItems, setCartItems] = useState(getInitialCart); // ✅ Initialize directly from localStorage
+  const [cartItems, setCartItems] = useState(loadCart); // Load from localStorage on first render
 
   useEffect(() => {
-    // ✅ Reload the correct cart when userId changes
-    try {
-      const storedCart = localStorage.getItem(`cart_${userId}`);
-      setCartItems(storedCart ? JSON.parse(storedCart) : []);
-      console.log(`CartContext - Loaded cart for ${userId}:`, storedCart);
-    } catch (error) {
-      console.error("Error loading cart from localStorage", error);
-      setCartItems([]);
-    }
-  }, [userId]); // ✅ Runs every time userId changes
+    // Load correct cart whenever userId changes
+    setCartItems(loadCart());
+  }, [userId]);
 
   useEffect(() => {
-    // ✅ Save cart to localStorage when cartItems change
+    // Save cart to localStorage whenever cartItems change
     try {
-      if (userId) {
-        console.log("Saving cart for:", userId);
-        localStorage.setItem(`cart_${userId}`, JSON.stringify(cartItems));
-      }
+      localStorage.setItem(`cart_${userId}`, JSON.stringify(cartItems));
     } catch (error) {
       console.error("Error saving cart to localStorage", error);
     }
   }, [cartItems, userId]);
 
   useEffect(() => {
-    // ✅ Sync cart across tabs/windows
+    // Sync cart across multiple tabs
     const handleStorageChange = (event) => {
       if (event.key === `cart_${userId}`) {
         setCartItems(JSON.parse(event.newValue) || []);
@@ -67,11 +57,19 @@ export const CartProvider = ({ children }) => {
     setCartItems((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       return existingItem
-        ? prevCart.map((item) =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-          )
+        ? prevCart // Prevent quantity from increasing when adding from ProductCard.jsx
         : [...prevCart, { ...product, quantity: 1 }];
     });
+  };
+
+  const updateCartItemQuantity = (productId, change) => {
+    setCartItems((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId
+          ? { ...item, quantity: Math.max(item.quantity + change, 1) } // Prevents quantity < 1
+          : item
+      )
+    );
   };
 
   const removeFromCart = (productId) => {
@@ -79,7 +77,7 @@ export const CartProvider = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateCartItemQuantity }}>
       {children}
     </CartContext.Provider>
   );

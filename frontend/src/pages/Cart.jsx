@@ -1,24 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext"; // Ensure correct import
+import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const CartPage = () => {
-  const { cartItems = [], removeFromCart } = useCart();
+  const { cartItems = [], removeFromCart, updateCartItemQuantity } = useCart(); // Add updateCartItemQuantity
 
   console.log("Cart Items:", cartItems); // Debugging line
 
-  // Ensure totalPrice calculation works correctly
-  const totalPrice = cartItems.length
-    ? cartItems.reduce((total, item) => total + (Number(item.price) || 0) * item.quantity, 0)
-    : 0;
+  const totalPrice = cartItems.reduce((total, item) => total + (Number(item.price) || 0) * item.quantity, 0);
 
   return (
     <>
       <Header />
       <div className="container mx-auto" style={{ marginTop: "0px", minHeight: "100vh" }}>
-        <h2 className="text-center">Your Shopping Cart</h2>
+        <h2 className="text-center" style={{ marginTop: "0px", marginBottom: "40px" }}>Your Shopping Cart</h2>
 
         {cartItems.length === 0 ? (
           <div className="text-center">
@@ -28,27 +25,51 @@ const CartPage = () => {
         ) : (
           <>
             {cartItems.map((item) => {
-              const itemPrice = Number(item.price) || 0; // Ensure price is a number
-              
-              // Fetch image from backend just like in ProductCard.jsx
+              const itemPrice = Number(item.price) || 0;
               const itemImage =
                 item.main_image_url ||
                 (item.images && item.images.length > 0 ? item.images[0].image_url : "/OIP.png");
 
               return (
                 <div key={item.id} className="card mb-3 p-3 d-flex flex-row align-items-center">
+                  {/* Item Image */}
                   <img
-                    src={itemImage} // Use backend image
+                    src={itemImage}
                     alt={item.name}
-                    style={{ width: "80px", marginRight: "15px" }}
-                    onError={(e) => (e.target.src = "/OIP.png")} // Handles broken images
+                    style={{ width: "80px", height: "80px", objectFit: "cover", marginRight: "15px" }}
+                    onError={(e) => (e.target.src = "/OIP.png")}
                   />
+
+                  {/* Item Details */}
                   <div className="flex-grow-1">
                     <h5>{item.name}</h5>
-                    <p>${itemPrice.toFixed(2)} each</p> {/* Prevents NaN error */}
-                    <span>Total: ${(itemPrice * item.quantity).toFixed(2)}</span>
+                    <p>₦{itemPrice.toFixed(2)} each</p>
+                    <span>Total: ₦{(itemPrice * item.quantity).toFixed(2)}</span>
                   </div>
-                  <button className="btn btn-danger" onClick={() => removeFromCart(item.id)}>
+
+                  {/* Quantity Controls */}
+                  <div className="d-flex align-items-center">
+                  <button
+  className="btn btn-secondary me-2"
+  style={{ fontSize: "12px", padding: "4px 8px" }} // Custom size
+  onClick={() => updateCartItemQuantity(item.id, -1)}
+  disabled={item.quantity <= 1}
+>
+  −
+</button>
+<span>{item.quantity}</span>
+<button
+  className="btn btn-secondary ms-2"
+  style={{ fontSize: "12px", padding: "4px 8px" }} // Custom size
+  onClick={() => updateCartItemQuantity(item.id, 1)}
+>
+  +
+</button>
+
+                  </div>
+
+                  {/* Remove Item */}
+                  <button className="btn btn-danger ms-3" onClick={() => removeFromCart(item.id)}>
                     Remove
                   </button>
                 </div>
@@ -57,7 +78,7 @@ const CartPage = () => {
 
             {/* Total Price & Checkout */}
             <div className="text-end mb-5">
-              <h4>Total: ${totalPrice.toFixed(2)}</h4>
+              <h4>Total: ₦{totalPrice.toFixed(2)}</h4>
               <Link to="/checkout" className="btn btn-success">Proceed to Checkout</Link>
             </div>
           </>
