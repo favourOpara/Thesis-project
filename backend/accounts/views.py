@@ -129,3 +129,21 @@ class LogoutView(APIView):
             return Response({"success": True, "message": "Logout successful"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        try:
+            # Delete the user
+            user.delete()
+
+            # Return success response
+            return Response(
+                {"message": "Account deleted successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )

@@ -1,13 +1,13 @@
-import React from "react";
+import React from "react"; 
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const CartPage = () => {
-  const { cartItems = [], removeFromCart, updateCartItemQuantity } = useCart(); // Add updateCartItemQuantity
+  const { cartItems = [], removeFromCart, updateCartItemQuantity } = useCart();
 
-  console.log("Cart Items:", cartItems); // Debugging line
+  console.log("Cart Items:", cartItems); 
 
   const totalPrice = cartItems.reduce((total, item) => total + (Number(item.price) || 0) * item.quantity, 0);
 
@@ -32,40 +32,41 @@ const CartPage = () => {
 
               return (
                 <div key={item.id} className="card mb-3 p-3 d-flex flex-row align-items-center">
-                  {/* Item Image */}
-                  <img
-                    src={itemImage}
-                    alt={item.name}
-                    style={{ width: "80px", height: "80px", objectFit: "cover", marginRight: "15px" }}
-                    onError={(e) => (e.target.src = "/OIP.png")}
-                  />
-
-                  {/* Item Details */}
-                  <div className="flex-grow-1">
-                    <h5>{item.name}</h5>
-                    <p>₦{itemPrice.toFixed(2)} each</p>
-                    <span>Total: ₦{(itemPrice * item.quantity).toFixed(2)}</span>
-                  </div>
+                  {/* Link to Product Details Page */}
+                  <Link to={`/product/${item.id}`} className="d-flex align-items-center" style={{ textDecoration: "none", color: "inherit" }}>
+                    {/* Item Image */}
+                    <img
+                      src={itemImage}
+                      alt={item.name}
+                      style={{ width: "80px", height: "80px", objectFit: "cover", marginRight: "15px" }}
+                      onError={(e) => (e.target.src = "/OIP.png")}
+                    />
+                    {/* Item Details */}
+                    <div className="flex-grow-1">
+                      <h5>{item.name}</h5>
+                      <p>₦{itemPrice.toFixed(2)} each</p>
+                      <span>Total: ₦{(itemPrice * item.quantity).toFixed(2)}</span>
+                    </div>
+                  </Link>
 
                   {/* Quantity Controls */}
                   <div className="d-flex align-items-center">
-                  <button
-  className="btn btn-secondary me-2"
-  style={{ fontSize: "12px", padding: "4px 8px" }} // Custom size
-  onClick={() => updateCartItemQuantity(item.id, -1)}
-  disabled={item.quantity <= 1}
->
-  −
-</button>
-<span>{item.quantity}</span>
-<button
-  className="btn btn-secondary ms-2"
-  style={{ fontSize: "12px", padding: "4px 8px" }} // Custom size
-  onClick={() => updateCartItemQuantity(item.id, 1)}
->
-  +
-</button>
-
+                    <button
+                      className="btn btn-secondary me-2"
+                      style={{ fontSize: "12px", padding: "4px 8px" }}
+                      onClick={() => updateCartItemQuantity(item.id, -1)}
+                      disabled={item.quantity <= 1}
+                    >
+                      −
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      className="btn btn-secondary ms-2"
+                      style={{ fontSize: "12px", padding: "4px 8px" }}
+                      onClick={() => updateCartItemQuantity(item.id, 1)}
+                    >
+                      +
+                    </button>
                   </div>
 
                   {/* Remove Item */}

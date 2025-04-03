@@ -368,10 +368,6 @@ const AddProduct = () => {
         dataToSend.append("images", file);
       });
 
-      imageFiles.forEach(file => {
-        dataToSend.append("images", file);
-      });
-
       await axios.post("http://127.0.0.1:8000/api/owner-products/", dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,

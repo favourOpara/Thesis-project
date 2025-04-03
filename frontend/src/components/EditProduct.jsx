@@ -397,10 +397,6 @@ const EditProduct = () => {
         dataToSend.append("images", file);
       });
 
-      imageFiles.forEach(file => {
-        dataToSend.append("images", file);
-      });
-
       await axios.put(`http://127.0.0.1:8000/api/owner-products/${id}/`, dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,

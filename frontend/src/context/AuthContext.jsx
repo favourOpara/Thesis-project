@@ -28,14 +28,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return;
     }
-  
+
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/user-info/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       console.log("AuthContext - User Data from API:", response.data); // Debugging
       setUser(response.data);
       localStorage.setItem("user", JSON.stringify(response.data)); // **Store user in localStorage**
@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-  
 
   // Function to handle login
   const login = async (accessToken, refreshToken) => {
@@ -58,11 +57,23 @@ export const AuthProvider = ({ children }) => {
     await fetchUserData();
   };
 
-  // Function to handle logout
+  // Function to handle logout and fully clear user data
   const logout = () => {
+    console.log("AuthContext - Logging out user");
+    
+    // Remove user-specific data
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser && storedUser.email) {
+      const cartKey = `cart_${storedUser.email.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      localStorage.removeItem(cartKey); // Remove user's cart
+    }
+    
+    // Clear everything
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    setUser(null); // Clear user data
+    localStorage.removeItem("user");
+    
+    setUser(null); // Reset user state
   };
 
   // Initial fetch on component mount
