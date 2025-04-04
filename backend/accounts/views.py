@@ -54,6 +54,23 @@ class LoginView(APIView):
                 "message": "Invalid credentials"
             }, status=status.HTTP_401_UNAUTHORIZED)
 
+class ChangePasswordView(APIView):
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        
+        if not user.check_password(old_password):
+            return Response(
+                {"error": "Wrong old password"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        user.set_password(new_password)
+        user.save()
+        update_session_auth_hash(request, user)  # Maintain session
+        return Response({"success": "Password updated"})
+    
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.middleware import csrf
 from rest_framework.decorators import api_view
