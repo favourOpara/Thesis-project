@@ -17,6 +17,14 @@ const SellerSignUp = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
+  const passwordRules = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+  
   const validateFields = () => {
     let formErrors = {};
 
@@ -105,10 +113,14 @@ const SellerSignUp = () => {
     textAlign: "center",
   };
 
-  const errorStyle = {
-    color: "red",
+  const errorStyle = { color: "red", fontSize: "0.875rem" };
+  const ruleStyle = (isValid) => ({
+    color: isValid ? "green" : "red",
     fontSize: "0.875rem",
-  };
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  });
 
   return (
     <div style={containerStyle}>
@@ -250,9 +262,27 @@ const SellerSignUp = () => {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                         />
-                        {errors.password && (
-                          <div style={errorStyle}>{errors.password}</div>
-                        )}
+                        {errors.password && <div style={errorStyle}>{errors.password}</div>}
+
+                        {/* Real-time rules */}
+                        <div className="mt-2">
+                          <p style={{ fontWeight: "bold", marginBottom: "0.25rem" }}>Password must contain:</p>
+                          <div style={ruleStyle(passwordRules.length)}>
+                            {passwordRules.length ? "✅" : "❌"} At least 8 characters
+                          </div>
+                          <div style={ruleStyle(passwordRules.uppercase)}>
+                            {passwordRules.uppercase ? "✅" : "❌"} At least one uppercase letter
+                          </div>
+                          <div style={ruleStyle(passwordRules.lowercase)}>
+                            {passwordRules.lowercase ? "✅" : "❌"} At least one lowercase letter
+                          </div>
+                          <div style={ruleStyle(passwordRules.number)}>
+                            {passwordRules.number ? "✅" : "❌"} At least one number
+                          </div>
+                          <div style={ruleStyle(passwordRules.specialChar)}>
+                            {passwordRules.specialChar ? "✅" : "❌"} At least one special character
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -266,9 +296,7 @@ const SellerSignUp = () => {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                         />
-                        {errors.confirmPassword && (
-                          <div style={errorStyle}>{errors.confirmPassword}</div>
-                        )}
+                        {errors.confirmPassword && <div style={errorStyle}>{errors.confirmPassword}</div>}
                       </div>
                     </div>
 

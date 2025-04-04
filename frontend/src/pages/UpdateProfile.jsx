@@ -20,6 +20,23 @@ const UpdateProfile = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  const passwordRules = {
+    length: newPassword.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword),
+    lowercase: /[a-z]/.test(newPassword),
+    number: /[0-9]/.test(newPassword),
+    specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+  };
+
+  const ruleStyle = (isValid) => ({
+    color: isValid ? "green" : "red",
+    fontSize: "0.875rem",
+  });
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -76,31 +93,28 @@ const UpdateProfile = () => {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-  
+
     const confirmDelete = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
     if (!confirmDelete) return;
-  
+
     try {
       const response = await axios.delete("http://127.0.0.1:8000/api/delete-account/", {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
-  
+
       if (response.status === 200) {
         console.log("Account deleted successfully");
-  
-        // Remove only the current user's data
+
         const userId = user.email ? user.email.replace(/[^a-zA-Z0-9]/g, "_") : "guest";
         const CART_STORAGE_KEY = `cart_${userId}`;
-  
+
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         localStorage.removeItem(CART_STORAGE_KEY);
-  
-        // Update state and ensure UI reflects logout
+
         setUser(null);
-  
-        // Delay navigation slightly to ensure state updates
+
         setTimeout(() => {
           navigate("/signin", { replace: true });
         }, 500);
@@ -109,8 +123,45 @@ const UpdateProfile = () => {
       console.error("Error deleting account:", error);
     }
   };
-    
-  
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    if (!Object.values(passwordRules).every(Boolean)) {
+      toast.error("New password does not meet complexity requirements");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/change-password/",
+        {
+          current_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmNewPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Password changed successfully");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to change password");
+    }
+  };
 
   return (
     <>
@@ -148,7 +199,56 @@ const UpdateProfile = () => {
               {loading ? "Updating..." : "Update Profile"}
             </button>
           </form>
-          <div className="d-flex justify-content-between">
+
+          {/* CHANGE PASSWORD SECTION */}
+          <h4 className="mt-5">Change Password</h4>
+          <form onSubmit={handleChangePassword}>
+            <div className="mb-3">
+              <label className="form-label">Current Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+              <div className="mt-2">
+                <div style={ruleStyle(passwordRules.length)}>• At least 8 characters</div>
+                <div style={ruleStyle(passwordRules.uppercase)}>• One uppercase letter</div>
+                <div style={ruleStyle(passwordRules.lowercase)}>• One lowercase letter</div>
+                <div style={ruleStyle(passwordRules.number)}>• One number</div>
+                <div style={ruleStyle(passwordRules.specialChar)}>• One special character</div>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Confirm New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-warning w-100">
+              Change Password
+            </button>
+          </form>
+
+          <div className="d-flex justify-content-between mt-4">
             <button className="btn btn-secondary" onClick={() => navigate("/user-profile")}>Back to Profile</button>
             <button className="btn btn-danger" onClick={handleDeleteAccount}>Delete Account</button>
           </div>
