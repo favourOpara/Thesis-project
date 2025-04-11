@@ -2,12 +2,19 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignUpSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate, update_session_auth_hash
+from .serializers import SignUpSerializer, UpdateProfileSerializer, ChangePasswordSerializer
 from .models import CustomUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.middleware import csrf
+from rest_framework.decorators import api_view, permission_classes
 
+# Sign Up View
 class SignUpView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
@@ -21,16 +28,9 @@ class SignUpView(APIView):
                 },
                 status=status.HTTP_201_CREATED,
             )
-        # print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
-from rest_framework import status
-
+# Login View
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -54,82 +54,32 @@ class LoginView(APIView):
                 "message": "Invalid credentials"
             }, status=status.HTTP_401_UNAUTHORIZED)
 
+# Change Password View
 class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can change password
+    authentication_classes = [JWTAuthentication]  # JWT authentication for security
+
     def post(self, request):
-        user = request.user
-        old_password = request.data.get('old_password')
-        new_password = request.data.get('new_password')
-        
-        if not user.check_password(old_password):
-            return Response(
-                {"error": "Wrong old password"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        user.set_password(new_password)
-        user.save()
-        update_session_auth_hash(request, user)  # Maintain session
-        return Response({"success": "Password updated"})
-    
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django.middleware import csrf
-from rest_framework.decorators import api_view
+        user = request.user  # Get the authenticated user
+        serializer = ChangePasswordSerializer(data=request.data, context={'user': user})
 
-
-@api_view(['GET', 'POST']) 
-@csrf_exempt
-def test_view(request):
-    print(request.META)
-    csrf_token = csrf.get_token(request)
-    print("CSRF Token in View:", csrf_token)
-    data = {"message": "Hello, world!"}
-    return Response(data)
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_info(request):
-    if request.user.is_authenticated:
-        user = request.user
-        return Response({
-            "name": user.first_name or user.email,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone_number": user.phone_number,
-            "address": user.address,
-            "user_type": getattr(user, 'user_type', 'Unknown')
-        })
-    else:
-        return Response({"error": "User is anonymous"}, status=401)
-    
-from .serializers import UpdateProfileSerializer
-
-class UpdateProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        serializer = UpdateProfileSerializer(user)
-        return Response(serializer.data)
-
-    def put(self, request):
-        user = request.user
-        serializer = UpdateProfileSerializer(user, data=request.data, partial=True)  # Allow partial updates
         if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Profile updated successfully!", "data": serializer.data})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
+            # Extract the old and new password
+            old_password = serializer.validated_data.get('old_password')
+            new_password = serializer.validated_data.get('new_password')
 
+            # Set the new password
+            user.set_password(new_password)
+            user.save()
+
+            # Update session hash to keep the user logged in after password change
+            update_session_auth_hash(request, user)  # Maintains session even after password change
+
+            return Response({"success": "Password updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Logout View
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -146,6 +96,8 @@ class LogoutView(APIView):
             return Response({"success": True, "message": "Logout successful"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# Delete Account View
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -164,3 +116,48 @@ class DeleteAccountView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+
+# User Info View
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_info(request):
+    if request.user.is_authenticated:
+        user = request.user
+        return Response({
+            "name": user.first_name or user.email,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+            "address": user.address,
+            "user_type": getattr(user, 'user_type', 'Unknown')
+        })
+    else:
+        return Response({"error": "User is anonymous"}, status=401)
+
+# Profile Update View
+class UpdateProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UpdateProfileSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        user = request.user
+        serializer = UpdateProfileSerializer(user, data=request.data, partial=True)  # Allow partial updates
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Profile updated successfully!", "data": serializer.data})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Test View for CSRF Token (can be removed in production)
+@api_view(['GET', 'POST'])
+@csrf_exempt
+def test_view(request):
+    print(request.META)
+    csrf_token = csrf.get_token(request)
+    print("CSRF Token in View:", csrf_token)
+    data = {"message": "Hello, world!"}
+    return Response(data)

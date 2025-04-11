@@ -1,18 +1,23 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext.jsx";
 import { NotificationContext } from "../context/NotificationContext.jsx";
+import { useAddToCartMutation } from "../redux/api/cartApi"; // ✅ new
 import "./ProductList.css";
 
 const ProductCard = ({ product }) => {
   const { showNotification } = useContext(NotificationContext);
-  const { addToCart } = useCart();
+  const [addToCart] = useAddToCartMutation(); // ✅ new
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await addToCart(product);
-    showNotification("Added to cart");
+    try {
+      await addToCart(product).unwrap(); // ✅ RTK Query handles async
+      showNotification("Added to cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      showNotification("Failed to add to cart");
+    }
   };
 
   const productImage =

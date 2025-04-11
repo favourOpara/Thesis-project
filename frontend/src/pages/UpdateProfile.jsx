@@ -127,23 +127,25 @@ const UpdateProfile = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
 
+    // Confirm new passwords match
     if (newPassword !== confirmNewPassword) {
       toast.error("New passwords do not match");
       return;
     }
 
+    // Validate password complexity
     if (!Object.values(passwordRules).every(Boolean)) {
       toast.error("New password does not meet complexity requirements");
       return;
     }
 
     try {
+      // Call the backend API to change the password
       const response = await axios.post(
         "http://127.0.0.1:8000/api/change-password/",
         {
-          current_password: currentPassword,
+          old_password: currentPassword,  // Make sure this matches the backend's expected key
           new_password: newPassword,
-          confirm_password: confirmNewPassword,
         },
         {
           headers: {
@@ -152,6 +154,7 @@ const UpdateProfile = () => {
         }
       );
 
+      // Handle success
       if (response.status === 200) {
         toast.success("Password changed successfully");
         setCurrentPassword("");
@@ -159,6 +162,7 @@ const UpdateProfile = () => {
         setConfirmNewPassword("");
       }
     } catch (err) {
+      // Handle error (backend may send a message like "Incorrect password")
       toast.error(err.response?.data?.message || "Failed to change password");
     }
   };
