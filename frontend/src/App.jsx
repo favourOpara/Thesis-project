@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
@@ -29,17 +29,22 @@ import AddProduct from "./pages/AddProduct";
 import { AuthProvider } from "./context/AuthContext";
 import { SearchProvider } from "./context/SearchContext";
 import { NotificationProvider } from "./context/NotificationContext";
-import { CartProvider } from "./context/CartContext";  // Import CartProvider
+import { CartProvider } from "./context/CartContext";
 import GlobalNotification from "./components/GlobalNotification";
+import ProductList from "./components/ProductList";
+import SearchResults from "./components/SearchResults";
+import CookieConsent from "./components/CookieConsent"; // <-- Import CookieConsent
 
 const App = () => {
   return (
     <AuthProvider>
       <SearchProvider>
         <NotificationProvider>
-          <CartProvider>  {/* Wrap your app with CartProvider */}
+          <CartProvider>
             <Router>
               <GlobalNotification />
+              {/* Cookie prompt is always available at the root */}
+              <CookieConsent />
               <main>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -56,6 +61,8 @@ const App = () => {
                   <Route path="/seller-dashboard" element={<SellerProductListTest />} />
                   <Route path="/edit-product/:id" element={<EditProduct />} />
                   <Route path="*" element={<NotFound />} />
+                  <Route path="/products" element={<ProductList />} />
+                  <Route path="/search" element={<SearchResults />} />
                 </Routes>
               </main>
             </Router>

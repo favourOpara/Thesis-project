@@ -1,0 +1,55 @@
+/* SearchResults.jsx Custom Styles - NO className conflict! */
+
+/* Use Bootstrap's .container for layout—no need for flex container here */
+.search-results-outer {
+  padding-top: 70px;  /* or whatever your header height is */
+  min-height: 80vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff !important;   /* Ensure entire background is white */
+}
+
+/* Section holding the grid */
+.search-results-section {
+  width: 100%;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Title styling */
+.search-results-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: left;
+  padding-left: 16px;
+}
+
+/* Product grid for results */
+.search-results-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  width: 100%;
+  padding: 0 16px;
+}
+
+/* Responsive: 3 columns on mobile, tighter gaps */
+@media (max-width: 768px) {
+  .search-results-outer {
+    padding-top: 60px;
+    min-height: 70vh;
+    background: #fff !important; /* Always force white on mobile too */
+  }
+  .search-results-section {
+    width: 100%;
+    padding: 0;
+  }
+  .search-results-grid {
+    grid-template-columns: repeat(3, 1fr); /* or repeat(2, 1fr) for tighter phones */
+    gap: 10px;
+    padding: 0 4px;
+  }
+}

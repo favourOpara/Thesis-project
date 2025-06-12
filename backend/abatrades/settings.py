@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'accounts',
     'products',
     'cart',
+    'recommendations',
 
     'django.contrib.sites',
     'allauth',

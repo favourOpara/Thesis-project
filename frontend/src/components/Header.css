@@ -4,6 +4,12 @@
   width: 100%;
   z-index: 1030;
 }
+.dropdown-menu.show {
+  display: block;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+}
 
 @media (max-width: 991px) {
   /* Hamburger icon */

@@ -23,7 +23,7 @@
   border-radius: 0px;
   flex: 1;
   min-width: 280px; /* Prevents sections from being too narrow */
-  max-width: 33%;   /* Ensures three sections in a row if you want 3 side-by-side */
+  max-width: 35%;   /* Ensures three sections in a row if you want 3 side-by-side */
   text-align: center;
 }
 

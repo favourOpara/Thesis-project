@@ -8,7 +8,7 @@
   justify-content: flex-start;
   flex-wrap: nowrap; /* On desktop, sections remain side-by-side */
   width: 100%;
-  max-width: 1200px;
+  max-width: 1300px;
   margin-left: auto;
   margin-right: auto;
 }

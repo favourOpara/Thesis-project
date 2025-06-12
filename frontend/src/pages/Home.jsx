@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect, useContext } from "react";
 import Layout from "../components/Layout";
 import SideBar from "../components/SideBar";
 import Header from "../components/Header";
@@ -17,14 +17,18 @@ import CookwithAbatrades from "../components/CookwithAbatrades";
 import BuildwithAbatrades from "../components/BuildwithAbatrades";
 import SleepwithAbatrades from "../components/SleepwithAbatrades";
 import StayPrettyWithAbatrades from "../components/StayPrettyWithAbatrades";
-import GameWithAbatrades from  "../components/GameWithAbatrades";
+import GameWithAbatrades from "../components/GameWithAbatrades";
 import TechWithAbatrades from "../components/TechWithAbatrades";
 import TopPicksInYourRegion from "../components/TopPicksInYourRegion";
 import ScrollingBanner from "../components/ScrollingBanner";
+import SearchContext from "../context/SearchContext";
+import SearchResults from "../components/SearchResults";
+import CookieConsent from "../components/CookieConsent"; 
 
 const Home = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { searchQuery } = useContext(SearchContext);
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev);
@@ -49,13 +53,16 @@ const Home = () => {
   return (
     <div>
       <Layout>
+         <CookieConsent />
         <Header toggleSidebar={toggleSidebar} />
         <div className={`container ${isSidebarOpen ? "dimmed" : ""}`}>
           {isSidebarOpen && <div className="backdrop"></div>}
           {isSidebarOpen && <SideBar toggleSidebar={toggleSidebar} />}
         </div>
 
-        {user && user.user_type === "seller" ? (
+        {searchQuery ? (
+          <SearchResults />
+        ) : user && user.user_type === "seller" ? (
           <SellerProductListTest />
         ) : (
           <>
@@ -82,7 +89,8 @@ const Home = () => {
 
             {/* 5) Scrolling Banner with 2 images (automatically scrolls horizontally) */}
             <ScrollingBanner />
-            {/* 6) Next recommended section*/}
+
+            {/* 6) Next recommended sections */}
             <div className="recommended-sections">
               <CookwithAbatrades />
               <BuildwithAbatrades />
@@ -97,7 +105,8 @@ const Home = () => {
               <TopPicksInYourRegion />
               <MostVisitedStores />
             </div>
-            {/* 6) More items */}
+
+            {/* 7) More items */}
             <RelatedToYou />
             <div className="additional-section-container">
               <TopPicksInYourRegion />

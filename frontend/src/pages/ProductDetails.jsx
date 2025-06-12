@@ -7,6 +7,8 @@ import Spinner from "../components/Spinner";
 import Header from "../components/Header";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/splide/dist/css/splide.min.css";
+import { addProductToHistory } from "../utils/localHistory";
+import { hasConsentedToCookies } from "../utils/cookieConsent"; // <-- Import this
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -21,11 +23,9 @@ const ProductDetails = () => {
         const response = await axios.get(
           `http://127.0.0.1:8000/api/products/${id}/`
         );
-        console.log("Product Data:", response.data);
         setProduct(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching product:", error);
         setLoading(false);
         toast.error("Failed to load product details. Please try again.");
       }
@@ -34,15 +34,26 @@ const ProductDetails = () => {
     fetchProductDetails();
   }, [id]);
 
+  // ONLY SAVE TO HISTORY IF COOKIES ACCEPTED
+  useEffect(() => {
+    if (product && hasConsentedToCookies()) {
+      addProductToHistory(product);
+    }
+  }, [product]);
+
   const handleSizeSelection = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-    const invalidSizes = selectedOptions.filter(size => !product.size.includes(size));
-    
+    const selectedOptions = Array.from(e.target.selectedOptions).map(
+      (option) => option.value
+    );
+    const invalidSizes = selectedOptions.filter(
+      (size) => !product.size.includes(size)
+    );
+
     if (invalidSizes.length > 0) {
-      toast.error(`Size not available: ${invalidSizes.join(', ')}`);
+      toast.error(`Size not available: ${invalidSizes.join(", ")}`);
       return;
     }
-    
+
     setSelectedSizes(selectedOptions);
   };
 
@@ -86,7 +97,6 @@ const ProductDetails = () => {
           <div className="col-xxl-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
             <div className="widget-content widget-content-area br-8">
               <div className="row justify-content-center" style={{ marginTop: "130px" }}>
-                
                 <div className="col-xxl-5 col-xl-6 col-lg-7 col-md-7 col-sm-9 col-12 d-flex justify-content-center align-items-center">
                   <Splide
                     options={{

@@ -6,7 +6,10 @@
   margin-top: 20px;
   flex-wrap: wrap; /* Ensures sections wrap properly on smaller screens */
 }
-
+.product-card-category-link:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
 /* Each individual section */
 .recommended-section {
   flex: 1;

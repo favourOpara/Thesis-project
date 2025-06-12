@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Q
+
 from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
 from .serializers import (
     ShopSerializer,
@@ -14,7 +16,6 @@ from .serializers import (
     ShippingAddressSerializer,
     PaymentSerializer,
 )
-
 
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
@@ -29,13 +30,12 @@ class ShopViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-
+# ======= PRODUCT LOGIC SECTION =======
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -43,28 +43,43 @@ class ProductViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(quantity__gt=0)
+        queryset = super().get_queryset().filter(
+            is_active=True, quantity__gt=0
+        )
         search = self.request.query_params.get('search')
         if search:
-            queryset = queryset.filter(name__icontains=search)
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(category__icontains=search) |
+                Q(sub_category__icontains=search)
+            )
         return queryset
 
     def perform_create(self, serializer):
-        product = serializer.save(owner=self.request.user)
-        images = self.request.FILES.getlist('images')  # Get multiple images
+        # If the request explicitly sets is_active, use it; otherwise, default to True.
+        is_active = self.request.data.get('is_active')
+        if is_active is not None:
+            is_active = str(is_active).lower() in ['true', '1', 'yes']
+        else:
+            is_active = True
 
+        product = serializer.save(owner=self.request.user, is_active=is_active)
+        images = self.request.FILES.getlist('images')
         for image in images:
             ProductImage.objects.create(product=product, image=image)
 
     def perform_update(self, serializer):
         product = serializer.save()
-        images = self.request.FILES.getlist('images')
+        # Auto-deactivate if quantity goes to zero
+        if product.quantity == 0 and product.is_active:
+            product.is_active = False
+            product.save(update_fields=['is_active'])
 
+        images = self.request.FILES.getlist('images')
         if images:
-            product.images.all().delete()  # Delete old images
+            product.images.all().delete()
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
-
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
@@ -74,7 +89,6 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
-
 
 class OwnerProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
@@ -91,35 +105,36 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        is_active = request.data.get('is_active')
+        if is_active is not None:
+            is_active = str(is_active).lower() in ['true', '1', 'yes']
+        else:
+            is_active = True
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            product = serializer.save(owner=self.request.user)
-            images = request.FILES.getlist('images')  # Get multiple images
-
+            product = serializer.save(owner=self.request.user, is_active=is_active)
+            images = request.FILES.getlist('images')
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        product = self.get_object()
-        serializer = self.get_serializer(product)
-        return Response(serializer.data)
 
     def update(self, request, pk=None):
         product = self.get_object()
         serializer = self.get_serializer(product, data=request.data, partial=True)
-
         if serializer.is_valid():
             product = serializer.save()
-            images = request.FILES.getlist('images')
+            # Auto-deactivate if quantity goes to zero
+            if product.quantity == 0 and product.is_active:
+                product.is_active = False
+                product.save(update_fields=['is_active'])
 
+            images = request.FILES.getlist('images')
             if images:
-                product.images.all().delete()  # Remove old images
+                product.images.all().delete()
                 for image in images:
                     ProductImage.objects.create(product=product, image=image)
-
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -127,7 +142,6 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -152,18 +166,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_item.save()
         return Response({'message': 'Item added successfully.'}, status=status.HTTP_201_CREATED)
 
-
 class OrderItemViewSet(viewsets.ModelViewSet):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
 class ShippingAddressViewSet(viewsets.ModelViewSet):
     queryset = ShippingAddress.objects.all()
     serializer_class = ShippingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
-
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
