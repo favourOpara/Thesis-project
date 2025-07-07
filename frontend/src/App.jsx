@@ -15,7 +15,7 @@ import EditProduct from "./components/EditProduct";
 import SellerProductListTest from "./components/SellerProductListTest";
 import Home from "./pages/Home";
 import SignIn from "./pages/Signin";
-import SignUp from "./pages/SignUp";
+import SignUp from "./pages/Signup";
 import CartPage from "./pages/Cart";
 import UserProfile from "./pages/UserProfile";
 import ProductDetails from "./pages/ProductDetails";
