@@ -21,7 +21,7 @@ const ProductDetails = () => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/products/${id}/`
+          `inspiring-spontaneity-production.up.railway.app/api/products/${id}/`
         );
         setProduct(response.data);
         setLoading(false);
@@ -73,14 +73,14 @@ const ProductDetails = () => {
   if (product?.main_image_url) {
     const mainImage = product.main_image_url.startsWith("http")
       ? product.main_image_url
-      : `http://127.0.0.1:8000${product.main_image_url}`;
+      : `inspiring-spontaneity-production.up.railway.app${product.main_image_url}`;
     productImagesSet.add(mainImage);
   }
   if (Array.isArray(product?.images) && product.images.length > 0) {
     product.images.forEach((img) => {
       const imageUrl = img.image_url.startsWith("http")
         ? img.image_url
-        : `http://127.0.0.1:8000${img.image_url}`;
+        : `inspiring-spontaneity-production.up.railway.app${img.image_url}`;
       productImagesSet.add(imageUrl);
     });
   }

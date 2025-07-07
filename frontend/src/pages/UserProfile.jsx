@@ -29,7 +29,7 @@ const Profile = () => {
 
       // Send logout request to the backend
       await axios.post(
-        "http://127.0.0.1:8000/api/signout/", // Update with your actual logout endpoint
+        "inspiring-spontaneity-production.up.railway.app/api/signout/", // Update with your actual logout endpoint
         { refresh: refreshToken },
         {
           headers: {

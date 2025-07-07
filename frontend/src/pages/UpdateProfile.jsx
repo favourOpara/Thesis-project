@@ -40,7 +40,7 @@ const UpdateProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/update-profile/", {
+        const response = await axios.get("inspiring-spontaneity-production.up.railway.app/api/update-profile/", {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         });
         setProfile(response.data);
@@ -63,7 +63,7 @@ const UpdateProfile = () => {
     let updatedUser = null;
     toast.promise(
       axios
-        .put("http://127.0.0.1:8000/api/update-profile/", profile, {
+        .put("inspiring-spontaneity-production.up.railway.app/api/update-profile/", profile, {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         })
         .then((response) => {
@@ -98,7 +98,7 @@ const UpdateProfile = () => {
     if (!confirmDelete) return;
 
     try {
-      const response = await axios.delete("http://127.0.0.1:8000/api/delete-account/", {
+      const response = await axios.delete("inspiring-spontaneity-production.up.railway.app/api/delete-account/", {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
@@ -142,7 +142,7 @@ const UpdateProfile = () => {
     try {
       // Call the backend API to change the password
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/change-password/",
+        "inspiring-spontaneity-production.up.railway.app/api/change-password/",
         {
           old_password: currentPassword,  // Make sure this matches the backend's expected key
           new_password: newPassword,

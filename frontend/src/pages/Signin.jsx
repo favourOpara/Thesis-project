@@ -37,7 +37,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // try {
-    //   const response = await axios.post("http://127.0.0.1:8000/api/signin/", {
+    //   const response = await axios.post("inspiring-spontaneity-production.up.railway.app/api/signin/", {
     //     email,
     //     password,
     //   }); // Update with your API endpoint
@@ -52,7 +52,7 @@ const SignIn = () => {
     // }
 
     toast.promise(
-      axios.post("http://127.0.0.1:8000/api/signin/", {
+      axios.post("inspiring-spontaneity-production.up.railway.app/api/signin/", {
         email,
         password,
       }),

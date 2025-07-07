@@ -8,7 +8,7 @@ const CookwithAbatrades = () => {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/products/")
+      .get("inspiring-spontaneity-production.up.railway.app/api/products/")
       .then((res) => setProducts(res.data))
       .catch((err) => console.error("Error fetching CookwithAbatrades:", err));
   }, []);

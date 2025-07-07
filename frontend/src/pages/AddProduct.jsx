@@ -368,7 +368,7 @@ const AddProduct = () => {
         dataToSend.append("images", file);
       });
 
-      await axios.post("http://127.0.0.1:8000/api/owner-products/", dataToSend, {
+      await axios.post("inspiring-spontaneity-production.up.railway.app/api/owner-products/", dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

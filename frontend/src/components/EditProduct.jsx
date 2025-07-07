@@ -240,7 +240,7 @@ const EditProduct = () => {
       try {
         const token = localStorage.getItem("accessToken");
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/owner-products/${id}/`,
+          `inspiring-spontaneity-production.up.railway.app/api/owner-products/${id}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -397,7 +397,7 @@ const EditProduct = () => {
         dataToSend.append("images", file);
       });
 
-      await axios.put(`http://127.0.0.1:8000/api/owner-products/${id}/`, dataToSend, {
+      await axios.put(`inspiring-spontaneity-production.up.railway.app/api/owner-products/${id}/`, dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
