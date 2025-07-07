@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Spinner from "./Spinner";
-import "./sellerproductlisttest.css"; // Uses new scoped CSS
+import "./SellerProductListTest.css"; // Uses new scoped CSS
 
 const SellerProductList = () => {
   const [products, setProducts] = useState([]);
