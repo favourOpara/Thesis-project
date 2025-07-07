@@ -90,9 +90,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'abatrades.wsgi.application'
 
 # Database
-if 'DATABASE_URL' in os.environ:
+if os.environ.get('RAILWAY_ENVIRONMENT'):
     DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.config(conn_max_age=600)
     }
 else:
     DATABASES = {
