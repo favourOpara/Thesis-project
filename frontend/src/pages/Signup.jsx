@@ -46,7 +46,7 @@ const SignUp = () => {
       user_type: "buyer",
     };
 
-    toast.promise(axios.post("inspiring-spontaneity-production.up.railway.app/api/signup/", userData), {
+    toast.promise(axios.post("https://inspiring-spontaneity-production.up.railway.app/api/signup/", userData), {
       pending: "Signing up...",
       success: {
         render({ data }) {

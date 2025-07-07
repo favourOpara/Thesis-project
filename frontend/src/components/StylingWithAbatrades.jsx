@@ -8,7 +8,7 @@ const StylingWithAbatrades = () => {
 
   useEffect(() => {
     axios
-      .get("inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
       .then((response) => setProducts(response.data))
       .catch((error) => console.error("Error fetching products:", error));
   }, []);

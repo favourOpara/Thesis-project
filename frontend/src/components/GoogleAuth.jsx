@@ -15,8 +15,8 @@ function GoogleAuth() {
     };
     try {
       const response = await axios.post(
-        // "inspiring-spontaneity-production.up.railway.app/api/api/social/login/",
-        "inspiring-spontaneity-production.up.railway.app/api/test/",
+        // "https://inspiring-spontaneity-production.up.railway.app/api/api/social/login/",
+        "https://inspiring-spontaneity-production.up.railway.app/api/test/",
         {
           access_token: credentialResponse.credential,
           headers: {

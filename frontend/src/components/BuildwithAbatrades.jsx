@@ -8,7 +8,7 @@ const BuildwithAbatrades = () => {
 
   useEffect(() => {
     axios
-      .get("inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
       .then((res) => setProducts(res.data))
       .catch((err) => console.error("Error fetching BuildwithAbatrades:", err));
   }, []);

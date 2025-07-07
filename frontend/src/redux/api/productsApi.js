@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const productsApi = createApi({
   reducerPath: "productsApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "inspiring-spontaneity-production.up.railway.app/api/" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "https://inspiring-spontaneity-production.up.railway.app/api/" }),
   endpoints: (builder) => ({
     getProducts: builder.query({
       query: (searchQuery = "") => {

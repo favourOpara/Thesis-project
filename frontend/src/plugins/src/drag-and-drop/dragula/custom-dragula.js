@@ -94,7 +94,7 @@ function useNative () {
 /**
  * Cross-browser `CustomEvent` constructor.
  *
- * https://developer.mozilla.org/en-US/docs/Webinspiring-spontaneity-production.up.railway.app/api/CustomEvent.CustomEvent
+ * https://developer.mozilla.org/en-US/docs/Webhttps://inspiring-spontaneity-production.up.railway.app/api/CustomEvent.CustomEvent
  *
  * @public
  */

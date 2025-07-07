@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await axios.get("inspiring-spontaneity-production.up.railway.app/api/user-info/", {
+      const response = await axios.get("https://inspiring-spontaneity-production.up.railway.app/api/user-info/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
