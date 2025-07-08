@@ -225,17 +225,18 @@
   background-color: #485a6b;
 }
 
+/* FIXED: Higher z-index and proper positioning for desktop dropdown */
 .desktop-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: fixed; /* Changed from absolute to fixed */
+  top: 110px; /* Position below the desktop sidebar */
+  left: 0.75rem; /* Align with the categories button */
   width: 300px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1040;
-  max-height: 350px; /* Limit height */
+  z-index: 10050; /* FIXED: Much higher z-index */
+  max-height: 60vh; /* FIXED: Use viewport height instead of fixed pixels */
   overflow-y: auto; /* Enable scrolling */
   opacity: 0;
   transform: translateY(-10px);
@@ -272,6 +273,7 @@
   background-color: #f8f9fa;
 }
 
+/* FIXED: Proper subcategory content positioning */
 .desktop-subcategory-content {
   max-height: 0;
   overflow: hidden;
@@ -280,7 +282,8 @@
 }
 
 .desktop-subcategory-content.open {
-  max-height: 300px;
+  max-height: 250px; /* FIXED: Reduced max height */
+  overflow-y: auto; /* FIXED: Enable scrolling for subcategories */
 }
 
 .desktop-subcategory-link {
@@ -333,4 +336,15 @@
 .desktop-subcategory-content {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* ADDED: Prevent body scroll when dropdown is open on mobile */
+.mobile-sidebar.open {
+  transform: translateX(0);
+}
+
+/* ADDED: Additional safety for high z-index elements */
+.desktop-dropdown * {
+  position: relative;
+  z-index: inherit;
 }
