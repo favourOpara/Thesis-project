@@ -8,7 +8,7 @@ const RelatedToYou = () => {
 
   useEffect(() => {
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("http://127.0.0.1:8000/api/products/")
       .then((response) => 
         setProducts(response.data.slice(0, 20)) // Limit to 20 products
       )

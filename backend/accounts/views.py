@@ -30,7 +30,7 @@ class SignUpView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Login View
+# Login View - UPDATED for case-insensitive email
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -38,16 +38,36 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        user = authenticate(request, username=email, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
+        if not email or not password:
             return Response({
-                "success": True,
-                "message": "Login successful",
-                "access": str(refresh.access_token),
-                "refresh": str(refresh)
-            }, status=status.HTTP_200_OK)
+                "success": False,
+                "message": "Email and password are required"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Case-insensitive email lookup
+            user = CustomUser.objects.get(email__iexact=email)
+        except CustomUser.DoesNotExist:
+            return Response({
+                "success": False,
+                "message": "Invalid credentials"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Check password
+        if user.check_password(password):
+            if user.is_active:
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "success": True,
+                    "message": "Login successful",
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh)
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    "success": False,
+                    "message": "Account is disabled"
+                }, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({
                 "success": False,

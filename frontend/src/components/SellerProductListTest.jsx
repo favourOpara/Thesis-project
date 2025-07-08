@@ -8,12 +8,23 @@ import "./SellerProductListTest.css"; // Uses new scoped CSS
 const SellerProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
 
+  // Handle window resize to detect mobile/desktop
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/owner-products", {
+      .get("http://127.0.0.1:8000/api/owner-products", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -31,12 +42,17 @@ const SellerProductList = () => {
   const handleAddProductClick = () => navigate("/add-product");
   const handleViewProduct = (productId) => navigate(`/product/${productId}`); // ✅ Correctly routes to ProductDetails
   const handleEditProduct = (productId) => navigate(`/edit-product/${productId}`);
+  
+  // Navigate to main homepage with parameter to force customer view
+  const handleReturnToMainHomepage = () => {
+    window.location.href = "/?view=customer";
+  };
 
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await axios.delete(`https://inspiring-spontaneity-production.up.railway.app/api/owner-products/${productId}/`, {
+      await axios.delete(`http://127.0.0.1:8000/api/owner-products/${productId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +91,32 @@ const SellerProductList = () => {
 
   return (
     <div className="seller-product-list"> {/*Scoped for CSS isolation */}
-      <h3 className="title">Your Products</h3>
+      {/* Header section with conditional styling */}
+      <div className={`header-section ${isMobile ? 'mobile-spacing' : 'desktop-spacing'}`}>
+        <h3 className="title">Your Products</h3>
+        <button 
+          className="return-homepage-btn" 
+          onClick={handleReturnToMainHomepage}
+          title="Return to Main Homepage"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9,22 9,12 15,12 15,22"></polyline>
+          </svg>
+          <span>Return to Main Homepage</span>
+        </button>
+      </div>
+
       <div className="button-container">
         <button className="add-product-btn" onClick={handleAddProductClick}>
           Add Product

@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import Layout from "../components/Layout";
-import SideBar from "../components/SideBar";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
 import "./Home.css";
@@ -26,71 +25,39 @@ import SearchResults from "../components/SearchResults";
 import CookieConsent from "../components/CookieConsent"; 
 
 const Home = () => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
   const { searchQuery } = useContext(SearchContext);
-
-  const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const sidebar = document.querySelector(".sidebar");
-      if (isSidebarOpen && sidebar && !sidebar.contains(event.target)) {
-        setSidebarOpen(false);
-      }
-    };
-
-    if (isSidebarOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isSidebarOpen]);
+  
+  // Check if seller wants to view customer homepage
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceCustomerView = urlParams.get('view') === 'customer';
 
   return (
     <div>
       <Layout>
-         <CookieConsent />
-        <Header toggleSidebar={toggleSidebar} />
-        <div className={`container ${isSidebarOpen ? "dimmed" : ""}`}>
-          {isSidebarOpen && <div className="backdrop"></div>}
-          {isSidebarOpen && <SideBar toggleSidebar={toggleSidebar} />}
-        </div>
-
+        <CookieConsent />
+        <Header />
+        
         {searchQuery ? (
           <SearchResults />
-        ) : user && user.user_type === "seller" ? (
+        ) : user && user.user_type === "seller" && !forceCustomerView ? (
           <SellerProductListTest />
         ) : (
           <>
             <Hero />
-
-            {/* 1) Recommended sections */}
+            {/* Rest of your components... */}
             <div className="recommended-sections">
               <RecommendedForYou />
               <StylingWithAbatrades />
               <GymWears />
             </div>
-
-            {/* 2) Categories Section */}
             <Categories />
-
-            {/* 3) Additional Section: Wholesale + Most Visited */}
             <div className="additional-section-container">
               <WholesaleProducts />
               <MostVisitedStores />
             </div>
-
-            {/* 4) Related to Items You've Viewed */}
             <RelatedToYou />
-
-            {/* 5) Scrolling Banner with 2 images (automatically scrolls horizontally) */}
             <ScrollingBanner />
-
-            {/* 6) Next recommended sections */}
             <div className="recommended-sections">
               <CookwithAbatrades />
               <BuildwithAbatrades />
@@ -105,8 +72,6 @@ const Home = () => {
               <TopPicksInYourRegion />
               <MostVisitedStores />
             </div>
-
-            {/* 7) More items */}
             <RelatedToYou />
             <div className="additional-section-container">
               <TopPicksInYourRegion />

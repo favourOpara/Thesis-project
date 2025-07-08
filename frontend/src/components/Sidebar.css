@@ -1,0 +1,336 @@
+/* Sidebar Styles */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-sidebar {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: 300px;
+  height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
+  z-index: 1041;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+  visibility: visible;
+}
+
+.mobile-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.menu-item-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.menu-item-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-decoration: none;
+}
+
+.menu-icon {
+  margin-right: 0.75rem;
+  width: 20px;
+  height: 20px;
+  opacity: 0.9;
+}
+
+.dropdown-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.dropdown-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(90deg);
+}
+
+.dropdown-content {
+  max-height: 0;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-content.open {
+  max-height: 300px; /* Limit height to make it scrollable */
+  overflow-y: auto; /* Enable scrolling */
+}
+
+.category-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.category-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.category-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.subcategory-content {
+  max-height: 0;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.3);
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subcategory-content.open {
+  max-height: 400px;
+}
+
+.subcategory-link {
+  display: block;
+  padding: 0.4rem 3rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.subcategory-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-decoration: none;
+}
+
+.subcategory-link:last-child {
+  border-bottom: none;
+}
+
+/* Desktop sidebar styles */
+.desktop-sidebar {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
+  z-index: 1030;
+  padding: 0.25rem 0.75rem; /* Reduced padding */
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Reduced gap */
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  height: 40px; /* Reduced height */
+  overflow-x: auto; /* Allow horizontal scrolling if needed */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.categories-dropdown {
+  position: relative;
+}
+
+.categories-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* Reduced gap */
+  background-color: #37475A;
+  padding: 0.25rem 0.5rem; /* Reduced padding */
+  border-radius: 3px; /* Smaller radius */
+  cursor: pointer;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 0.8rem; /* Smaller font */
+  transition: all 0.2s ease;
+}
+
+.categories-btn:hover {
+  background-color: #485a6b;
+}
+
+.desktop-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 300px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1040;
+  max-height: 350px; /* Limit height */
+  overflow-y: auto; /* Enable scrolling */
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: dropdownSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes dropdownSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.desktop-category-item {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.desktop-category-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.desktop-category-toggle:hover {
+  background-color: #f8f9fa;
+}
+
+.desktop-subcategory-content {
+  max-height: 0;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.desktop-subcategory-content.open {
+  max-height: 300px;
+}
+
+.desktop-subcategory-link {
+  display: block;
+  padding: 0.5rem 2rem;
+  text-decoration: none;
+  color: #666;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.desktop-subcategory-link:hover {
+  background-color: #e9ecef;
+  color: #333;
+  text-decoration: none;
+}
+
+.desktop-menu-link {
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* Reduced gap */
+  font-size: 0.8rem; /* Smaller font */
+  padding: 0.25rem 0; /* Reduced padding */
+  white-space: nowrap;
+  transition: color 0.2s ease;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.desktop-menu-link:hover {
+  color: #FF9900;
+  text-decoration: none;
+}
+
+/* Hide scrollbars completely */
+.mobile-sidebar::-webkit-scrollbar,
+.desktop-dropdown::-webkit-scrollbar,
+.dropdown-content::-webkit-scrollbar,
+.subcategory-content::-webkit-scrollbar,
+.desktop-subcategory-content::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-sidebar,
+.desktop-dropdown,
+.dropdown-content,
+.subcategory-content,
+.desktop-subcategory-content {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}

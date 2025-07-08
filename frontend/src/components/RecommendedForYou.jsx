@@ -6,8 +6,8 @@ import ProductCard from "./ProductCard";
 import { hasConsentedToCookies } from "../utils/cookieConsent";
 
 const LOCAL_HISTORY_KEY = "viewed_products";
-const API_URL = "https://inspiring-spontaneity-production.up.railway.app/api/recommended-for-you/";
-const PRODUCT_DETAIL_URL = (id) => `https://inspiring-spontaneity-production.up.railway.app/api/products/${id}/`;
+const API_URL = "http://127.0.0.1:8000/api/recommended-for-you/";
+const PRODUCT_DETAIL_URL = (id) => `http://127.0.0.1:8000/api/products/${id}/`;
 
 const RecommendedForYou = () => {
   const [products, setProducts] = useState([]);

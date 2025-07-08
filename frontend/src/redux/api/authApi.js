@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Base URL for your Django API
-const baseUrl = 'https://inspiring-spontaneity-production.up.railway.app/api/';
+const baseUrl = 'http://127.0.0.1:8000/api/';
 
 // Create the API slice
 export const authApi = createApi({

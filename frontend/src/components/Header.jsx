@@ -32,7 +32,9 @@ const Header = () => {
   const shouldHideSearchAndProfile = hideSearchAndProfileOn.includes(location.pathname);
   const shouldHideSearchAndCart = hideSearchAndCartOn.includes(location.pathname);
 
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const toggleSidebar = () => {
+  setSidebarOpen((prev) => !prev);
+};
 
   // Hide dropdown if search result is clicked
   const handleProductClick = (productId) => {
@@ -43,29 +45,32 @@ const Header = () => {
   };
 
   // Click outside closes dropdown/overlay
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        event.target.closest('.search-dropdown-desktop') ||
-        event.target.closest('.search-bar-mobile')
-      ) {
-        return;
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowOverlay(false);
-        setSearchOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm.trim().length > 0) {
-      setSearchOpen(true);
-      setShowOverlay(true);
+  // Click outside closes dropdown/overlay
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    // Ignore clicks on sidebar or hamburger buttons
+    if (
+      event.target.closest('.sidebar-wrapper') ||
+      event.target.closest('.mobile-menu-button') ||
+      event.target.closest('.btn-toggle')
+    ) {
+      return;
     }
-  }, [searchTerm]);
+    
+    if (
+      event.target.closest('.search-dropdown-desktop') ||
+      event.target.closest('.search-bar-mobile')
+    ) {
+      return;
+    }
+    if (searchRef.current && !searchRef.current.contains(event.target)) {
+      setShowOverlay(false);
+      setSearchOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
 
   return (
     <>

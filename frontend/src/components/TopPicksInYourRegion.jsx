@@ -8,7 +8,7 @@ const TopPicksInYourRegion = () => {
 
   useEffect(() => {
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("http://127.0.0.1:8000/api/products/")
       .then((response) => setProducts(response.data))
       .catch((error) =>
         console.error("Error fetching wholesale products:", error)
