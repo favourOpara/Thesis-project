@@ -24,7 +24,7 @@ const SellerProductList = () => {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/owner-products", {
+      .get("https://inspiring-spontaneity-production.up.railway.app/api/owner-products", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,7 +52,7 @@ const SellerProductList = () => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/owner-products/${productId}/`, {
+      await axios.delete(`https://inspiring-spontaneity-production.up.railway.app/api/owner-products/${productId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

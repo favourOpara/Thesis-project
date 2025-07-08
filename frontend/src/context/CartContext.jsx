@@ -36,7 +36,7 @@ export const CartProvider = ({ children }) => {
   const fetchUpdatedCart = async () => {
     if (!user || !user.token) return;
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/check-cart-items/", {
+      const response = await axios.get("https://inspiring-spontaneity-production.up.railway.app/api/check-cart-items/", {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       console.log("Fetched updated cart from backend:", response.data);
