@@ -19,18 +19,19 @@ const EditProduct = () => {
     quantity: "",
     material_type: "",
     brand: "",
-    size: "",
+    size: [], // Changed to array to match AddProduct
     gender: "",
   });
 
   const [imageFiles, setImageFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // Track existing images separately
   const [errorMessage, setErrorMessage] = useState("");
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Dropdown options (same as AddProduct.jsx)
+  // Complete category options (same as AddProduct.jsx)
   const categoryOptions = [
     { value: "Clothing materials", label: "Clothing materials" },
     { value: "Body accessories", label: "Body accessories" },
@@ -50,13 +51,19 @@ const EditProduct = () => {
     { value: "Adult", label: "Adult" },
   ];
 
+  // Complete subcategory options (same as AddProduct.jsx)
   const subCategoryOptions = [
     { value: "Traditional materials", label: "Traditional materials", category: "Clothing materials" },
     { value: "African prints", label: "African prints", category: "Clothing materials" },
     { value: "Aso-ebi", label: "Aso-ebi", category: "Clothing materials" },
     { value: "Wrappers", label: "Wrappers", category: "Clothing materials" },
     { value: "Shirts", label: "Shirts", category: "Clothing materials" },
+    { value: "Baby wears", label: "Baby wears", category: "Clothing materials" },
+    { value: "Sweatshirts", label: "Sweatshirts", category: "Clothing materials" },
+    { value: "Hoodies", label: "Hoodies", category: "Clothing materials" },
     { value: "Trousers", label: "Trousers", category: "Clothing materials" },
+    { value: "Joggers", label: "Joggers", category: "Clothing materials" },
+    { value: "Shorts", label: "Shorts", category: "Clothing materials" },
     { value: "Gym wears", label: "Gym wears", category: "Clothing materials" },
     { value: "Underwears", label: "Underwears", category: "Clothing materials" },
     { value: "Dresses", label: "Dresses", category: "Clothing materials" },
@@ -167,6 +174,36 @@ const EditProduct = () => {
     { value: "Other", label: "Other (provide details)", category: "Animal pets" },
   ];
 
+  // Enhanced category options that include subcategory search capability
+  const enhancedCategoryOptions = categoryOptions.map(category => {
+    // Get all subcategories for this category
+    const subcategoriesForCategory = subCategoryOptions
+      .filter(sub => sub.category === category.value)
+      .map(sub => sub.label.toLowerCase());
+    
+    return {
+      ...category,
+      subcategories: subcategoriesForCategory
+    };
+  });
+
+  // Custom filter function for category search
+  const categoryFilterOption = (option, inputValue) => {
+    if (!inputValue) return true;
+    
+    const searchTerm = inputValue.toLowerCase();
+    
+    // Search in category name
+    if (option.label.toLowerCase().includes(searchTerm)) {
+      return true;
+    }
+    
+    // Search in subcategories for this category
+    return option.data.subcategories.some(subcategory => 
+      subcategory.includes(searchTerm)
+    );
+  };
+
   const genderOptions = [
     { value: "male", label: "Male" },
     { value: "female", label: "Female" },
@@ -175,52 +212,52 @@ const EditProduct = () => {
 
   const sizeOptions = [
     { value: "XS", label: "Extra Small" },
-  { value: "S", label: "Small" },
-  { value: "M", label: "Medium" },
-  { value: "L", label: "Large" },
-  { value: "XL", label: "Extra Large" },
-  { value: "XXL", label: "2XL" },
-  { value: "XXXL", label: "3XL" },
-  { value: "4XL", label: "4XL" },
-  { value: "5XL", label: "5XL" },
-  { value: "6XL", label: "6XL" },
-  { value: "Free Size", label: "Free Size" },
+    { value: "S", label: "Small" },
+    { value: "M", label: "Medium" },
+    { value: "L", label: "Large" },
+    { value: "XL", label: "Extra Large" },
+    { value: "XXL", label: "2XL" },
+    { value: "XXXL", label: "3XL" },
+    { value: "4XL", label: "4XL" },
+    { value: "5XL", label: "5XL" },
+    { value: "6XL", label: "6XL" },
+    { value: "Free Size", label: "Free Size" },
 
-  // Shoe Sizes
-  { value: "EU 36", label: "EU 36" },
-  { value: "EU 37", label: "EU 37" },
-  { value: "EU 38", label: "EU 38" },
-  { value: "EU 39", label: "EU 39" },
-  { value: "EU 40", label: "EU 40" },
-  { value: "EU 41", label: "EU 41" },
-  { value: "EU 42", label: "EU 42" },
-  { value: "EU 43", label: "EU 43" },
-  { value: "EU 44", label: "EU 44" },
-  { value: "EU 45", label: "EU 45" },
-  { value: "EU 46", label: "EU 46" },
-  { value: "US 6", label: "US 6" },
-  { value: "US 7", label: "US 7" },
-  { value: "US 8", label: "US 8" },
-  { value: "US 9", label: "US 9" },
-  { value: "US 10", label: "US 10" },
-  { value: "US 11", label: "US 11" },
-  { value: "US 12", label: "US 12" },
+    // Shoe Sizes
+    { value: "EU 36", label: "EU 36" },
+    { value: "EU 37", label: "EU 37" },
+    { value: "EU 38", label: "EU 38" },
+    { value: "EU 39", label: "EU 39" },
+    { value: "EU 40", label: "EU 40" },
+    { value: "EU 41", label: "EU 41" },
+    { value: "EU 42", label: "EU 42" },
+    { value: "EU 43", label: "EU 43" },
+    { value: "EU 44", label: "EU 44" },
+    { value: "EU 45", label: "EU 45" },
+    { value: "EU 46", label: "EU 46" },
+    { value: "US 6", label: "US 6" },
+    { value: "US 7", label: "US 7" },
+    { value: "US 8", label: "US 8" },
+    { value: "US 9", label: "US 9" },
+    { value: "US 10", label: "US 10" },
+    { value: "US 11", label: "US 11" },
+    { value: "US 12", label: "US 12" },
 
-  // Kids Sizes
-  { value: "0-3M", label: "0-3 Months" },
-  { value: "3-6M", label: "3-6 Months" },
-  { value: "6-12M", label: "6-12 Months" },
-  { value: "1-2Y", label: "1-2 Years" },
-  { value: "2-3Y", label: "2-3 Years" },
-  { value: "3-4Y", label: "3-4 Years" },
-  { value: "4-5Y", label: "4-5 Years" },
-  { value: "5-6Y", label: "5-6 Years" },
-  { value: "6-7Y", label: "6-7 Years" },
-  { value: "7-8Y", label: "7-8 Years" },
-  { value: "8-9Y", label: "8-9 Years" },
-  { value: "9-10Y", label: "9-10 Years" },
+    // Kids Sizes
+    { value: "0-3M", label: "0-3 Months" },
+    { value: "3-6M", label: "3-6 Months" },
+    { value: "6-12M", label: "6-12 Months" },
+    { value: "1-2Y", label: "1-2 Years" },
+    { value: "2-3Y", label: "2-3 Years" },
+    { value: "3-4Y", label: "3-4 Years" },
+    { value: "4-5Y", label: "4-5 Years" },
+    { value: "5-6Y", label: "5-6 Years" },
+    { value: "6-7Y", label: "6-7 Years" },
+    { value: "7-8Y", label: "7-8 Years" },
+    { value: "8-9Y", label: "8-9 Years" },
+    { value: "9-10Y", label: "9-10 Years" },
 
-  { value: "Custom", label: "Custom (Specify in Description)" },
+    { value: "Custom", label: "Custom (Specify in Description)" },
   ];
 
   const customStyles = {
@@ -244,6 +281,13 @@ const EditProduct = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
+        // Handle size as array (convert if it's a string)
+        let sizeArray = response.data.size || [];
+        if (typeof sizeArray === 'string') {
+          // If size is returned as comma-separated string, split it
+          sizeArray = sizeArray.split(',').map(s => s.trim()).filter(s => s);
+        }
+
         setFormData({
           name: response.data.name || "",
           category: response.data.category || "",
@@ -253,12 +297,16 @@ const EditProduct = () => {
           quantity: response.data.quantity || "",
           material_type: response.data.material_type || "",
           brand: response.data.brand || "",
-          size: response.data.size || "",
+          size: sizeArray,
           gender: response.data.gender || "",
         });
 
-        if (response.data.images) {
-          setPreviewUrls(response.data.images);
+        // Handle existing images - don't treat them as preview URLs that get revoked
+        if (response.data.images && response.data.images.length > 0) {
+          // Ensure all images are strings (URLs)
+          const imageUrls = response.data.images.filter(img => img && typeof img === 'string');
+          setExistingImages(imageUrls);
+          setPreviewUrls(imageUrls); // Show existing images in preview
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -275,9 +323,14 @@ const EditProduct = () => {
     }
   }, [errorMessage]);
 
+  // Only revoke blob URLs for new files, not existing images
   useEffect(() => {
     return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.forEach(url => {
+        if (url && typeof url === 'string' && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
     };
   }, [previewUrls]);
 
@@ -285,7 +338,8 @@ const EditProduct = () => {
     setErrorMessage("");
     const files = Array.from(e.target.files);
     
-    if (files.length + imageFiles.length > 8) {
+    const totalImages = existingImages.length + imageFiles.length + files.length;
+    if (totalImages > 8) {
       setErrorMessage("Maximum 8 images allowed");
       e.target.value = null;
       return;
@@ -303,23 +357,47 @@ const EditProduct = () => {
     });
 
     if (invalidFiles.length > 0) {
-      setErrorMessage(`Uh-oh, The file ${invalidFiles.join(", ")}  exceeds 500KB`);
+      setErrorMessage(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
     }
 
-    const newFiles = [...imageFiles, ...validFiles].slice(0, 8);
+    const newFiles = [...imageFiles, ...validFiles];
     setImageFiles(newFiles);
-    setPreviewUrls(newFiles.map(file => URL.createObjectURL(file)));
+    
+    // Combine existing images with new file previews
+    const newFilePreviews = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls([...existingImages, ...newFilePreviews]);
     e.target.value = null;
   };
 
   const removeImage = (index) => {
-    const newFiles = [...imageFiles];
-    const newUrls = [...previewUrls];
-    URL.revokeObjectURL(newUrls[index]);
-    newFiles.splice(index, 1);
-    newUrls.splice(index, 1);
-    setImageFiles(newFiles);
-    setPreviewUrls(newUrls);
+    const totalExistingImages = existingImages.length;
+    
+    if (index < totalExistingImages) {
+      // Removing an existing image
+      const newExistingImages = [...existingImages];
+      newExistingImages.splice(index, 1);
+      setExistingImages(newExistingImages);
+      
+      // Update preview URLs
+      const newFilePreviews = imageFiles.map(file => URL.createObjectURL(file));
+      setPreviewUrls([...newExistingImages, ...newFilePreviews]);
+    } else {
+      // Removing a new file
+      const fileIndex = index - totalExistingImages;
+      const newFiles = [...imageFiles];
+      const removedFile = newFiles.splice(fileIndex, 1)[0];
+      setImageFiles(newFiles);
+      
+      // Revoke the blob URL for the removed file
+      const blobUrl = previewUrls[index];
+      if (blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(blobUrl);
+      }
+      
+      // Update preview URLs
+      const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviewUrls([...existingImages, ...newFilePreviews]);
+    }
   };
 
   const handleSelectChange = (name, selectedOption) => {
@@ -369,9 +447,11 @@ const EditProduct = () => {
       return acc;
     }, {});
 
-    if (Object.keys(newInvalidFields).length > 0 || imageFiles.length === 0) {
-      setInvalidFields({ ...newInvalidFields, images: imageFiles.length === 0 });
-      setErrorMessage("Please fill all required fields");
+    // Check if we have at least one image (existing or new)
+    const totalImages = existingImages.length + imageFiles.length;
+    if (Object.keys(newInvalidFields).length > 0 || totalImages === 0) {
+      setInvalidFields({ ...newInvalidFields, images: totalImages === 0 });
+      setErrorMessage("Please fill all required fields and ensure at least one image");
       setLoading(false);
       return;
     }
@@ -392,7 +472,12 @@ const EditProduct = () => {
         dataToSend.append("size", size);
       });
 
-      // Append images
+      // Append existing images to keep
+      existingImages.forEach(imageUrl => {
+        dataToSend.append("existing_images", imageUrl);
+      });
+
+      // Append new images
       imageFiles.forEach(file => {
         dataToSend.append("images", file);
       });
@@ -405,20 +490,6 @@ const EditProduct = () => {
       });
 
       setSuccessMessage("Product updated successfully!");
-      setFormData({
-        name: "",
-        category: "",
-        sub_category: "",
-        description: "",
-        price: "",
-        quantity: "",
-        material_type: "",
-        brand: "",
-        size: "",
-        gender: "",
-      });
-      setImageFiles([]);
-      setPreviewUrls([]);
       setTimeout(() => navigate("/"), 500);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -461,11 +532,13 @@ const EditProduct = () => {
           <div className="form-group mb-3">
             <label>Category</label>
             <Select
-              options={categoryOptions}
-              value={categoryOptions.find(opt => opt.value === formData.category)}
+              options={enhancedCategoryOptions}
+              value={enhancedCategoryOptions.find(opt => opt.value === formData.category)}
               onChange={(selected) => handleSelectChange("category", selected)}
               styles={customStyles}
               isSearchable
+              filterOption={categoryFilterOption}
+              placeholder="Search by category or subcategory name..."
               className={invalidFields.category ? "is-invalid" : ""}
             />
             {invalidFields.category && <div className="invalid-feedback">Required field</div>}
@@ -595,20 +668,20 @@ const EditProduct = () => {
             />
             {invalidFields.images && <div className="invalid-feedback">At least one image required</div>}
             <small className="text-muted">
-              {imageFiles.length} images selected (Max 8)
+              {existingImages.length + imageFiles.length} images total (Max 8)
             </small>
           </div>
 
           {/* Image Previews */}
           {previewUrls.length > 0 && (
             <div className="mb-3">
-              <label>Image Previews:</label>
+              <label>Current Images:</label>
               <div className="d-flex flex-wrap gap-2 mt-2">
                 {previewUrls.map((url, index) => (
                   <div key={url} className="position-relative">
                     <img
                       src={url}
-                      alt={`Preview ${index + 1}`}
+                      alt={`Image ${index + 1}`}
                       className="img-thumbnail"
                       style={{ width: "100px", height: "100px", objectFit: "cover" }}
                     />
@@ -620,14 +693,26 @@ const EditProduct = () => {
                     >
                       ×
                     </button>
+                    {index < existingImages.length && (
+                      <div className="position-absolute bottom-0 start-0 bg-primary text-white px-1" style={{ fontSize: "10px" }}>
+                        Existing
+                      </div>
+                    )}
+                    {index >= existingImages.length && (
+                      <div className="position-absolute bottom-0 start-0 bg-success text-white px-1" style={{ fontSize: "10px" }}>
+                        New
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
+          
           {errorMessage && (
             <div className="alert alert-danger mb-3">{errorMessage}</div>
           )}
+          
           <button 
             type="submit" 
             className="btn btn-primary mt-3"

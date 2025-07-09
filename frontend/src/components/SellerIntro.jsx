@@ -1,6 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+// Import your local images
+import images1 from "../assets/img/images1.jpg";
+import images2 from "../assets/img/images2.jpg";
+import images3 from "../assets/img/images3.jpg";
+import images4 from "../assets/img/images4.jpg";
+
 const SellerIntro = () => {
   return (
     <div className="container product-list-container">
@@ -61,22 +67,22 @@ const SellerIntro = () => {
             }}
           >
             <img
-              src="https://via.placeholder.com/150"
+              src={images1}
               alt="Seller interaction"
               style={{ width: "100%", borderRadius: "8px" }}
             />
             <img
-              src="https://via.placeholder.com/150"
+              src={images2}
               alt="Products display"
               style={{ width: "100%", borderRadius: "8px" }}
             />
             <img
-              src="https://via.placeholder.com/150"
+              src={images3}
               alt="Assorted items"
               style={{ width: "100%", borderRadius: "8px" }}
             />
             <img
-              src="https://via.placeholder.com/150"
+              src={images4}
               alt="Goods on display"
               style={{ width: "100%", borderRadius: "8px" }}
             />

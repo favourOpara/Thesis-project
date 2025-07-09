@@ -170,6 +170,36 @@ const AddProduct = () => {
     { value: "Other", label: "Other (provide details)", category: "Animal pets" },
   ];
 
+  // Enhanced category options that include subcategory search capability
+  const enhancedCategoryOptions = categoryOptions.map(category => {
+    // Get all subcategories for this category
+    const subcategoriesForCategory = subCategoryOptions
+      .filter(sub => sub.category === category.value)
+      .map(sub => sub.label.toLowerCase());
+    
+    return {
+      ...category,
+      subcategories: subcategoriesForCategory
+    };
+  });
+
+  // Custom filter function for category search
+  const categoryFilterOption = (option, inputValue) => {
+    if (!inputValue) return true;
+    
+    const searchTerm = inputValue.toLowerCase();
+    
+    // Search in category name
+    if (option.label.toLowerCase().includes(searchTerm)) {
+      return true;
+    }
+    
+    // Search in subcategories for this category
+    return option.data.subcategories.some(subcategory => 
+      subcategory.includes(searchTerm)
+    );
+  };
+
   const genderOptions = [
     { value: "male", label: "Male" },
     { value: "female", label: "Female" },
@@ -177,54 +207,54 @@ const AddProduct = () => {
   ];
 
   const sizeOptions = [
-  { value: "XS", label: "Extra Small" },
-  { value: "S", label: "Small" },
-  { value: "M", label: "Medium" },
-  { value: "L", label: "Large" },
-  { value: "XL", label: "Extra Large" },
-  { value: "XXL", label: "2XL" },
-  { value: "XXXL", label: "3XL" },
-  { value: "4XL", label: "4XL" },
-  { value: "5XL", label: "5XL" },
-  { value: "6XL", label: "6XL" },
-  { value: "Free Size", label: "Free Size" },
+    { value: "XS", label: "Extra Small" },
+    { value: "S", label: "Small" },
+    { value: "M", label: "Medium" },
+    { value: "L", label: "Large" },
+    { value: "XL", label: "Extra Large" },
+    { value: "XXL", label: "2XL" },
+    { value: "XXXL", label: "3XL" },
+    { value: "4XL", label: "4XL" },
+    { value: "5XL", label: "5XL" },
+    { value: "6XL", label: "6XL" },
+    { value: "Free Size", label: "Free Size" },
 
-  // Shoe Sizes
-  { value: "EU 36", label: "EU 36" },
-  { value: "EU 37", label: "EU 37" },
-  { value: "EU 38", label: "EU 38" },
-  { value: "EU 39", label: "EU 39" },
-  { value: "EU 40", label: "EU 40" },
-  { value: "EU 41", label: "EU 41" },
-  { value: "EU 42", label: "EU 42" },
-  { value: "EU 43", label: "EU 43" },
-  { value: "EU 44", label: "EU 44" },
-  { value: "EU 45", label: "EU 45" },
-  { value: "EU 46", label: "EU 46" },
-  { value: "US 6", label: "US 6" },
-  { value: "US 7", label: "US 7" },
-  { value: "US 8", label: "US 8" },
-  { value: "US 9", label: "US 9" },
-  { value: "US 10", label: "US 10" },
-  { value: "US 11", label: "US 11" },
-  { value: "US 12", label: "US 12" },
+    // Shoe Sizes
+    { value: "EU 36", label: "EU 36" },
+    { value: "EU 37", label: "EU 37" },
+    { value: "EU 38", label: "EU 38" },
+    { value: "EU 39", label: "EU 39" },
+    { value: "EU 40", label: "EU 40" },
+    { value: "EU 41", label: "EU 41" },
+    { value: "EU 42", label: "EU 42" },
+    { value: "EU 43", label: "EU 43" },
+    { value: "EU 44", label: "EU 44" },
+    { value: "EU 45", label: "EU 45" },
+    { value: "EU 46", label: "EU 46" },
+    { value: "US 6", label: "US 6" },
+    { value: "US 7", label: "US 7" },
+    { value: "US 8", label: "US 8" },
+    { value: "US 9", label: "US 9" },
+    { value: "US 10", label: "US 10" },
+    { value: "US 11", label: "US 11" },
+    { value: "US 12", label: "US 12" },
 
-  // Kids Sizes
-  { value: "0-3M", label: "0-3 Months" },
-  { value: "3-6M", label: "3-6 Months" },
-  { value: "6-12M", label: "6-12 Months" },
-  { value: "1-2Y", label: "1-2 Years" },
-  { value: "2-3Y", label: "2-3 Years" },
-  { value: "3-4Y", label: "3-4 Years" },
-  { value: "4-5Y", label: "4-5 Years" },
-  { value: "5-6Y", label: "5-6 Years" },
-  { value: "6-7Y", label: "6-7 Years" },
-  { value: "7-8Y", label: "7-8 Years" },
-  { value: "8-9Y", label: "8-9 Years" },
-  { value: "9-10Y", label: "9-10 Years" },
+    // Kids Sizes
+    { value: "0-3M", label: "0-3 Months" },
+    { value: "3-6M", label: "3-6 Months" },
+    { value: "6-12M", label: "6-12 Months" },
+    { value: "1-2Y", label: "1-2 Years" },
+    { value: "2-3Y", label: "2-3 Years" },
+    { value: "3-4Y", label: "3-4 Years" },
+    { value: "4-5Y", label: "4-5 Years" },
+    { value: "5-6Y", label: "5-6 Years" },
+    { value: "6-7Y", label: "6-7 Years" },
+    { value: "7-8Y", label: "7-8 Years" },
+    { value: "8-9Y", label: "8-9 Years" },
+    { value: "9-10Y", label: "9-10 Years" },
 
-  { value: "Custom", label: "Custom (Specify in Description)" },
-];
+    { value: "Custom", label: "Custom (Specify in Description)" },
+  ];
 
   const customStyles = {
     menuList: (provided) => ({
@@ -434,11 +464,13 @@ const AddProduct = () => {
           <div className="form-group mb-3">
             <label>Category</label>
             <Select
-              options={categoryOptions}
-              value={categoryOptions.find(opt => opt.value === formData.category)}
+              options={enhancedCategoryOptions}
+              value={enhancedCategoryOptions.find(opt => opt.value === formData.category)}
               onChange={(selected) => handleSelectChange("category", selected)}
               styles={customStyles}
               isSearchable
+              filterOption={categoryFilterOption}
+              placeholder="Search by category or subcategory name..."
               className={invalidFields.category ? "is-invalid" : ""}
             />
             {invalidFields.category && <div className="invalid-feedback">Required field</div>}
