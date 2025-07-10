@@ -16,6 +16,14 @@ cloudinary.config(
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
 )
+
+print(f"DEBUG: DEFAULT_FILE_STORAGE = {globals().get('DEFAULT_FILE_STORAGE', 'NOT SET')}")
+
+try:
+    import cloudinary
+    print(f"DEBUG: Cloudinary configured = {cloudinary.config().cloud_name}")
+except Exception as e:
+    print(f"DEBUG: Cloudinary error = {e}")
 # Debug Cloudinary credentials
 print(f"DEBUG: CLOUDINARY_CLOUD_NAME = {os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT FOUND')}")
 print(f"DEBUG: CLOUDINARY_API_KEY = {os.environ.get('CLOUDINARY_API_KEY', 'NOT FOUND')}")
