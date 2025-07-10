@@ -1,3 +1,13 @@
+# Cloudinary configuration
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+)
 from dotenv import load_dotenv
 load_dotenv()
 from pathlib import Path
@@ -19,8 +29,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # MEDIA FILE HANDLING
+# Cloudinary media settings
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
@@ -38,6 +49,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'cloudinary_storage',
+    'cloudinary',
 
     'accounts',
     'products',
