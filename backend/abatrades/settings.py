@@ -1,6 +1,4 @@
-
 from dotenv import load_dotenv
-load_dotenv()
 from pathlib import Path
 import os
 import dj_database_url
@@ -18,7 +16,10 @@ cloudinary.config(
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
 )
-
+# Debug Cloudinary credentials
+print(f"DEBUG: CLOUDINARY_CLOUD_NAME = {os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT FOUND')}")
+print(f"DEBUG: CLOUDINARY_API_KEY = {os.environ.get('CLOUDINARY_API_KEY', 'NOT FOUND')}")
+print(f"DEBUG: CLOUDINARY_API_SECRET = {os.environ.get('CLOUDINARY_API_SECRET', 'NOT FOUND')}")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -41,6 +42,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Application definition
 INSTALLED_APPS = [
+    'cloudinary_storage',
+    'cloudinary',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,8 +55,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'cloudinary_storage',
-    'cloudinary',
 
     'accounts',
     'products',
