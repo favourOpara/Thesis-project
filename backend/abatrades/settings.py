@@ -1,3 +1,13 @@
+
+from dotenv import load_dotenv
+load_dotenv()
+from pathlib import Path
+import os
+import dj_database_url
+
+if os.path.exists('.env'):
+    load_dotenv()
+
 # Cloudinary configuration
 import cloudinary
 import cloudinary.uploader
@@ -8,14 +18,6 @@ cloudinary.config(
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
 )
-from dotenv import load_dotenv
-load_dotenv()
-from pathlib import Path
-import os
-import dj_database_url
-
-if os.path.exists('.env'):
-    load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
