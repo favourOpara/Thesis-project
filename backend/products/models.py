@@ -1,7 +1,7 @@
 from django.db import models
 from accounts.models import CustomUser
 from multiselectfield import MultiSelectField
-
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 class Shop(models.Model):
     owner = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='shop')
@@ -89,7 +89,7 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField()
+    image = models.ImageField(storage=MediaCloudinaryStorage())
     alt_text = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
