@@ -21,9 +21,8 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'image_url', 'alt_text']
 
     def get_image_url(self, obj):
-        request = self.context.get('request')
         if obj.image:
-            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+            return obj.image.url  # This will return the Cloudinary URL
         return None
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -47,9 +46,8 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_main_image_url(self, obj):
-        request = self.context.get('request')
         if obj.images.exists():
-            return request.build_absolute_uri(obj.images.first().image.url) if request else obj.images.first().image.url
+            return obj.images.first().image.url  # This will return the Cloudinary URL
         return None
 
     def create(self, validated_data):
