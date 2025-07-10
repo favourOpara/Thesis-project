@@ -45,21 +45,6 @@ if hasattr(storage, '_default_storage'):
 from cloudinary_storage.storage import MediaCloudinaryStorage
 storage.default_storage = MediaCloudinaryStorage()
 
-from django.core.files.storage import default_storage
-print(f"DEBUG: Actual storage class = {default_storage.__class__}")
-
-# Debug info
-print(f"DEBUG: DEFAULT_FILE_STORAGE = {globals().get('DEFAULT_FILE_STORAGE', 'NOT SET')}")
-try:
-    import cloudinary
-    print(f"DEBUG: Cloudinary configured = {cloudinary.config().cloud_name}")
-except Exception as e:
-    print(f"DEBUG: Cloudinary error = {e}")
-
-print(f"DEBUG: CLOUDINARY_CLOUD_NAME = {os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT FOUND')}")
-print(f"DEBUG: CLOUDINARY_API_KEY = {os.environ.get('CLOUDINARY_API_KEY', 'NOT FOUND')}")
-print(f"DEBUG: CLOUDINARY_API_SECRET = {os.environ.get('CLOUDINARY_API_SECRET', 'NOT FOUND')}")
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
 
