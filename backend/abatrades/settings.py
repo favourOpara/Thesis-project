@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['*']
 # MEDIA FILE HANDLING
 # Cloudinary media settings
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = '/media/'
+MEDIA_URL = None
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
