@@ -24,6 +24,9 @@ cloudinary.config(
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
+from django.core.files.storage import default_storage
+print(f"DEBUG: Actual storage class = {default_storage.__class__}")
+
 # Debug info
 print(f"DEBUG: DEFAULT_FILE_STORAGE = {globals().get('DEFAULT_FILE_STORAGE', 'NOT SET')}")
 try:
