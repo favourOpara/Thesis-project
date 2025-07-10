@@ -6,6 +6,9 @@ import dj_database_url
 if os.path.exists('.env'):
     load_dotenv()
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # Cloudinary configuration
 import cloudinary
 import cloudinary.uploader
@@ -17,19 +20,21 @@ cloudinary.config(
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
 )
 
-print(f"DEBUG: DEFAULT_FILE_STORAGE = {globals().get('DEFAULT_FILE_STORAGE', 'NOT SET')}")
+# Cloudinary media settings - MUST be after cloudinary.config()
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'
 
+# Debug info
+print(f"DEBUG: DEFAULT_FILE_STORAGE = {globals().get('DEFAULT_FILE_STORAGE', 'NOT SET')}")
 try:
     import cloudinary
     print(f"DEBUG: Cloudinary configured = {cloudinary.config().cloud_name}")
 except Exception as e:
     print(f"DEBUG: Cloudinary error = {e}")
-# Debug Cloudinary credentials
+
 print(f"DEBUG: CLOUDINARY_CLOUD_NAME = {os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT FOUND')}")
 print(f"DEBUG: CLOUDINARY_API_KEY = {os.environ.get('CLOUDINARY_API_KEY', 'NOT FOUND')}")
 print(f"DEBUG: CLOUDINARY_API_SECRET = {os.environ.get('CLOUDINARY_API_SECRET', 'NOT FOUND')}")
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
@@ -38,11 +43,6 @@ SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-
-# MEDIA FILE HANDLING
-# Cloudinary media settings
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = '/media/'
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
