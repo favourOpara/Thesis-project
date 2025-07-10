@@ -7,8 +7,6 @@ import dj_database_url
 if os.path.exists('.env'):
     load_dotenv()
 
-print(f"DEBUG: DATABASE_URL = {os.environ.get('DATABASE_URL', 'NOT FOUND')}")
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
