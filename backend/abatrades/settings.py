@@ -20,6 +20,14 @@ cloudinary.config(
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
 )
 
+STORAGES = {
+    'default': {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 # Cloudinary media settings - MUST be after cloudinary.config()
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
