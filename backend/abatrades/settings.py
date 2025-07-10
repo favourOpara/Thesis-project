@@ -27,14 +27,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
 # MEDIA FILE HANDLING
 # Cloudinary media settings
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = None
+MEDIA_URL = '/media/'
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
