@@ -49,6 +49,7 @@ urlpatterns = [
     # Payment URLs
     path('payments/', PaymentViewSet.as_view({'get': 'list', 'post': 'create'}), name='payment-list'),
     path('payments/<int:pk>/', PaymentViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='payment-detail'),
+    path('debug-storage/', views.debug_storage, name='debug_storage'),
 ]
 
 # Serve media files in development

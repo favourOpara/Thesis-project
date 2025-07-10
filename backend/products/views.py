@@ -4,6 +4,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
+from django.http import JsonResponse
+from django.core.files.storage import default_storage
+from cloudinary_storage.storage import MediaCloudinaryStorage
+from django.conf import settings
 
 from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
 from .serializers import (
@@ -180,3 +184,26 @@ class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+def debug_storage(request):
+    """Debug endpoint to check storage configuration"""
+    
+    # Check what storage Django thinks it's using
+    storage_class = default_storage.__class__
+    
+    # Try to create Cloudinary storage directly
+    try:
+        cloudinary_storage = MediaCloudinaryStorage()
+        cloudinary_works = True
+        cloudinary_class = cloudinary_storage.__class__
+    except Exception as e:
+        cloudinary_works = False
+        cloudinary_class = str(e)
+    
+    return JsonResponse({
+        'default_storage_class': str(storage_class),
+        'cloudinary_works': cloudinary_works,
+        'cloudinary_class': str(cloudinary_class),
+        'default_file_storage_setting': getattr(settings, 'DEFAULT_FILE_STORAGE', 'NOT SET'),
+        'storages_setting': getattr(settings, 'STORAGES', 'NOT SET'),
+    })
