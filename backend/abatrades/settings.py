@@ -28,9 +28,22 @@ STORAGES = {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
 }
+
 # Cloudinary media settings - MUST be after cloudinary.config()
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
+
+# Force reload default storage to pick up our settings
+from django.core.files.storage import storages
+from django.core.files import storage
+
+# Clear the cached default storage and force reload
+if hasattr(storage, '_default_storage'):
+    storage._default_storage = None
+
+# Explicitly set the default storage
+from cloudinary_storage.storage import MediaCloudinaryStorage
+storage.default_storage = MediaCloudinaryStorage()
 
 from django.core.files.storage import default_storage
 print(f"DEBUG: Actual storage class = {default_storage.__class__}")
