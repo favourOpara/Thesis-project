@@ -28,7 +28,6 @@
   overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
   visibility: visible;
 }
 
@@ -225,19 +224,19 @@
   background-color: #485a6b;
 }
 
-/* FIXED: Higher z-index and proper positioning for desktop dropdown */
+/* DESKTOP DROPDOWN - ENLARGED AND FIXED TEXT POSITIONING */
 .desktop-dropdown {
-  position: fixed; /* Changed from absolute to fixed */
-  top: 110px; /* Position below the desktop sidebar */
-  left: 0.75rem; /* Align with the categories button */
-  width: 300px;
+  position: fixed;
+  top: 110px;
+  left: 0.75rem;
+  width: 450px; /* ENLARGED from 300px to 450px */
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 10050; /* FIXED: Much higher z-index */
-  max-height: 60vh; /* FIXED: Use viewport height instead of fixed pixels */
-  overflow-y: auto; /* Enable scrolling */
+  z-index: 10050;
+  max-height: 60vh;
+  overflow-y: auto;
   opacity: 0;
   transform: translateY(-10px);
   animation: dropdownSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -288,7 +287,7 @@
 
 .desktop-subcategory-link {
   display: block;
-  padding: 0.5rem 2rem;
+  padding: 0.5rem 1rem 0.5rem 3rem; /* FIXED: More left padding (3rem) to move text away from edge */
   text-decoration: none;
   color: #666;
   font-size: 0.85rem;
@@ -347,4 +346,25 @@
 .desktop-dropdown * {
   position: relative;
   z-index: inherit;
+}
+
+/* FIXED: Desktop category header with proper padding to move text away from edge */
+.category-header, .desktop-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* ADDED: 2.5rem left padding to move text away from container edge */
+}
+
+.category-main-link, .desktop-category-main-link {
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.category-expand-btn, .desktop-category-expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
 }

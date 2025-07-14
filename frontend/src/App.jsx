@@ -1,4 +1,4 @@
-import React from "react"; 
+import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
@@ -26,6 +26,9 @@ import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
 import AddProduct from "./pages/AddProduct";
 
+// ADD THIS IMPORT - The CategoryPage we built
+import CategoryPage from "./pages/CategoryPage";
+
 import { AuthProvider } from "./context/AuthContext";
 import { SearchProvider } from "./context/SearchContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -33,7 +36,7 @@ import { CartProvider } from "./context/CartContext";
 import GlobalNotification from "./components/GlobalNotification";
 import ProductList from "./components/ProductList";
 import SearchResults from "./components/SearchResults";
-import CookieConsent from "./components/CookieConsent"; // <-- Import CookieConsent
+import CookieConsent from "./components/CookieConsent";
 
 const App = () => {
   return (
@@ -60,6 +63,10 @@ const App = () => {
                   <Route path="/coming-soon" element={<ComingSoon />} />
                   <Route path="/seller-dashboard" element={<SellerProductListTest />} />
                   <Route path="/edit-product/:id" element={<EditProduct />} />
+                  
+                  {/* ADD THIS ROUTE - Category system we built */}
+                  <Route path="/category/:categoryName" element={<CategoryPage />} />
+                  
                   <Route path="*" element={<NotFound />} />
                   <Route path="/products" element={<ProductList />} />
                   <Route path="/search" element={<SearchResults />} />

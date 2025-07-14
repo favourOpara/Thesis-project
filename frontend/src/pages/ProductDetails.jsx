@@ -9,6 +9,7 @@ import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/splide/dist/css/splide.min.css";
 import { addProductToHistory } from "../utils/localHistory";
 import { hasConsentedToCookies } from "../utils/cookieConsent"; // <-- Import this
+import "./ProductDetails.css";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -41,20 +42,17 @@ const ProductDetails = () => {
     }
   }, [product]);
 
-  const handleSizeSelection = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(
-      (option) => option.value
-    );
-    const invalidSizes = selectedOptions.filter(
-      (size) => !product.size.includes(size)
-    );
-
-    if (invalidSizes.length > 0) {
-      toast.error(`Size not available: ${invalidSizes.join(", ")}`);
-      return;
-    }
-
-    setSelectedSizes(selectedOptions);
+  // Updated size selection handler for button clicks
+  const handleSizeToggle = (size) => {
+    setSelectedSizes(prevSizes => {
+      if (prevSizes.includes(size)) {
+        // Remove size if already selected
+        return prevSizes.filter(s => s !== size);
+      } else {
+        // Add size if not selected
+        return [...prevSizes, size];
+      }
+    });
   };
 
   const formatPrice = (price) => {
@@ -160,21 +158,29 @@ const ProductDetails = () => {
                       </div>
                     </div>
 
+                    {/* Updated Size Selection Section */}
                     <div className="row size-selector mb-4">
                       <div className="col-md-12">
                         <strong>Select Sizes:</strong>
-                        <select
-                          multiple
-                          className="form-select form-control-sm mt-2"
-                          value={selectedSizes}
-                          onChange={handleSizeSelection}
-                          style={{ minHeight: "100px" }}
-                        >
+                        <div className="product-size-buttons-container mt-2">
                           {product.size.map((size) => (
-                            <option key={size} value={size}>{size}</option>
+                            <button
+                              key={size}
+                              type="button"
+                              className={`product-size-button ${selectedSizes.includes(size) ? 'product-size-selected' : ''}`}
+                              onClick={() => handleSizeToggle(size)}
+                            >
+                              {size}
+                            </button>
                           ))}
-                        </select>
-                        <small className="text-muted">Hold CTRL/CMD to select multiple sizes</small>
+                        </div>
+                        {selectedSizes.length > 0 && (
+                          <div className="product-selected-sizes-display mt-2">
+                            <small className="text-muted">
+                              Selected: {selectedSizes.join(", ")}
+                            </small>
+                          </div>
+                        )}
                       </div>
                     </div>
 

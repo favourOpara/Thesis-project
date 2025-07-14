@@ -1,42 +1,46 @@
-/* General container for recommended sections */
-.recommended-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 20px;
-  flex-wrap: wrap; /* Ensures sections wrap properly on smaller screens */
-}
-.product-card-category-link:hover {
-  text-decoration: underline;
-  color: #0056b3;
-}
-/* Each individual section */
-.recommended-section {
-  flex: 1;
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  min-width: 300px; /* Prevents sections from getting too small */
-}
+/* General container for recommended sections */ 
+.recommended-container {   
+  display: flex;   
+  justify-content: space-between;   
+  gap: 20px;   
+  margin-top: 20px;   
+  flex-wrap: wrap; /* Ensures sections wrap properly on smaller screens */ 
+} 
 
-/* Section headers */
-.recommended-section h3 {
-  font-size: 16px; /* Reduce font size for better fit */
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 10px;
-}
+.product-card-category-link:hover {   
+  text-decoration: underline;   
+  color: #0056b3; 
+} 
 
-/* Grid for product arrangement (3 rows, 2 columns) */
-.recommended-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* Each individual section */ 
+.recommended-section {   
+  flex: 1;   
+  background-color: white;   
+  padding: 15px;   
+  border-radius: 8px;   
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);   
+  min-width: 300px; /* Prevents sections from getting too small */ 
+}  
+
+/* Section headers */ 
+.recommended-section h3 {   
+  font-size: 16px; /* Reduce font size for better fit */   
+  font-weight: bold;   
+  text-align: center;   
+  margin-bottom: 10px; 
+}  
+
+/* Grid for product arrangement (3 rows, 2 columns) */ 
+.recommended-grid {   
+  display: grid;   
+  grid-template-columns: repeat(2, 1fr);   
   gap: 15px;
-}
+  /* FIXED: Ensure all grid items have equal height */
+  grid-auto-rows: 1fr;
+}  
 
-/* Product Card Styling */
-.product-card-vertical {
+/* Product Card Styling */ 
+.product-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* Push content to top & bottom */
@@ -47,84 +51,299 @@
   color: inherit;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
-  height: 100%; /* Make sure it takes up full height */
+  /* FIXED: Set consistent height for all cards */
+  height: 280px; /* Fixed height ensures all cards are same size */
+  max-width: 100%;
+  min-width: 0; /* Allow shrinking */
 }
 
-.product-card-vertical:hover {
+.product-card:hover {
   transform: scale(1.02);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Image Styling */
-.product-card-image img {
-  width: 100%;
-  height: 150px;
-  object-fit: contain;
-  background-color: #f9f9f9;
-}
-
-/* Card Content */
-.product-card-body {
+/* Product Card Details Link */
+.product-card-details {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Space out the elements */
-  height: 100%;
-  padding: 10px;
-  text-align: center;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  /* FIXED: Ensure link respects container boundaries */
+  min-width: 0;
+  overflow: hidden;
 }
 
-.product-card-title {
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 5px;
+.product-card-details:hover {
+  text-decoration: none;
+  color: inherit;
 }
 
-/* Fix pricing alignment and allow text to wrap */
-.product-card-pricing {
-  font-size: 14px;
-  margin-bottom: 5px;
+/* LEGACY: Keep product-card-vertical for backward compatibility */
+.product-card-vertical {   
+  display: flex;   
+  flex-direction: column;   
+  justify-content: space-between; /* Push content to top & bottom */   
+  background-color: #fff;   
+  border: 1px solid #ddd;   
+  border-radius: 8px;   
+  text-decoration: none;   
+  color: inherit;   
+  overflow: hidden;   
+  transition: transform 0.2s, box-shadow 0.2s;   
+  /* FIXED: Set consistent height for legacy cards too */
+  height: 280px; /* Fixed height ensures all cards are same size */
+}  
+
+.product-card-vertical:hover {   
+  transform: scale(1.02);   
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}  
+
+/* Image Styling */ 
+.product-card-image {
+  width: 100%;
+  overflow: hidden;
+  background-color: #f9f9f9;
+  /* FIXED: Ensure image container doesn't overflow */
+  min-height: 150px;
+  max-height: 150px;
   display: flex;
-  flex-direction: column; /* Stack price and discount on separate lines */
   align-items: center;
+  justify-content: center;
+}
+
+.product-card-image img {   
+  width: 100%;   
+  height: 150px;   
+  object-fit: contain;   
+  background-color: #f9f9f9; 
+}  
+
+/* Card Content */ 
+.product-card-body {   
+  display: flex;   
+  flex-direction: column;   
+  justify-content: space-between; /* Space out the elements */   
+  flex: 1; /* Take up remaining space after image */
+  padding: 10px;   
   text-align: center;
-  word-wrap: break-word; /* Ensure text wraps */
+  /* FIXED: Ensure body respects container boundaries */
+  min-width: 0;
+  overflow: hidden;
+  /* FIXED: Better space distribution */
+  min-height: 0;
+}  
+
+.product-card-title {   
+  font-size: 14px;   
+  font-weight: bold;   
+  margin-bottom: 5px;
+  /* FIXED: Add text wrapping properties */
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.3;
+  /* FIXED: Limit height to prevent excessive expansion */
+  max-height: 3.6em; /* Approximately 2-3 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}  
+
+/* Fix pricing alignment and allow text to wrap */ 
+.product-card-pricing {   
+  font-size: 14px;   
+  margin-bottom: 5px;   
+  display: flex;   
+  flex-direction: column; /* Stack price and discount on separate lines */   
+  align-items: center;   
+  text-align: center;   
+  word-wrap: break-word; /* Ensure text wraps */   
   white-space: normal; /* Allow text to break into a new line */
+  /* FIXED: Ensure pricing doesn't overflow */
+  min-width: 0;
+  overflow: hidden;
+}  
+
+/* FIXED: Ensure price text wraps properly */
+.product-card-pricing .text-success {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow: hidden;
+  max-width: 100%;
 }
 
-.line-through {
-  font-size: 12px;
-  color: gray;
-  text-decoration: line-through;
+.line-through {   
+  font-size: 12px;   
+  color: gray;   
+  text-decoration: line-through;   
   margin-top: 3px; /* Space between original and discount price */
-}
-/* Badge Styling */
-.badge {
-  font-size: 12px;
-  padding: 6px;
-  border-radius: 4px;
-  margin-top: auto; /* Push the button to the bottom */
-  background-color: rgb(255, 208, 0); /* Change background to yellow */
-  color: rgb(100, 98, 98); /* Make text black for contrast */
-  font-weight: bold;
-  border: 1px solid #ffffff; 
+  /* FIXED: Ensure strikethrough text wraps */
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow: hidden;
+  max-width: 100%;
+} 
+
+/* Badge Styling */ 
+.badge {   
+  font-size: 12px;   
+  padding: 6px;   
+  border-radius: 4px;   
+  margin-top: auto; /* Push the button to the bottom */   
+  background-color: rgb(255, 208, 0); /* Change background to yellow */   
+  color: rgb(100, 98, 98); /* Make text black for contrast */   
+  font-weight: bold;   
+  border: 1px solid #ffffff;
+  /* FIXED: Ensure badge doesn't overflow */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}  
+
+.badge:hover {
+  background-color: rgb(245, 188, 0);
+  transform: translateY(-1px);
 }
 
-/* Mobile View: Keep sections in a row, prevent stacking */
-@media screen and (max-width: 768px) {
-  .recommended-container {
-    display: flex;
-    flex-wrap: nowrap; /* Prevents sections from stacking */
-    overflow-x: auto; /* Enables horizontal scrolling if necessary */
-    gap: 10px; /* Adjust spacing for mobile */
+/* Mobile View: Keep sections in a row, prevent stacking */ 
+@media screen and (max-width: 768px) {   
+  .recommended-container {     
+    display: flex;     
+    flex-wrap: nowrap; /* Prevents sections from stacking */     
+    overflow-x: auto; /* Enables horizontal scrolling if necessary */     
+    gap: 10px; /* Adjust spacing for mobile */   
+  }    
+
+  .recommended-section {     
+    min-width: 250px; /* Prevents shrinking */     
+    flex: 1;   
+  }    
+
+  .recommended-grid {     
+    grid-template-columns: repeat(2, 1fr);     
+    gap: 10px;   
   }
+  
+  /* FIXED: Mobile-specific adjustments for product cards */
+  .product-card,
+  .product-card-vertical {
+    height: 260px; /* Slightly smaller for mobile */
+  }
+  
+  .product-card-title {
+    font-size: 13px;
+    max-height: 3.2em; /* Slightly reduce for mobile */
+    line-height: 1.2;
+  }
+  
+  .product-card-pricing {
+    font-size: 13px;
+  }
+  
+  .line-through {
+    font-size: 11px;
+  }
+  
+  .badge {
+    font-size: 11px;
+    padding: 5px;
+  }
+}
 
+/* FIXED: Additional responsive breakpoints for very small screens */
+@media screen and (max-width: 480px) {
   .recommended-section {
-    min-width: 250px; /* Prevents shrinking */
-    flex: 1;
+    min-width: 200px;
+    padding: 10px;
   }
-
+  
   .recommended-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
+  }
+  
+  .product-card,
+  .product-card-vertical {
+    height: 240px; /* Smaller for small screens */
+  }
+  
+  .product-card-title {
+    font-size: 12px;
+    max-height: 2.8em;
+    line-height: 1.15;
+  }
+  
+  .product-card-pricing {
+    font-size: 12px;
+  }
+  
+  .line-through {
+    font-size: 10px;
+  }
+  
+  .badge {
+    font-size: 10px;
+    padding: 4px;
+  }
+  
+  .product-card-image img {
+    height: 120px; /* Reduce image height on very small screens */
+  }
+  
+  .product-card-image {
+    min-height: 120px;
+    max-height: 120px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .recommended-section {
+    min-width: 180px;
+  }
+  
+  .product-card,
+  .product-card-vertical {
+    height: 220px; /* Even smaller for ultra-small screens */
+  }
+  
+  .product-card-body {
+    padding: 8px;
+  }
+  
+  .product-card-title {
+    font-size: 11px;
+    max-height: 2.6em;
+    margin-bottom: 3px;
+  }
+  
+  .product-card-pricing {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  
+  .line-through {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  
+  .badge {
+    font-size: 9px;
+    padding: 3px;
+  }
+  
+  .product-card-image img {
+    height: 100px;
+  }
+  
+  .product-card-image {
+    min-height: 100px;
+    max-height: 100px;
   }
 }

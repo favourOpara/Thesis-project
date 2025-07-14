@@ -1,35 +1,238 @@
 .related-section {
-    background-color: #fff;
-    padding: 20px;
-    text-align: center;
-    margin: 0px 0;
+  background-color: #fff;
+  padding: 20px;
+  text-align: center;
+  margin: 0px 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Container for horizontal scrolling */
+.related-scroll {
+  display: flex;
+  gap: 15px; /* Increased gap for better spacing */
+  overflow-x: auto;
+  overflow-y: hidden; /* Prevent vertical scroll */
+  padding-bottom: 10px;
+  /* FIXED: Ensure smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* FIXED: Override ProductCard styles within RelatedToYou for consistent sizing */
+.related-scroll .product-card {
+  /* FIXED: Prevent shrinking and maintain consistent width */
+  flex-shrink: 0;
+  width: 200px; /* Fixed width for desktop */
+  min-width: 200px;
+  max-width: 200px;
+  /* Maintain the fixed height from ProductList.css */
+  height: 280px;
+}
+
+/* FIXED: Ensure ProductCard details maintain proper layout */
+.related-scroll .product-card-details {
+  height: calc(100% - 45px); /* Account for button height */
+  display: flex;
+  flex-direction: column;
+}
+
+/* FIXED: Ensure image maintains proper size */
+.related-scroll .product-card-image {
+  min-height: 150px;
+  max-height: 150px;
+  width: 100%;
+}
+
+/* FIXED: Ensure product body takes remaining space */
+.related-scroll .product-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+/* FIXED: Ensure title respects the fixed width */
+.related-scroll .product-card-title {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow: hidden;
+  max-height: 3.6em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* FIXED: Ensure pricing fits within card width */
+.related-scroll .product-card-pricing {
+  word-wrap: break-word;
+  white-space: normal;
+  overflow: hidden;
+}
+
+/* FIXED: Ensure badge fits within card */
+.related-scroll .badge {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Hide scrollbar for WebKit browsers */
+.related-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.related-scroll {
+  scrollbar-width: none;
+}
+
+/* "Shop now" button styling */
+.shop-now {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #000;
+  transition: color 0.2s ease;
+}
+
+.shop-now:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+/* Mobile specific adjustments */
+@media screen and (max-width: 768px) {
+  .related-section {
+    padding: 15px;
   }
   
-  .section-title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 15px;
-  }
-  
-  /* Container for horizontal scrolling */
+  /* FIXED: Maintain card size on mobile for proper scrolling */
   .related-scroll {
-    display: flex;
+    gap: 12px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  .related-scroll .product-card {
+    /* FIXED: Slightly smaller but still substantial width for mobile */
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+    height: 260px; /* Slightly shorter for mobile */
+  }
+  
+  .related-scroll .product-card-details {
+    height: calc(100% - 40px); /* Account for smaller button */
+  }
+  
+  .related-scroll .product-card-image {
+    min-height: 120px;
+    max-height: 120px;
+  }
+  
+  .related-scroll .product-card-title {
+    font-size: 13px;
+    max-height: 3.2em;
+    line-height: 1.2;
+  }
+  
+  .related-scroll .product-card-pricing {
+    font-size: 13px;
+  }
+  
+  .related-scroll .badge {
+    font-size: 11px;
+    padding: 5px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .related-section {
+    padding: 12px;
+  }
+  
+  .related-scroll {
     gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 10px;
   }
   
-  /* Hide scrollbar for WebKit browsers */
-  .related-scroll::-webkit-scrollbar {
-    display: none;
+  .related-scroll .product-card {
+    /* FIXED: Even on small screens, maintain reasonable width */
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+    height: 240px;
   }
   
-  /* "Shop now" button styling */
-  .shop-now {
-    display: block;
-    margin-top: 10px;
-    font-size: 0.9rem;
-    text-decoration: none;
-    color: #000;
+  .related-scroll .product-card-details {
+    height: calc(100% - 35px);
   }
   
+  .related-scroll .product-card-image {
+    min-height: 100px;
+    max-height: 100px;
+  }
+  
+  .related-scroll .product-card-title {
+    font-size: 12px;
+    max-height: 2.8em;
+    line-height: 1.15;
+  }
+  
+  .related-scroll .product-card-pricing {
+    font-size: 12px;
+  }
+  
+  .related-scroll .badge {
+    font-size: 10px;
+    padding: 4px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .related-scroll .product-card {
+    /* FIXED: Minimum viable width even on ultra-small screens */
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    height: 220px;
+  }
+  
+  .related-scroll .product-card-details {
+    height: calc(100% - 32px);
+  }
+  
+  .related-scroll .product-card-image {
+    min-height: 80px;
+    max-height: 80px;
+  }
+  
+  .related-scroll .product-card-body {
+    padding: 8px;
+  }
+  
+  .related-scroll .product-card-title {
+    font-size: 11px;
+    max-height: 2.6em;
+    margin-bottom: 3px;
+  }
+  
+  .related-scroll .product-card-pricing {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  
+  .related-scroll .badge {
+    font-size: 9px;
+    padding: 3px;
+  }
+}

@@ -1,87 +1,184 @@
 .product-detail {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-  }
-  
-  .product-header {
-    display: flex;
-    gap: 20px;
-  }
-  
-  .image-section {
-    flex: 1;
-  }
-  
-  .image-section .main-image {
-    width: 100%;
-  }
-  
-  .thumbnail-section img {
-    width: 60px;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-  
-  .details-section {
-    flex: 2;
-  }
-  
-  .product-title {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-  
-  .pricing {
-    margin-bottom: 10px;
-  }
-  
-  .discounted-price {
-    color: red;
-    font-size: 20px;
-    font-weight: bold;
-  }
-  
-  .original-price {
-    text-decoration: line-through;
-    margin-left: 10px;
-  }
-  
-  .rating {
-    margin-bottom: 20px;
-  }
-  
-  .size-picker,
-  .color-picker,
-  .quantity {
-    margin-bottom: 15px;
-  }
-  
-  .buttons button {
-    padding: 10px 15px;
-    margin-right: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .buttons button:hover {
-    background-color: #0056b3;
-  }
-  
-  .product-description {
-    margin-top: 40px;
-  }
-  
-  .product-description h2 {
-    margin-top: 20px;
-  }
-  /* Removes spinner (dial) from number inputs */
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.product-header {
+  display: flex;
+  gap: 20px;
+}
+
+.image-section {
+  flex: 1;
+}
+
+.image-section .main-image {
+  width: 100%;
+}
+
+.thumbnail-section img {
+  width: 60px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.details-section {
+  flex: 2;
+}
+
+.product-title {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.pricing {
+  margin-bottom: 10px;
+}
+
+.discounted-price {
+  color: red;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.original-price {
+  text-decoration: line-through;
+  margin-left: 10px;
+}
+
+.rating {
+  margin-bottom: 20px;
+}
+
+.size-picker,
+.color-picker,
+.quantity {
+  margin-bottom: 15px;
+}
+
+.buttons button {
+  padding: 10px 15px;
+  margin-right: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.buttons button:hover {
+  background-color: #0056b3;
+}
+
+.product-description {
+  margin-top: 40px;
+}
+
+.product-description h2 {
+  margin-top: 20px;
+}
+
+/* Removes spinner (dial) from number inputs */
 .custom-input::-webkit-outer-spin-button,
 .custom-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .custom-input {
   -moz-appearance: textfield; /* Firefox fix */
+}
+
+/* ADDED: Product Details Size Button Styles - Unique class names to avoid conflicts */
+.product-size-buttons-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+.product-size-button {
+  padding: 10px 16px !important;
+  border: 2px solid #dee2e6 !important;
+  background-color: white !important;
+  color: #495057 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  min-width: 50px !important;
+  text-align: center !important;
+  user-select: none !important;
+  outline: none !important;
+}
+
+.product-size-button:hover {
+  border-color: #007bff !important;
+  color: #007bff !important;
+  background-color: #f8f9ff !important;
+  transform: translateY(-1px) !important;
+}
+
+.product-size-button:focus {
+  border-color: #007bff !important;
+  color: #007bff !important;
+  background-color: #f8f9ff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25) !important;
+}
+
+.product-size-button.product-size-selected {
+  background-color: #007bff !important;
+  color: white !important;
+  border-color: #007bff !important;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3) !important;
+}
+
+.product-size-button.product-size-selected:hover {
+  background-color: #0056b3 !important;
+  border-color: #0056b3 !important;
+}
+
+.product-size-button.product-size-selected:focus {
+  background-color: #0056b3 !important;
+  border-color: #0056b3 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25) !important;
+}
+
+.product-selected-sizes-display {
+  margin-top: 8px !important;
+}
+
+.product-selected-sizes-display small {
+  font-style: italic !important;
+  color: #007bff !important;
+  font-weight: 500 !important;
+}
+
+/* Responsive adjustments for product size buttons */
+@media (max-width: 768px) {
+  .product-size-button {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    min-width: 45px !important;
+  }
+  
+  .product-size-buttons-container {
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-size-button {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    min-width: 40px !important;
+  }
+  
+  .product-size-buttons-container {
+    gap: 6px !important;
+  }
+  
+  .product-selected-sizes-display small {
+    font-size: 11px !important;
+  }
 }

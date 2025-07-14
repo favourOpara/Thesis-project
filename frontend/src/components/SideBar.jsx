@@ -3,17 +3,23 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
 
-// Categories data
+// Complete Categories Data - Aligned with CategoryPage and AddProduct
 const categoriesData = [
   {
     name: "Clothing materials",
+    value: "Clothing materials",
     subcategories: [
       "Traditional materials",
       "African prints",
       "Aso-ebi",
       "Wrappers",
       "Shirts",
+      "Baby wears",
+      "Sweatshirts",
+      "Hoodies",
       "Trousers",
+      "Joggers",
+      "Shorts",
       "Gym wears",
       "Underwears",
       "Dresses",
@@ -27,6 +33,7 @@ const categoriesData = [
   },
   {
     name: "Body accessories",
+    value: "Body accessories",
     subcategories: [
       "Handbags",
       "Purses",
@@ -39,6 +46,7 @@ const categoriesData = [
   },
   {
     name: "Household items",
+    value: "Household items",
     subcategories: [
       "Kitchenware",
       "Cookware",
@@ -49,7 +57,41 @@ const categoriesData = [
     ],
   },
   {
+    name: "Sports & Fitness",
+    value: "Sports and fitness",
+    subcategories: [
+      "Football equipment",
+      "Basketball equipment",
+      "Tennis equipment",
+      "Swimming gear",
+      "Running gear",
+      "Cycling equipment",
+      "Boxing equipment",
+      "Golf equipment",
+      "Outdoor sports",
+      "Team sports",
+      "Other",
+    ],
+  },
+  {
+    name: "Gym & Workout",
+    value: "Gym and workout equipment",
+    subcategories: [
+      "Weights and dumbbells",
+      "Cardio machines",
+      "Yoga and pilates",
+      "Resistance bands",
+      "Exercise mats",
+      "Fitness trackers",
+      "Protein supplements",
+      "Gym bags",
+      "Home gym equipment",
+      "Other",
+    ],
+  },
+  {
     name: "Electronics",
+    value: "Electronics and appliances",
     subcategories: [
       "Mobile phones",
       "Television",
@@ -71,6 +113,7 @@ const categoriesData = [
   },
   {
     name: "Agriculture & Food",
+    value: "agriculture, food, and groceries",
     subcategories: [
       "Fresh fruits",
       "Vegetables",
@@ -90,6 +133,7 @@ const categoriesData = [
   },
   {
     name: "Beauty & Health",
+    value: "Cosmetic and beauty products",
     subcategories: [
       "Skincare",
       "Haircare",
@@ -101,6 +145,7 @@ const categoriesData = [
   },
   {
     name: "Arts & Crafts",
+    value: "Arts and craft",
     subcategories: [
       "Handcrafted sculptures",
       "Carvings",
@@ -115,6 +160,7 @@ const categoriesData = [
   },
   {
     name: "Stationery",
+    value: "Stationery",
     subcategories: [
       "Writing materials",
       "Office supplies",
@@ -125,6 +171,7 @@ const categoriesData = [
   },
   {
     name: "Furniture & Decor",
+    value: "Furniture and home decor",
     subcategories: [
       "Chairs",
       "Tables",
@@ -139,6 +186,7 @@ const categoriesData = [
   },
   {
     name: "Autoparts",
+    value: "Autoparts and accessories",
     subcategories: [
       "Vehicle spare parts",
       "Car accessories",
@@ -148,6 +196,7 @@ const categoriesData = [
   },
   {
     name: "Building Materials",
+    value: "Building materials",
     subcategories: [
       "Cement",
       "Sand",
@@ -163,6 +212,7 @@ const categoriesData = [
   },
   {
     name: "Toys & Kids",
+    value: "Toys and children products",
     subcategories: [
       "Dolls",
       "Action figures",
@@ -173,9 +223,290 @@ const categoriesData = [
       "Other",
     ],
   },
-  { name: "Miscellaneous", subcategories: [] },
-  { name: "Animal Pets", subcategories: ["Pets", "Pet food", "Other"] },
-  { name: "Adult", subcategories: ["Sex toys", "Lubricants", "Other"] },
+  {
+    name: "Books & Media",
+    value: "Books and media",
+    subcategories: [
+      "Fiction books",
+      "Non-fiction books",
+      "Educational books",
+      "Children books",
+      "Religious books",
+      "Magazines",
+      "Newspapers",
+      "DVDs and CDs",
+      "Audiobooks",
+      "Comics and manga",
+      "Other",
+    ],
+  },
+  {
+    name: "Health & Medical",
+    value: "Health and medical",
+    subcategories: [
+      "First aid supplies",
+      "Medical devices",
+      "Vitamins and supplements",
+      "Personal care",
+      "Dental care",
+      "Eye care",
+      "Hearing aids",
+      "Mobility aids",
+      "Health monitors",
+      "Prescription items",
+      "Other",
+    ],
+  },
+  {
+    name: "Travel & Luggage",
+    value: "Travel and luggage",
+    subcategories: [
+      "Suitcases",
+      "Backpacks",
+      "Travel bags",
+      "Laptop bags",
+      "Travel accessories",
+      "Travel pillows",
+      "Passport holders",
+      "Luggage locks",
+      "Travel organizers",
+      "Other",
+    ],
+  },
+  {
+    name: "Musical Instruments",
+    value: "Musical instruments",
+    subcategories: [
+      "Guitars",
+      "Keyboards and pianos",
+      "Drums",
+      "Wind instruments",
+      "String instruments",
+      "DJ equipment",
+      "Recording equipment",
+      "Music accessories",
+      "Traditional instruments",
+      "Sheet music",
+      "Other",
+    ],
+  },
+  {
+    name: "Jewelry & Watches",
+    value: "Jewelry and watches",
+    subcategories: [
+      "Necklaces",
+      "Earrings",
+      "Rings",
+      "Bracelets",
+      "Watches",
+      "Engagement rings",
+      "Wedding bands",
+      "Fashion jewelry",
+      "Traditional jewelry",
+      "Jewelry accessories",
+      "Other",
+    ],
+  },
+  {
+    name: "Photography & Cameras",
+    value: "Photography and cameras",
+    subcategories: [
+      "Digital cameras",
+      "Film cameras",
+      "Camera lenses",
+      "Tripods",
+      "Camera bags",
+      "Memory cards",
+      "Lighting equipment",
+      "Photo frames",
+      "Photo albums",
+      "Video equipment",
+      "Other",
+    ],
+  },
+  {
+    name: "Garden & Outdoor",
+    value: "Garden and outdoor",
+    subcategories: [
+      "Plants and seeds",
+      "Garden tools",
+      "Pots and planters",
+      "Fertilizers",
+      "Outdoor furniture",
+      "BBQ and grills",
+      "Garden decor",
+      "Watering equipment",
+      "Lawn care",
+      "Camping gear",
+      "Other",
+    ],
+  },
+  {
+    name: "Services",
+    value: "Services",
+    subcategories: [
+      "Cleaning services",
+      "Repair services",
+      "Tutoring",
+      "Photography services",
+      "Event planning",
+      "Transportation",
+      "Home improvement",
+      "Beauty services",
+      "IT services",
+      "Consulting",
+      "Other",
+    ],
+  },
+  {
+    name: "Office & Business",
+    value: "Office and business",
+    subcategories: [
+      "Office furniture",
+      "Office supplies",
+      "Printers and scanners",
+      "Business equipment",
+      "Filing and storage",
+      "Presentation equipment",
+      "Communication devices",
+      "Software",
+      "Industrial equipment",
+      "Safety equipment",
+      "Other",
+    ],
+  },
+  {
+    name: "Baby & Maternity",
+    value: "Baby and maternity",
+    subcategories: [
+      "Baby clothing",
+      "Baby gear",
+      "Baby feeding",
+      "Diapers and wipes",
+      "Baby furniture",
+      "Maternity wear",
+      "Baby toys",
+      "Baby safety",
+      "Strollers and car seats",
+      "Nursing supplies",
+      "Other",
+    ],
+  },
+  {
+    name: "Food & Beverages",
+    value: "Food and beverages",
+    subcategories: [
+      "Beverages",
+      "Snacks",
+      "Condiments and sauces",
+      "Baking supplies",
+      "Frozen foods",
+      "Canned goods",
+      "Dairy products",
+      "Specialty foods",
+      "International foods",
+      "Organic foods",
+      "Other",
+    ],
+  },
+  {
+    name: "Party & Events",
+    value: "Party and events",
+    subcategories: [
+      "Party supplies",
+      "Decorations",
+      "Birthday supplies",
+      "Wedding supplies",
+      "Holiday decorations",
+      "Balloons",
+      "Party favors",
+      "Catering supplies",
+      "Event furniture",
+      "Entertainment",
+      "Other",
+    ],
+  },
+  {
+    name: "Antiques & Collectibles",
+    value: "Antiques and collectibles",
+    subcategories: [
+      "Vintage items",
+      "Rare books",
+      "Coins and stamps",
+      "Artwork",
+      "Memorabilia",
+      "Antique furniture",
+      "Vintage clothing",
+      "Collectible toys",
+      "Historical items",
+      "Other",
+    ],
+  },
+  {
+    name: "Religious & Spiritual",
+    value: "Religious and spiritual",
+    subcategories: [
+      "Religious books",
+      "Prayer items",
+      "Religious clothing",
+      "Spiritual jewelry",
+      "Religious art",
+      "Meditation supplies",
+      "Candles and incense",
+      "Religious music",
+      "Ceremonial items",
+      "Other",
+    ],
+  },
+  {
+    name: "Animal Pets",
+    value: "Pets and animals",
+    subcategories: [
+      "Dogs",
+      "Cats",
+      "Birds",
+      "Fish and aquariums",
+      "Small animals",
+      "Reptiles",
+      "Pet food",
+      "Pet toys",
+      "Pet accessories",
+      "Pet grooming",
+      "Pet health",
+      "Pet training",
+      "Pet carriers",
+      "Other",
+    ],
+  },
+  {
+    name: "Miscellaneous",
+    value: "Miscellaneous",
+    subcategories: [
+      "Gift cards",
+      "Tickets",
+      "Vouchers",
+      "Craft supplies",
+      "Hobby items",
+      "Seasonal items",
+      "Novelty items",
+      "Custom items",
+      "Bulk items",
+      "Other",
+    ],
+  },
+  {
+    name: "Adult",
+    value: "Adult",
+    subcategories: [
+      "Adult entertainment",
+      "Adult toys",
+      "Adult accessories",
+      "Adult books and media",
+      "Adult clothing",
+      "Wellness products",
+      "Other",
+    ],
+  },
 ];
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
@@ -233,6 +564,16 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     if (isMobile) {
       toggleSidebar();
     }
+  };
+
+  // Generate category URL
+  const getCategoryUrl = (categoryValue) => {
+    return `/category/${encodeURIComponent(categoryValue)}`;
+  };
+
+  // Generate subcategory URL
+  const getSubcategoryUrl = (categoryValue, subcategory) => {
+    return `/category/${encodeURIComponent(categoryValue)}?subcategory=${encodeURIComponent(subcategory)}`;
   };
 
   // MOBILE VERSION
@@ -331,21 +672,29 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
             <div className={`dropdown-content ${openCategories['main-categories'] ? 'open' : ''}`}>
               {categoriesData.map((category, idx) => (
                 <div key={idx} className="category-item">
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggleCategory(category.name);
-                    }}
-                    className="category-toggle"
-                  >
-                    <span>{category.name}</span>
+                  <div className="category-header">
+                    <Link
+                      to={getCategoryUrl(category.value)}
+                      className="category-main-link"
+                      onClick={closeAllAndSidebar}
+                    >
+                      {category.name}
+                    </Link>
                     {category.subcategories.length > 0 && (
-                      <span className={`dropdown-arrow ${openCategories[category.name] ? 'open' : ''}`}>
-                        ▶
-                      </span>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleCategory(category.name);
+                        }}
+                        className="category-expand-btn"
+                      >
+                        <span className={`dropdown-arrow ${openCategories[category.name] ? 'open' : ''}`}>
+                          ▶
+                        </span>
+                      </button>
                     )}
-                  </button>
+                  </div>
                   
                   {/* Sub-subcategories */}
                   {category.subcategories.length > 0 && (
@@ -353,7 +702,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
                       {category.subcategories.map((sub, subIdx) => (
                         <Link
                           key={subIdx}
-                          to="/pages/ComingSoon.jsx"
+                          to={getSubcategoryUrl(category.value, sub)}
                           className="subcategory-link"
                           onClick={closeAllAndSidebar}
                         >
@@ -473,27 +822,36 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
           <div className="desktop-dropdown">
             {categoriesData.map((category, idx) => (
               <div key={idx} className="desktop-category-item">
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleCategory(`desktop-${category.name}`);
-                  }}
-                  className="desktop-category-toggle"
-                >
-                  <span>{category.name}</span>
+                <div className="desktop-category-header">
+                  <Link
+                    to={getCategoryUrl(category.value)}
+                    className="desktop-category-main-link"
+                    onClick={closeAllAndSidebar}
+                    style={{ color: '#333', textDecoration: 'none', flex: 1 }}
+                  >
+                    {category.name}
+                  </Link>
                   {category.subcategories.length > 0 && (
-                    <span className={`dropdown-arrow ${openCategories[`desktop-${category.name}`] ? 'open' : ''}`}>
-                      ▶
-                    </span>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleCategory(`desktop-${category.name}`);
+                      }}
+                      className="desktop-category-expand-btn"
+                    >
+                      <span className={`dropdown-arrow ${openCategories[`desktop-${category.name}`] ? 'open' : ''}`}>
+                        ▶
+                      </span>
+                    </button>
                   )}
-                </button>
+                </div>
                 {openCategories[`desktop-${category.name}`] && category.subcategories.length > 0 && (
                   <div className={`desktop-subcategory-content ${openCategories[`desktop-${category.name}`] ? 'open' : ''}`}>
                     {category.subcategories.map((sub, subIdx) => (
                       <Link
                         key={subIdx}
-                        to="/pages/ComingSoon.jsx"
+                        to={getSubcategoryUrl(category.value, sub)}
                         className="desktop-subcategory-link"
                         onClick={closeAllAndSidebar}
                       >
