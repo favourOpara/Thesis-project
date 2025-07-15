@@ -1,71 +1,3 @@
-/* ADDED: Hide vertical scrollbar while keeping scroll functionality */
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for Firefox */
-html {
-  scrollbar-width: none;
-}
-
-/* Hide scrollbar for Internet Explorer and Edge */
-body {
-  -ms-overflow-style: none;
-}
-
-/* ADDED: Hide vertical scrollbar while keeping scroll functionality */
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for Firefox */
-html {
-  scrollbar-width: none;
-}
-
-/* Hide scrollbar for Internet Explorer and Edge */
-body {
-  -ms-overflow-style: none;
-}
-
-/* FIXED: Completely prevent horizontal scrolling */
-html {
-  overflow-x: hidden !important;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-  width: 100% !important;
-  max-width: 100vw !important;
-}
-
-body {
-  overflow-x: hidden !important;
-  overflow-y: auto;
-  width: 100% !important;
-  max-width: 100vw !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* FIXED: Ensure no element can cause horizontal scroll */
-* {
-  max-width: 100vw !important;
-  box-sizing: border-box !important;
-}
-
-/* ADDED: Ensure the main container doesn't create horizontal scroll */
-.home-container {
-  width: 100% !important;
-  max-width: 100vw !important;
-  overflow-x: hidden !important;
-}
-
-/* ADDED: Smooth scrolling for mobile devices */
-@media (max-width: 768px) {
-  html {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
 :root {
   /* Original spacing variables */
   --spacing-unit: 0px;
@@ -94,9 +26,6 @@ body {
   margin-bottom: var(--section-gap);
   overflow-x: auto; /* Horizontal scroll if too wide */
   scrollbar-width: none;
-  /* ADDED: Ensure sections don't exceed viewport width */
-  max-width: 100vw;
-  box-sizing: border-box;
 }
 
 .recommended-section {
@@ -128,9 +57,6 @@ body {
 .categories-section {
   padding: var(--spacing-unit);
   margin: var(--section-gap) 0;
-  /* ADDED: Ensure categories don't exceed viewport */
-  max-width: 100vw;
-  box-sizing: border-box;
 }
 
 .categories-grid {
@@ -157,9 +83,6 @@ body {
   gap: var(--additional-section-gap); /* Default gap = 20px */
   margin-top: var(--additional-section-gap);
   justify-content: space-between; /* side-by-side on desktop */
-  /* ADDED: Ensure container doesn't exceed viewport */
-  max-width: 100vw;
-  box-sizing: border-box;
 }
 
 /* Each additional section (Wholesale, MostVisited) */
@@ -196,8 +119,6 @@ body {
   transition: transform 0.2s, box-shadow 0.2s;
   width: 100%;
   max-width: none;
-  /* ADDED: Ensure product cards don't cause overflow */
-  box-sizing: border-box;
 }
 
 .product-card:hover {
@@ -210,8 +131,6 @@ body {
   height: 100px;
   object-fit: contain;
   background-color: #f9f9f9;
-  /* ADDED: Ensure images don't exceed container */
-  max-width: 100%;
 }
 
 /* -------------------------------------
@@ -257,17 +176,4 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-/* ADDED: Additional safety for preventing horizontal scroll */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* ADDED: Ensure Layout component doesn't create scrollbars */
-.layout-container {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
 }

@@ -8,11 +8,11 @@ import image2 from "../assets/img/1.png";
 
 const ScrollingBanner = () => {
   return (
-    <div className="scrolling-banner-container">
-      <h3 className="banner-title">Casual Fashion</h3>
+    <div className="fashion-scrolling-banner-container">
+      <h3 className="fashion-banner-title">Casual Fashion</h3>
 
       {/* The continuously scrolling track */}
-      <div className="scroll-track">
+      <div className="fashion-scroll-track">
         {/* Repeat each image at least twice for seamless loop */}
         <Link to="/coming-soon">
           <img src={image1} alt="Fashion 1" />

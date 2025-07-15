@@ -87,6 +87,9 @@ const ProductDetails = () => {
     productImagesArray.push("/OIP.png");
   }
 
+  // FIXED: Determine if we should show carousel or single image
+  const hasMultipleImages = productImagesArray.length > 1;
+
   return (
     <>
       <Header />
@@ -96,36 +99,46 @@ const ProductDetails = () => {
             <div className="widget-content widget-content-area br-8">
               <div className="row justify-content-center" style={{ marginTop: "130px" }}>
                 <div className="col-xxl-5 col-xl-6 col-lg-7 col-md-7 col-sm-9 col-12 d-flex justify-content-center align-items-center">
-                  <Splide
-                    options={{
-                      type: "loop",
-                      perPage: 1,
-                      autoplay: true,
-                      arrows: true,
-                      pagination: true,
-                    }}
-                    className="w-100"
-                  >
-                    {productImagesArray.map((image, index) => (
-                      <SplideSlide key={index} className="d-flex justify-content-center">
-                        <img
-                          src={image}
-                          alt={`Product Image ${index + 1}`}
-                          className="img-fluid"
-                          style={{
-                            maxWidth: "100%",
-                            height: "400px",
-                            objectFit: "contain",
-                            display: "block",
-                            margin: "auto",
-                          }}
-                          onError={(e) => {
-                            e.target.src = "/OIP.png";
-                          }}
-                        />
-                      </SplideSlide>
-                    ))}
-                  </Splide>
+                  {/* FIXED: Conditional rendering based on number of images */}
+                  {hasMultipleImages ? (
+                    <Splide
+                      options={{
+                        type: "loop",
+                        perPage: 1,
+                        autoplay: true,
+                        arrows: true,
+                        pagination: true,
+                        gap: 0, // Remove gap between slides
+                        padding: 0, // Remove padding
+                      }}
+                      className="product-image-carousel"
+                    >
+                      {productImagesArray.map((image, index) => (
+                        <SplideSlide key={index} className="product-slide">
+                          <img
+                            src={image}
+                            alt={`Product Image ${index + 1}`}
+                            className="product-slide-image"
+                            onError={(e) => {
+                              e.target.src = "/OIP.png";
+                            }}
+                          />
+                        </SplideSlide>
+                      ))}
+                    </Splide>
+                  ) : (
+                    /* FIXED: Single image display without carousel */
+                    <div className="single-product-image">
+                      <img
+                        src={productImagesArray[0]}
+                        alt="Product Image"
+                        className="product-single-image"
+                        onError={(e) => {
+                          e.target.src = "/OIP.png";
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="col-xxl-4 col-xl-5 col-lg-12 col-md-12 col-12 mt-xl-0 mt-5 align-self-center">

@@ -88,6 +88,107 @@
   -moz-appearance: textfield; /* Firefox fix */
 }
 
+/* FIXED: Product Image Carousel Styles - Reduced Heights */
+.product-image-carousel {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.product-image-carousel .splide__track {
+  overflow: visible !important;
+}
+
+.product-image-carousel .splide__list {
+  align-items: center !important;
+}
+
+.product-slide {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 280px !important; /* REDUCED from 400px to 280px */
+  overflow: hidden !important;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.product-slide-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+  border-radius: 8px;
+}
+
+/* FIXED: Single Image Display - Reduced Height */
+.single-product-image {
+  width: 100%;
+  height: 280px; /* REDUCED from 400px to 280px */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.product-single-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+/* FIXED: Override Splide default styles that cause overlapping */
+.product-image-carousel .splide__slide {
+  opacity: 1 !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.product-image-carousel .splide__slide img {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* FIXED: Ensure arrows and pagination don't interfere */
+.product-image-carousel .splide__arrows {
+  position: absolute;
+  z-index: 10;
+}
+
+.product-image-carousel .splide__arrow {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+}
+
+.product-image-carousel .splide__arrow svg {
+  fill: white !important;
+}
+
+.product-image-carousel .splide__pagination {
+  bottom: 10px !important;
+  position: absolute !important;
+  z-index: 10 !important;
+}
+
+.product-image-carousel .splide__pagination__page {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.product-image-carousel .splide__pagination__page.is-active {
+  background-color: white !important;
+}
+
 /* ADDED: Product Details Size Button Styles - Unique class names to avoid conflicts */
 .product-size-buttons-container {
   display: flex !important;
@@ -165,6 +266,17 @@
   .product-size-buttons-container {
     gap: 8px !important;
   }
+  
+  /* FIXED: Mobile image adjustments - Smaller heights */
+  .product-slide,
+  .single-product-image {
+    height: 220px !important; /* REDUCED from 300px to 220px */
+  }
+  
+  .product-image-carousel .splide__arrow {
+    width: 35px !important;
+    height: 35px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -180,5 +292,16 @@
   
   .product-selected-sizes-display small {
     font-size: 11px !important;
+  }
+  
+  /* FIXED: Small mobile image adjustments - Even smaller heights */
+  .product-slide,
+  .single-product-image {
+    height: 200px !important; /* REDUCED from 250px to 200px */
+  }
+  
+  .product-image-carousel .splide__arrow {
+    width: 30px !important;
+    height: 30px !important;
   }
 }
