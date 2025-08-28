@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      console.log("AuthContext - User Data from API:", response.data); // Debugging
       setUser(response.data);
       localStorage.setItem("user", JSON.stringify(response.data)); // **Store user in localStorage**
     } catch (err) {

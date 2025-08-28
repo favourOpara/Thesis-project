@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { NotificationContext } from "../context/NotificationContext.jsx";
 import { useAddToCartMutation } from "../redux/api/cartApi";
@@ -50,6 +51,20 @@ const ProductCard = ({ product }) => {
       </button>
     </div>
   );
+};
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    price: PropTypes.string.isRequired,
+    main_image_url: PropTypes.string,
+    images: PropTypes.arrayOf(
+      PropTypes.shape({
+        image_url: PropTypes.string
+      })
+    )
+  }).isRequired
 };
 
 export default ProductCard;

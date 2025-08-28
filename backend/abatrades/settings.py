@@ -48,7 +48,7 @@ storage.default_storage = MediaCloudinaryStorage()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
@@ -161,7 +161,7 @@ from datetime import timedelta
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
     "BLACKLIST_AFTER_ROTATION": True,
 }
