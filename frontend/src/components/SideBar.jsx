@@ -44,11 +44,21 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     if (isMobile && isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
+      // iOS rubber-band fix: if the page is at the very top, a 1px nudge
+      // stops Safari from triggering its native top-bounce before our
+      // touchmove handler can intercept it.
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchmove', preventBackgroundScroll, { passive: false });
+      // Restore to true top if we nudged it
+      if (window.scrollY === 1) {
+        window.scrollTo(0, 0);
+      }
     };
   }, [isOpen, toggleSidebar, isMobile]);
 
