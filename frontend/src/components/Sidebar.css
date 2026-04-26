@@ -23,17 +23,25 @@
   height: 100vh;
   background: #ffffff;
   z-index: 1060;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   transform: translateX(-100%);
   transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   flex-direction: column;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
-.mobile-sidebar::-webkit-scrollbar { display: none; }
+.sidebar-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-scroll-body::-webkit-scrollbar { display: none; }
 
 .mobile-sidebar.open {
   transform: translateX(0);
@@ -49,6 +57,7 @@
   background: #fff;
   min-height: 56px;
   flex-shrink: 0;
+  z-index: 1;
 }
 
 .sidebar-logo {

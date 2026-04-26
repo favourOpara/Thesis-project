@@ -102,7 +102,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
 
         <div ref={sidebarRef} className={`mobile-sidebar ${isOpen ? 'open' : ''}`}>
 
-          {/* ── Top bar ── */}
+          {/* ── Top bar — fixed, never scrolls ── */}
           <div className="sidebar-header">
             <span className="sidebar-logo">aba<span>trades</span></span>
             <button onClick={toggleSidebar} className="close-btn" aria-label="Close menu">
@@ -111,6 +111,9 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
               </svg>
             </button>
           </div>
+
+          {/* ── Scrollable content ── */}
+          <div className="sidebar-scroll-body">
 
           {/* ── User greeting ── */}
           {user ? (
@@ -233,6 +236,8 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
               </Link>
             </div>
           )}
+
+          </div>{/* end sidebar-scroll-body */}
         </div>
       </>
     );
