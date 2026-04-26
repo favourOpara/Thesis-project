@@ -227,7 +227,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
 
           {/* ── Seller dashboard ── */}
           {user?.user_type === "seller" && (
-            <Link to="/seller-dashboard" className="sidebar-nav-row" onClick={closeAllAndSidebar} style={{ textDecoration: "none" }}>
+            <Link to="/seller/overview" className="sidebar-nav-row" onClick={closeAllAndSidebar} style={{ textDecoration: "none" }}>
               <div className="nav-icon" style={{ background: "#eff6ff" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b7bf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>

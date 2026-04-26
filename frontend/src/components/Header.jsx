@@ -274,7 +274,7 @@ const Header = () => {
 
               {/* Seller dashboard shortcut */}
               {isSeller && (
-                <Link to="/seller-dashboard" style={{ display: "inline-flex" }}>
+                <Link to="/seller/overview" style={{ display: "inline-flex" }}>
                   <span className="avatar-icon rounded-circle" style={{ backgroundColor: "#eff6ff", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="7" height="7"/>
@@ -288,7 +288,7 @@ const Header = () => {
 
               {/* Profile */}
               {!shouldHideSearchAndProfile && (
-                <Link to={user ? (isSeller ? "/seller-dashboard" : "/user-profile") : "/signin"} style={{ display: "inline-flex" }}>
+                <Link to={user ? (isSeller ? "/seller/overview" : "/user-profile") : "/signin"} style={{ display: "inline-flex" }}>
                   <span className="avatar-icon rounded-circle" style={{ backgroundColor: "#f1f5f9", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

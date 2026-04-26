@@ -164,7 +164,7 @@ const DiasporaSection = () => (
           fontSize: "16px", color: "rgba(255,255,255,0.75)",
           maxWidth: "560px", margin: "0 auto", lineHeight: 1.75,
         }}>
-          You don't need to be in Lagos to sell to Lagos. Whether you're in London, Houston, or Dubai —
+          You don't need to be in Nigeria to sell to Nigeria. Whether you're in London, Houston, or Dubai —
           we handle the warehousing, fulfilment, and last-mile delivery so your customers get their orders on time.
         </p>
       </div>
@@ -258,6 +258,188 @@ const DiasporaSection = () => (
     <style>{`
       @media (max-width: 768px) {
         .diaspora-grid { grid-template-columns: 1fr !important; }
+      }
+    `}</style>
+  </section>
+);
+
+/* ─────────────────────────────────────────
+   RAFIKI PARTNER SECTION
+───────────────────────────────────────── */
+const RafikiSection = () => (
+  <section style={{
+    background: "#fff",
+    padding: "72px 20px",
+    overflow: "hidden",
+  }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+
+      {/* Top label */}
+      <div style={{ textAlign: "center", marginBottom: "48px" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "#fef3c7", borderRadius: "999px",
+          padding: "6px 16px", marginBottom: "20px",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#d97706"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          <span style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+            Official Partner
+          </span>
+        </div>
+
+        <h2 style={{
+          fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 900,
+          color: "#0f172a", lineHeight: 1.15, marginBottom: "14px",
+          letterSpacing: "-0.3px",
+        }}>
+          Don't know how to source products abroad?<br />
+          <span style={{ color: "#f59e0b" }}>We've got you covered.</span>
+        </h2>
+        <p style={{
+          fontSize: "16px", color: "#64748b", maxWidth: "620px",
+          margin: "0 auto", lineHeight: 1.75,
+        }}>
+          Through our partnership with <strong style={{ color: "#0f172a" }}>Rafiki.com.ng</strong>, you can source
+          directly from China and have your goods delivered straight to your door — or our warehouse.
+          Once your stock is with us, we handle every delivery to your buyers. You never have to go anywhere.
+        </p>
+      </div>
+
+      {/* Main card */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "0",
+        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
+        borderRadius: "24px",
+        overflow: "hidden",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.14)",
+      }}
+        className="rafiki-grid"
+      >
+        {/* Left — copy */}
+        <div style={{ padding: "52px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "10px",
+            marginBottom: "28px",
+          }}>
+            <div style={{
+              background: "#f59e0b", borderRadius: "10px",
+              width: "40px", height: "40px",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" fill="rgba(255,255,255,0.3)"/></svg>
+            </div>
+            <span style={{ color: "#f59e0b", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.3px" }}>
+              rafiki.com.ng
+            </span>
+          </div>
+
+          <h3 style={{
+            color: "white", fontWeight: 900, fontSize: "clamp(20px, 2.5vw, 28px)",
+            lineHeight: 1.25, marginBottom: "20px",
+          }}>
+            Source abroad. Sell in Nigeria.<br />Never leave your house.
+          </h3>
+
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "14.5px", lineHeight: 1.75, marginBottom: "32px" }}>
+            Rafiki sources your products from China and ships them directly to your
+            designated address — whether that's your home or our Abatrades warehouse.
+            From there, every time a buyer places an order, we handle the delivery.
+            No logistics headache. No running around. Just sales.
+          </p>
+
+          <a
+            href="https://rafiki.com.ng"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: "#f59e0b", color: "#0f172a",
+              padding: "13px 28px", borderRadius: "10px",
+              fontWeight: 800, fontSize: "14px", textDecoration: "none",
+              alignSelf: "flex-start",
+              transition: "background 0.15s, transform 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#fbbf24"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#f59e0b"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            Visit Rafiki
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+
+        {/* Right — feature tiles */}
+        <div style={{
+          background: "rgba(255,255,255,0.05)",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
+          padding: "40px 36px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "18px",
+          justifyContent: "center",
+        }}>
+          {[
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+              title: "Rafiki sources from China",
+              body: "Tell Rafiki what you need. They connect you to vetted manufacturers, handle quality checks, and get your goods on the move.",
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+              title: "Delivered to your address",
+              body: "Rafiki ships your goods directly to wherever you choose — your home, office, or our Abatrades warehouse.",
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>,
+              title: "We store your stock",
+              body: "Keep your products in our Abatrades warehouse. They go live on your storefront and are ready to fulfil orders instantly.",
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+              title: "We deliver to your buyers",
+              body: "Order comes in — we pack and ship it to your buyer anywhere in Nigeria. You collect your money. That's it.",
+            },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: "flex", gap: "14px", alignItems: "flex-start",
+              background: "rgba(255,255,255,0.07)",
+              borderRadius: "12px", padding: "16px 18px",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "9px", flexShrink: 0,
+                background: "rgba(245,158,11,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {item.icon}
+              </div>
+              <div>
+                <div style={{ color: "white", fontWeight: 700, fontSize: "13.5px", marginBottom: "4px" }}>
+                  {item.title}
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12.5px", lineHeight: 1.6 }}>
+                  {item.body}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom tagline */}
+      <p style={{
+        textAlign: "center", color: "#94a3b8", fontSize: "13px",
+        marginTop: "24px",
+      }}>
+        Abatrades x Rafiki — your full supply chain, handled.
+      </p>
+    </div>
+
+    <style>{`
+      @media (max-width: 768px) {
+        .rafiki-grid { grid-template-columns: 1fr !important; }
+        .rafiki-grid > div:last-child { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.1); }
       }
     `}</style>
   </section>
@@ -788,6 +970,7 @@ const Home = () => {
             <Marquee />
             <StatsStrip />
             <DiasporaSection />
+            <RafikiSection />
             <FeatureSection
               eyebrow="For sellers"
               headline={"Your brand.\nYour storefront.\nYour rules."}

@@ -1,6 +1,6 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 import "./assets/img/favicon.ico";
 import "../layouts/horizontal-light-menu/css/light/loader.css";
@@ -25,6 +25,12 @@ import Cart            from "./pages/Cart";
 import Checkout        from "./pages/Checkout";
 import Orders          from "./pages/Orders";
 import SellerDashboard from "./pages/SellerDashboard";
+import SellerLayout    from "./components/SellerLayout";
+import SellerOverview  from "./pages/SellerOverview";
+import SellerProducts  from "./pages/SellerProducts";
+import SellerOrders    from "./pages/SellerOrders";
+import SellerInquiries from "./pages/SellerInquiries";
+import SellerSettings  from "./pages/SellerSettings";
 import AddProduct      from "./pages/AddProduct";
 import BecomeASeller   from "./pages/BecomeASeller";
 import NotFound        from "./pages/NotFound";
@@ -74,8 +80,17 @@ const App = () => {
                   <Route path="/user-profile"          element={<UserProfile />} />
                   <Route path="/edit-profile"          element={<UpdateProfile />} />
 
-                  {/* Seller */}
-                  <Route path="/seller-dashboard"      element={<SellerDashboard />} />
+                  {/* Seller — new split pages */}
+                  <Route path="/seller" element={<SellerLayout />}>
+                    <Route index element={<Navigate to="overview" replace />} />
+                    <Route path="overview"   element={<SellerOverview />} />
+                    <Route path="products"   element={<SellerProducts />} />
+                    <Route path="orders"     element={<SellerOrders />} />
+                    <Route path="inquiries"  element={<SellerInquiries />} />
+                    <Route path="settings"   element={<SellerSettings />} />
+                  </Route>
+                  {/* Legacy redirect */}
+                  <Route path="/seller-dashboard" element={<Navigate to="/seller/overview" replace />} />
                   <Route path="/add-product"           element={<AddProduct />} />
                   <Route path="/edit-product/:id"      element={<EditProduct />} />
 

@@ -1209,9 +1209,20 @@ const EditProduct = () => {
                   <div className="d-flex gap-2 justify-content-end mt-2">
                     <button
                       type="button"
-                      className="btn btn-outline-secondary"
                       onClick={() => navigate(-1)}
                       disabled={loading}
+                      style={{
+                        background: "transparent",
+                        border: "1.5px solid #d1d5db",
+                        borderRadius: "7px",
+                        padding: "8px 20px",
+                        fontSize: "14px",
+                        color: "#374151",
+                        cursor: "pointer",
+                        transition: "border-color 0.15s, color 0.15s",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.color = "#ef4444"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.color = "#374151"; }}
                     >
                       Cancel
                     </button>
