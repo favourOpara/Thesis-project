@@ -317,6 +317,27 @@ class GoogleLoginView(APIView):
         return response
 
 
+# Switch Role View
+class SwitchRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.user_type = 'seller' if user.user_type == 'buyer' else 'buyer'
+        user.save()
+        return Response({
+            'success': True,
+            'user_type': user.user_type,
+            'user': {
+                'email':      user.email,
+                'first_name': user.first_name,
+                'last_name':  user.last_name,
+                'user_type':  user.user_type,
+                'has_shop':   hasattr(user, 'shop'),
+            }
+        })
+
+
 # Test View for CSRF Token (can be removed in production)
 @api_view(['GET', 'POST'])
 @csrf_exempt

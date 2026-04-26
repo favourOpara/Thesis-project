@@ -627,7 +627,7 @@ const NAV = [
 
 /* ── Layout ── */
 const SellerLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [shopLoading, setShopLoading] = useState(true);
@@ -635,6 +635,22 @@ const SellerLayout = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pageTitle, setPageTitle] = useState("Dashboard");
   const [topbarActions, setTopbarActions] = useState(null);
+  const [switchingRole, setSwitchingRole] = useState(false);
+
+  const handleSwitchToBuyer = async () => {
+    setSwitchingRole(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(`${BASE}/api/switch-role/`, {}, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      await refreshUser();
+      navigate("/user-profile", { replace: true });
+    } catch {
+      setSwitchingRole(false);
+    }
+  };
 
   useEffect(() => {
     if (user === null) navigate("/signin", { replace: true });
@@ -726,6 +742,18 @@ const SellerLayout = () => {
                 <IconExternal /> View My Store
               </Link>
             )}
+            <button
+              className="sd-footer-btn"
+              onClick={handleSwitchToBuyer}
+              disabled={switchingRole}
+              style={{ color: "#15803d" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {switchingRole ? "Switching…" : "Switch to Buyer"}
+            </button>
             <button className="sd-footer-btn signout" onClick={handleLogout}>
               <IconLogout /> Sign Out
             </button>

@@ -13,7 +13,25 @@ const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const Profile = () => {
   const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const [switching, setSwitching] = useState(false);
+
+  const handleSwitchToSeller = async () => {
+    setSwitching(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(`${BASE}/api/switch-role/`, {}, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      await refreshUser();
+      navigate("/seller/overview");
+    } catch {
+      toast.error("Could not switch role. Please try again.");
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const handleEditProfile = () => {
     navigate("/edit-profile");
@@ -129,6 +147,22 @@ const Profile = () => {
                     }}
                   >
                     Edit Profile
+                  </button>
+                  <button
+                    className="btn w-100"
+                    onClick={handleSwitchToSeller}
+                    disabled={switching}
+                    style={{
+                      backgroundColor: "#f0fdf4",
+                      color: "#15803d",
+                      border: "1.5px solid #86efac",
+                      padding: "10px 20px",
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      fontSize: "13.5px",
+                    }}
+                  >
+                    {switching ? "Switching…" : "Switch to Seller Account"}
                   </button>
                 </div>
               </div>
