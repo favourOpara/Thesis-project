@@ -20,7 +20,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close on outside click (mobile only)
+  // Close on outside click + lock background scroll (mobile only)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -34,28 +34,21 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
       }
     };
 
+    // Prevent background page from scrolling when sidebar is open.
+    // Only blocks touches that are outside the sidebar panel itself.
+    const preventBackgroundScroll = (e) => {
+      if (sidebarRef.current && sidebarRef.current.contains(e.target)) return;
+      e.preventDefault();
+    };
+
     if (isMobile && isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.dataset.scrollY = scrollY;
-    } else {
-      const scrollY = parseInt(document.body.dataset.scrollY || '0');
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      if (scrollY) window.scrollTo(0, scrollY);
+      document.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      const scrollY = parseInt(document.body.dataset.scrollY || '0');
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      if (scrollY) window.scrollTo(0, scrollY);
+      document.removeEventListener('touchmove', preventBackgroundScroll, { passive: false });
     };
   }, [isOpen, toggleSidebar, isMobile]);
 
