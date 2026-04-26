@@ -20,48 +20,45 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Track loading state
   const [error, setError] = useState(null); // Track errors
 
-  // Function to fetch user data - now works with HttpOnly cookies!
+  const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  // Fetch user profile using stored access token
   const fetchUserData = async () => {
     try {
-      // Use environment variable or default to production
-      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem("access_token");
       const response = await axios.get(`${baseURL}/api/user-info/`, {
-        withCredentials: true  // Send HttpOnly cookies with request
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-
       setUser(response.data);
-      localStorage.setItem("user", JSON.stringify(response.data)); // Store user in localStorage
+      localStorage.setItem("user", JSON.stringify(response.data));
     } catch (err) {
-      console.error("AuthContext - Error fetching user:", err);
       setUser(null);
-      localStorage.removeItem("user"); // Remove user if request fails
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to handle login - tokens are in HttpOnly cookies
+  // Call after login — token already stored, just fetch profile
   const login = async () => {
-    // Tokens are in HttpOnly cookies - just fetch user data
     await fetchUserData();
   };
 
-  // Function to handle logout - clear HttpOnly cookies via API
   const logout = async () => {
-    console.log("AuthContext - Logging out user");
-
     try {
-      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-      await axios.post(`${baseURL}/api/logout/`, {}, {
-        withCredentials: true  // Send cookies to be cleared
+      const token = localStorage.getItem("access_token");
+      await axios.post(`${baseURL}/api/signout/`, {}, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     } catch (error) {
-      console.error("Logout error:", error);
+      // ignore logout errors
     }
-
     localStorage.removeItem("user");
-
-    setUser(null); // Reset user state
+    localStorage.removeItem("access_token");
+    setUser(null);
   };
 
   // Initial fetch on component mount

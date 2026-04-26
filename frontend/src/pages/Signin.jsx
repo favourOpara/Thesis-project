@@ -17,12 +17,11 @@ const SignIn = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
 
-  const handleLoginSuccess = async (userData) => {
+  const handleLoginSuccess = async (userData, accessToken) => {
     try {
+      if (accessToken) localStorage.setItem("access_token", accessToken);
       localStorage.setItem("user", JSON.stringify(userData));
       await login(); // fetches full user profile from /api/user-info/
-
-      // user_type comes from the login response directly
       const isSeller = userData.user_type === "seller";
       navigate(isSeller ? "/seller-dashboard" : "/", { replace: true });
     } catch (error) {
@@ -63,8 +62,8 @@ const SignIn = () => {
         success: {
           render({ data }) {
             const userData = data.data.user;
-            // Tokens are now in HttpOnly cookies - just store user data
-            handleLoginSuccess(userData);
+            const accessToken = data.data.access_token;
+            handleLoginSuccess(userData, accessToken);
             return "Login successful!";
           },
         },

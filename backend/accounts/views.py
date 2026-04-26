@@ -62,10 +62,12 @@ class LoginView(APIView):
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
 
-                # Create response without tokens in body
+                # Include access token in body so frontend can use
+                # Authorization header — avoids cross-domain cookie issues
                 response = Response({
                     "success": True,
                     "message": "Login successful",
+                    "access_token": access_token,
                     "user": {
                         "email": user.email,
                         "first_name": user.first_name,
