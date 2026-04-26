@@ -35,10 +35,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  display: flex;
-  flex-direction: column;
 }
 
 .sidebar-scroll-body::-webkit-scrollbar { display: none; }
@@ -247,10 +246,8 @@
 
 /* ── Bottom CTA ── */
 .sidebar-bottom {
-  margin-top: auto;
   padding: 16px;
   border-top: 1px solid #f1f5f9;
-  flex-shrink: 0;
 }
 
 .sidebar-cta-btn {
