@@ -36,14 +36,26 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
 
     if (isMobile && isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'hidden';
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.dataset.scrollY = scrollY;
     } else {
-      document.body.style.overflow = 'unset';
+      const scrollY = parseInt(document.body.dataset.scrollY || '0');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) window.scrollTo(0, scrollY);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'unset';
+      const scrollY = parseInt(document.body.dataset.scrollY || '0');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) window.scrollTo(0, scrollY);
     };
   }, [isOpen, toggleSidebar, isMobile]);
 
