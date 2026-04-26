@@ -3,12 +3,14 @@ import axios from "axios";
 import "./ProductSection.css";
 import ProductCard from "./ProductCard";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const GameWithAbatrades = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/products/")
+      .get(`${BASE}/api/products/`)
       .then((response) => setProducts(response.data))
       .catch((error) => console.error("Error fetching products:", error));
   }, []);

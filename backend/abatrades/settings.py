@@ -18,22 +18,19 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(','
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
-# Local file storage for testing (Cloudinary disabled)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Cloudinary — enabled automatically when credentials are present (production)
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "")
+USE_CLOUDINARY = bool(CLOUDINARY_URL)
 
-# Force reload default storage to pick up our settings
-# Temporarily commented out - causing settings load issues
-# from django.core.files.storage import storages
-# from django.core.files import storage
-
-# Clear the cached default storage and force reload
-# if hasattr(storage, '_default_storage'):
-#     storage._default_storage = None
-
-# Explicitly set the default storage
-# from cloudinary_storage.storage import MediaCloudinaryStorage
-# storage.default_storage = MediaCloudinaryStorage()
+if USE_CLOUDINARY:
+    import cloudinary
+    cloudinary.config(url=CLOUDINARY_URL)
+    CLOUDINARY_STORAGE = {'CLOUDINARY_URL': CLOUDINARY_URL}
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'  # Cloudinary overrides this internally
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
@@ -41,8 +38,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Application definition
 INSTALLED_APPS = [
-    # 'cloudinary_storage',  # Disabled for local testing
-    # 'cloudinary',  # Disabled for local testing
+    'cloudinary_storage',
+    'cloudinary',
 
     'django.contrib.admin',
     'django.contrib.auth',

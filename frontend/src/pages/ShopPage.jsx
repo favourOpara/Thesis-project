@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Spinner from "../components/Spinner";
@@ -21,14 +23,14 @@ const ShopPage = () => {
     const fetchShop = async () => {
       try {
         const [shopRes, productsRes] = await Promise.all([
-          axios.get(`http://localhost:8000/api/shops/${slug}/`),
-          axios.get(`http://localhost:8000/api/shops/${slug}/products/`),
+          axios.get(`${BASE}/api/shops/${slug}/`),
+          axios.get(`${BASE}/api/shops/${slug}/products/`),
         ]);
         setShop(shopRes.data);
         setProducts(productsRes.data);
 
         // Record visit (fire and forget)
-        axios.post(`http://localhost:8000/api/shops/${slug}/visit/`).catch(() => {});
+        axios.post(`${BASE}/api/shops/${slug}/visit/`).catch(() => {});
       } catch (err) {
         if (err.response?.status === 404) setNotFound(true);
       } finally {

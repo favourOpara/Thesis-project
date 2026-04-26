@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ShopCard from "../components/ShopCard";
@@ -51,7 +53,7 @@ const CategoryPage = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`http://localhost:8000/api/shops/?category=${encodeURIComponent(decoded)}`)
+      .get(`${BASE}/api/shops/?category=${encodeURIComponent(decoded)}`)
       .then((res) => setShops(res.data))
       .catch(() => setShops([]))
       .finally(() => setLoading(false));

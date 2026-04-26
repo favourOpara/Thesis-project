@@ -8,6 +8,8 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const Profile = () => {
   const navigate = useNavigate();
 
@@ -29,7 +31,7 @@ const Profile = () => {
 
       // Send logout request to the backend
       await axios.post(
-        "http://localhost:8000/api/signout/", // Update with your actual logout endpoint
+        `${BASE}/api/signout/`,
         { refresh: refreshToken },
         {
           headers: {

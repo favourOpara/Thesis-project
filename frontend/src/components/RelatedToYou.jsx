@@ -3,12 +3,14 @@ import axios from "axios";
 import "./RelatedToYou.css"; // New CSS for this component
 import ProductCard from "./ProductCard";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const RelatedToYou = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/products/")
+      .get(`${BASE}/api/products/`)
       .then((response) => 
         setProducts(response.data.slice(0, 20)) // Limit to 20 products
       )

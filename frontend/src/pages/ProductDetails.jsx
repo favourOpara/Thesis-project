@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Spinner from "../components/Spinner";
@@ -33,14 +35,14 @@ const ProductDetails = () => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/products/${id}/`
+          `${BASE}/api/products/${id}/`
         );
         const productData = response.data;
         setProduct(productData);
 
         // Fetch the shop that owns this product
         if (productData.owner) {
-          const shopsRes = await axios.get("http://localhost:8000/api/shops/");
+          const shopsRes = await axios.get(`${BASE}/api/shops/`);
           const ownerShop = shopsRes.data.find((s) => s.owner_email === productData.owner);
           if (ownerShop) setShop(ownerShop);
         }
@@ -91,14 +93,14 @@ const ProductDetails = () => {
   if (product?.main_image_url) {
     const mainImage = product.main_image_url.startsWith("http")
       ? product.main_image_url
-      : `http://localhost:8000${product.main_image_url}`;
+      : `${BASE}${product.main_image_url}`;
     productImagesSet.add(mainImage);
   }
   if (Array.isArray(product?.images) && product.images.length > 0) {
     product.images.forEach((img) => {
       const imageUrl = img.image_url.startsWith("http")
         ? img.image_url
-        : `http://localhost:8000${img.image_url}`;
+        : `${BASE}${img.image_url}`;
       productImagesSet.add(imageUrl);
     });
   }

@@ -3,12 +3,14 @@ import axios from "axios";
 import "./ProductSection.css"; // Reuse the same styling
 import ProductCard from "./ProductCard";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const CookwithAbatrades = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/products/")
+      .get(`${BASE}/api/products/`)
       .then((res) => setProducts(res.data))
       .catch((err) => console.error("Error fetching CookwithAbatrades:", err));
   }, []);

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +42,7 @@ const UpdateProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/update-profile/", {
+        const response = await axios.get(`${BASE}/api/update-profile/`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         });
         setProfile(response.data);
@@ -63,7 +65,7 @@ const UpdateProfile = () => {
     let updatedUser = null;
     toast.promise(
       axios
-        .put("http://localhost:8000/api/update-profile/", profile, {
+        .put(`${BASE}/api/update-profile/`, profile, {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         })
         .then((response) => {
@@ -98,7 +100,7 @@ const UpdateProfile = () => {
     if (!confirmDelete) return;
 
     try {
-      const response = await axios.delete("http://localhost:8000/api/delete-account/", {
+      const response = await axios.delete(`${BASE}/api/delete-account/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
@@ -142,7 +144,7 @@ const UpdateProfile = () => {
     try {
       // Call the backend API to change the password
       const response = await axios.post(
-        "http://localhost:8000/api/change-password/",
+        `${BASE}/api/change-password/`,
         {
           old_password: currentPassword,  // Make sure this matches the backend's expected key
           new_password: newPassword,

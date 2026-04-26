@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 import Layout from "../components/Layout";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
@@ -530,7 +532,7 @@ const LiveSellers = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/shops/")
+    axios.get(`${BASE}/api/shops/`)
       .then(r => setShops(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));

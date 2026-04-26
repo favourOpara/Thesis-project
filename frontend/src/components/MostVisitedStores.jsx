@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ShopCard from "./ShopCard";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const MostVisitedStores = () => {
   const [shops, setShops] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/shops/?ordering=-visit_count")
+    axios.get(`${BASE}/api/shops/?ordering=-visit_count`)
       .then(res => setShops(res.data.slice(0, 6)))
       .catch(() => {});
   }, []);

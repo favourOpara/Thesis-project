@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const InquiryModal = ({ show, onClose, shop, product = null }) => {
   const [form, setForm] = useState({ visitor_name: "", visitor_email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +28,7 @@ const InquiryModal = ({ show, onClose, shop, product = null }) => {
       };
       if (product) payload.product = product.id;
 
-      await axios.post("http://localhost:8000/api/inquiries/", payload);
+      await axios.post(`${BASE}/api/inquiries/`, payload);
       setSubmitted(true);
     } catch (err) {
       setError("Something went wrong. Please try again.");

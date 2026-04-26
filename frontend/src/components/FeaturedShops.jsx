@@ -3,6 +3,8 @@ import axios from "axios";
 import ShopCard from "./ShopCard";
 import { Link } from "react-router-dom";
 
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 /* ── Horizontal scroll strip for a row of shop cards ── */
 const ShopRow = ({ shops }) => {
   if (shops.length === 0) return null;
@@ -136,7 +138,7 @@ const FeaturedShops = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/shops/")
+      .get(`${BASE}/api/shops/`)
       .then((res) => {
         setShops(res.data);
         setFiltered(res.data);
