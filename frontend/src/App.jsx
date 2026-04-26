@@ -33,6 +33,7 @@ import SellerInquiries from "./pages/SellerInquiries";
 import SellerSettings  from "./pages/SellerSettings";
 import AddProduct      from "./pages/AddProduct";
 import BecomeASeller   from "./pages/BecomeASeller";
+import Join            from "./pages/Join";
 import NotFound        from "./pages/NotFound";
 import ComingSoon      from "./pages/ComingSoon";
 
@@ -65,6 +66,7 @@ const App = () => {
                   <Route path="/signin"                element={<SignIn />} />
                   <Route path="/signup"                element={<SignUp />} />
                   <Route path="/sellersignup"          element={<SellerSignUp />} />
+                  <Route path="/join"                  element={<Join />} />
                   <Route path="/becomeaseller"         element={<BecomeASeller />} />
                   <Route path="/shop/:slug"            element={<ShopPage />} />
                   <Route path="/product/:id"           element={<ProductDetails />} />

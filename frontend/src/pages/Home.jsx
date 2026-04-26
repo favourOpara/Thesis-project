@@ -11,6 +11,7 @@ import SearchResults from "../components/SearchResults";
 import CookieConsent from "../components/CookieConsent";
 import SearchContext from "../context/SearchContext";
 import "./Home.css";
+import LogoImg from "../assets/img/abatrades-large-logo.png";
 
 /* ─────────────────────────────────────────
    SERVICES MARQUEE
@@ -235,7 +236,7 @@ const DiasporaSection = () => (
 
       {/* CTA */}
       <div style={{ textAlign: "center", marginTop: "48px" }}>
-        <Link to="/sellersignup" style={{
+        <Link to="/join?type=seller" style={{
           display: "inline-flex", alignItems: "center", gap: "8px",
           background: "white", color: "#0284c7",
           padding: "14px 32px", borderRadius: "10px",
@@ -262,6 +263,45 @@ const DiasporaSection = () => (
     `}</style>
   </section>
 );
+
+/* ─────────────────────────────────────────
+   LOGO MARQUEE DIVIDER
+───────────────────────────────────────── */
+const LogoMarquee = () => {
+  const logos = Array(12).fill(null);
+  return (
+    <div style={{ overflow: "hidden", padding: "28px 0", background: "#fff" }}>
+      <div style={{
+        display: "flex",
+        width: "max-content",
+        animation: "logoScroll 50s linear infinite",
+        willChange: "transform",
+      }}>
+        {[...logos, ...logos].map((_, i) => (
+          <img
+            key={i}
+            src={LogoImg}
+            alt="Abatrades"
+            style={{
+              height: "60px",
+              opacity: 1,
+              margin: "0 56px",
+              userSelect: "none",
+              pointerEvents: "none",
+              flexShrink: 0,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes logoScroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 /* ─────────────────────────────────────────
    RAFIKI PARTNER SECTION
@@ -854,7 +894,7 @@ const Plans = () => (
               ))}
             </ul>
 
-            <Link to="/sellersignup" style={{
+            <Link to="/join?type=seller" style={{
               display: "block", textAlign: "center",
               background: p.highlight ? "#3b7bf8" : "transparent",
               color: p.highlight ? "white" : "#0f172a",
@@ -919,7 +959,7 @@ const FinalCTA = () => (
         Free to start, powerful to scale.
       </p>
       <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
-        <Link to="/sellersignup" style={{
+        <Link to="/join?type=seller" style={{
           background: "white", color: "#3b7bf8",
           padding: "16px 40px", borderRadius: "12px",
           fontWeight: 800, fontSize: "16px", textDecoration: "none",
@@ -965,12 +1005,13 @@ const Home = () => {
             <StatsStrip />
             <DiasporaSection />
             <RafikiSection />
+            <LogoMarquee />
             <FeatureSection
               eyebrow="For sellers"
               headline={"Your brand.\nYour storefront.\nYour rules."}
               body="Get a professional storefront you own. Showcase your products, connect with buyers, and manage everything from one dashboard — without paying anyone a commission."
               cta="Create your store"
-              ctaHref="/sellersignup"
+              ctaHref="/join?type=seller"
               visual={<SellerVisual />}
               flip={false}
             />

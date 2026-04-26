@@ -130,7 +130,7 @@ const Hero = () => {
 
           {/* CTAs */}
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Link to="/sellersignup" style={{
+            <Link to="/join" style={{
               background: "transparent",
               color: "#f97316", padding: "15px 32px",
               borderRadius: "10px", fontWeight: 700, fontSize: "15px",
