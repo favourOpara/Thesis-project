@@ -15,6 +15,18 @@ class Shop(models.Model):
     instagram = models.CharField(max_length=100, blank=True, null=True, help_text="Instagram handle without @")
     website = models.URLField(blank=True, null=True)
     visit_count = models.PositiveIntegerField(default=0)
+
+    # Storefront display controls
+    LAYOUT_CHOICES = [('all', 'All Products'), ('categories', 'By Category')]
+    SORT_CHOICES = [('newest', 'Newest First'), ('price_asc', 'Price: Low to High'), ('price_desc', 'Price: High to Low')]
+    STATUS_CHOICES = [('open', 'Open'), ('closed', 'Temporarily Closed')]
+
+    tagline = models.CharField(max_length=120, blank=True, null=True)
+    layout_mode = models.CharField(max_length=20, choices=LAYOUT_CHOICES, default='all')
+    sort_order = models.CharField(max_length=20, choices=SORT_CHOICES, default='newest')
+    store_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    store_status_message = models.CharField(max_length=200, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -102,6 +114,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

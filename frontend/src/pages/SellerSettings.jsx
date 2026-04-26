@@ -7,11 +7,16 @@ const SellerSettings = () => {
   const { shop, refreshShop, setPageTitle, setTopbarActions } = useSellerCtx();
 
   const [form, setForm] = useState({
-    name:        shop?.name        || "",
-    description: shop?.description || "",
-    whatsapp:    shop?.whatsapp    || "",
-    instagram:   shop?.instagram   || "",
-    website:     shop?.website     || "",
+    name:                 shop?.name                 || "",
+    description:          shop?.description          || "",
+    tagline:              shop?.tagline              || "",
+    whatsapp:             shop?.whatsapp             || "",
+    instagram:            shop?.instagram            || "",
+    website:              shop?.website              || "",
+    layout_mode:          shop?.layout_mode          || "all",
+    sort_order:           shop?.sort_order           || "newest",
+    store_status:         shop?.store_status         || "open",
+    store_status_message: shop?.store_status_message || "",
   });
   const [logo,   setLogo]   = useState(null);
   const [banner, setBanner] = useState(null);
@@ -37,11 +42,16 @@ const SellerSettings = () => {
   useEffect(() => {
     if (shop) {
       setForm({
-        name:        shop.name        || "",
-        description: shop.description || "",
-        whatsapp:    shop.whatsapp    || "",
-        instagram:   shop.instagram   || "",
-        website:     shop.website     || "",
+        name:                 shop.name                 || "",
+        description:          shop.description          || "",
+        tagline:              shop.tagline              || "",
+        whatsapp:             shop.whatsapp             || "",
+        instagram:            shop.instagram            || "",
+        website:              shop.website              || "",
+        layout_mode:          shop.layout_mode          || "all",
+        sort_order:           shop.sort_order           || "newest",
+        store_status:         shop.store_status         || "open",
+        store_status_message: shop.store_status_message || "",
       });
     }
   }, [shop]);
@@ -169,6 +179,112 @@ const SellerSettings = () => {
             <input className="sd-input" name="website" value={form.website}
               onChange={handleChange} placeholder="https://yourwebsite.com" />
           </div>
+        </div>
+
+        <hr className="sd-divider" />
+        <p className="sd-section-label">Storefront Controls</p>
+
+        <div className="sd-form-grid">
+          {/* Tagline */}
+          <div className="sd-form-full">
+            <label className="sd-label">Store Tagline</label>
+            <input
+              className="sd-input"
+              name="tagline"
+              value={form.tagline}
+              onChange={handleChange}
+              placeholder="e.g. Quality fashion, delivered fast"
+              maxLength={120}
+            />
+            <span style={{ fontSize: "11.5px", color: "#94a3b8" }}>
+              Shows under your store name on your public page. Max 120 characters.
+            </span>
+          </div>
+
+          {/* Layout mode */}
+          <div>
+            <label className="sd-label">Product Layout</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
+              {[
+                { value: "all", label: "All Products", desc: "Show every product in a single grid" },
+                { value: "categories", label: "By Category", desc: "Group products under category tabs" },
+              ].map(opt => (
+                <label key={opt.value} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="layout_mode"
+                    value={opt.value}
+                    checked={form.layout_mode === opt.value}
+                    onChange={handleChange}
+                    style={{ marginTop: "3px", accentColor: "#2563eb" }}
+                  />
+                  <span>
+                    <span style={{ fontWeight: 600, fontSize: "13.5px", color: "#0f172a" }}>{opt.label}</span>
+                    <span style={{ display: "block", fontSize: "12px", color: "#64748b" }}>{opt.desc}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Sort order */}
+          <div>
+            <label className="sd-label">Default Sort Order</label>
+            <select
+              className="sd-input"
+              name="sort_order"
+              value={form.sort_order}
+              onChange={handleChange}
+            >
+              <option value="newest">Newest First</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+          </div>
+        </div>
+
+        <hr className="sd-divider" />
+        <p className="sd-section-label">Store Status</p>
+
+        <div className="sd-form-grid">
+          <div>
+            <label className="sd-label">Store Status</label>
+            <div style={{ display: "flex", gap: "16px", marginTop: "6px" }}>
+              {[
+                { value: "open",   label: "Open",               color: "#16a34a" },
+                { value: "closed", label: "Temporarily Closed", color: "#dc2626" },
+              ].map(opt => (
+                <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="store_status"
+                    value={opt.value}
+                    checked={form.store_status === opt.value}
+                    onChange={handleChange}
+                    style={{ accentColor: opt.color }}
+                  />
+                  <span style={{ fontSize: "13.5px", fontWeight: 600, color: opt.color }}>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {form.store_status === "closed" && (
+            <div className="sd-form-full">
+              <label className="sd-label">Closed Message</label>
+              <input
+                className="sd-input"
+                name="store_status_message"
+                value={form.store_status_message}
+                onChange={handleChange}
+                placeholder="e.g. Back on Monday — orders are paused for now."
+                maxLength={200}
+              />
+              <span style={{ fontSize: "11.5px", color: "#94a3b8" }}>
+                Shown to buyers as a banner on your store page.
+              </span>
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: "20px" }}>

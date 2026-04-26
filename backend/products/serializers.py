@@ -18,6 +18,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'logo', 'logo_url', 'banner_image', 'banner_url',
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
+            'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['slug', 'visit_count', 'created_at', 'updated_at']
@@ -105,7 +106,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'owner', 'name', 'category', 'sub_category', 'description',
             'price', 'quantity', 'material_type', 'brand', 'size',
-            'is_active', 'created_at', 'updated_at', 'main_image_url',
+            'is_active', 'is_featured', 'created_at', 'updated_at', 'main_image_url',
             'images', 'uploaded_images'
         ]
 

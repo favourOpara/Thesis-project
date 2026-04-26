@@ -113,6 +113,18 @@ const ProductCard = ({ product }) => {
               {product.sub_category || product.category}
             </div>
           )}
+          {/* Featured badge */}
+          {product.is_featured && (
+            <div style={{
+              position: "absolute", top: "10px", right: "10px",
+              background: "#f59e0b",
+              borderRadius: "999px", padding: "3px 9px",
+              fontSize: "10.5px", fontWeight: 700, color: "#fff",
+              display: "flex", alignItems: "center", gap: "4px",
+            }}>
+              ★ Featured
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -197,10 +209,24 @@ const ShopPage = () => {
   );
 
   /* ── Derived data ── */
-  const categories = ["All", ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
-  const filtered = activeCategory === "All"
-    ? products
-    : products.filter(p => p.category === activeCategory);
+  // 1. Sort by seller preference
+  const sorted = [...products].sort((a, b) => {
+    if (shop.sort_order === "price_asc")  return parseFloat(a.price) - parseFloat(b.price);
+    if (shop.sort_order === "price_desc") return parseFloat(b.price) - parseFloat(a.price);
+    return b.id - a.id; // newest (default)
+  });
+
+  // 2. Featured products always float to the top
+  const displayProducts = [
+    ...sorted.filter(p => p.is_featured),
+    ...sorted.filter(p => !p.is_featured),
+  ];
+
+  // 3. Category tabs (only relevant in categories mode)
+  const categories = ["All", ...Array.from(new Set(displayProducts.map(p => p.category).filter(Boolean)))];
+  const filtered = (shop.layout_mode === "categories" && activeCategory !== "All")
+    ? displayProducts.filter(p => p.category === activeCategory)
+    : displayProducts;
 
   const hasSocials = shop.whatsapp || shop.instagram || shop.website;
   const bannerBg = shop.banner_url
@@ -214,12 +240,31 @@ const ShopPage = () => {
       <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
 
         {/* ══════════════════════════════
+            CLOSED BANNER
+        ══════════════════════════════ */}
+        {shop.store_status === "closed" && (
+          <div style={{
+            background: "#fef2f2", borderBottom: "1px solid #fecaca",
+            padding: "10px 20px", textAlign: "center", marginTop: "56px",
+          }}>
+            <span style={{ color: "#b91c1c", fontWeight: 700, fontSize: "13.5px" }}>
+              ⚠ This store is temporarily closed.
+            </span>
+            {shop.store_status_message && (
+              <span style={{ color: "#b91c1c", fontWeight: 400, fontSize: "13px", marginLeft: "8px" }}>
+                {shop.store_status_message}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════
             HERO BANNER
         ══════════════════════════════ */}
         <div style={{
           ...bannerBg,
           height: "220px",
-          marginTop: "56px",
+          marginTop: shop.store_status === "closed" ? "0" : "56px",
           position: "relative",
         }}>
           <div style={{
@@ -372,10 +417,20 @@ const ShopPage = () => {
               </div>
             </div>
 
+            {/* Tagline */}
+            {shop.tagline && (
+              <p style={{
+                fontSize: "13px", color: "#f59e0b", fontWeight: 600,
+                margin: "8px 0 0", letterSpacing: "0.01em",
+              }}>
+                {shop.tagline}
+              </p>
+            )}
+
             {/* Description — only if present, slim */}
             {shop.description && (
               <p style={{
-                fontSize: "13px", color: "#64748b", margin: "10px 0 0",
+                fontSize: "13px", color: "#64748b", margin: "6px 0 0",
                 lineHeight: 1.6, maxWidth: "640px",
                 overflow: "hidden", display: "-webkit-box",
                 WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
@@ -390,8 +445,8 @@ const ShopPage = () => {
           ══════════════════════════════ */}
           <div style={{ marginTop: "32px", paddingBottom: "60px" }}>
 
-            {/* Category filter tabs */}
-            {categories.length > 2 && (
+            {/* Category tabs — only in categories layout mode */}
+            {shop.layout_mode === "categories" && categories.length > 2 && (
               <div style={{
                 display: "flex", gap: "8px", flexWrap: "wrap",
                 marginBottom: "24px",

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   useSellerCtx, ac, BASE,
-  IconProducts, IconPlus, IconEdit, IconTrash, IconEye,
+  IconProducts, IconPlus, IconEdit, IconTrash, IconEye, IconStar,
 } from "../components/SellerLayout";
 
 const fmtNGN = (n) =>
@@ -38,6 +38,15 @@ const SellerProducts = () => {
     setProducts(p => p.filter(x => x.id !== id));
   };
 
+  const handleToggleFeatured = async (p) => {
+    try {
+      const fd = new FormData();
+      fd.append("is_featured", !p.is_featured);
+      await axios.patch(`${BASE}/api/owner-products/${p.id}/`, fd, ac());
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...x, is_featured: !p.is_featured } : x));
+    } catch {}
+  };
+
   if (loading) return (
     <div className="sd-loading" style={{ height: "200px" }}>
       <div className="spinner-border" style={{ color: "#2563eb", width: "1.75rem", height: "1.75rem" }} />
@@ -69,6 +78,7 @@ const SellerProducts = () => {
             <th>Price</th>
             <th>Stock</th>
             <th>Status</th>
+            <th>Featured</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -109,6 +119,28 @@ const SellerProducts = () => {
                 <span className={`sd-pill ${p.is_active ? "green" : "red"}`}>
                   {p.is_active ? "Active" : "Inactive"}
                 </span>
+              </td>
+              <td>
+                <button
+                  onClick={() => handleToggleFeatured(p)}
+                  title={p.is_featured ? "Remove from featured" : "Mark as featured"}
+                  style={{
+                    background: p.is_featured ? "#fef3c7" : "#f8fafc",
+                    border: `1.5px solid ${p.is_featured ? "#f59e0b" : "#e2e8f0"}`,
+                    color: p.is_featured ? "#b45309" : "#94a3b8",
+                    borderRadius: "8px", padding: "5px 10px",
+                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px",
+                    fontWeight: 600, fontSize: "12px", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#f59e0b"; e.currentTarget.style.color = "#b45309"; }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = p.is_featured ? "#f59e0b" : "#e2e8f0";
+                    e.currentTarget.style.color = p.is_featured ? "#b45309" : "#94a3b8";
+                  }}
+                >
+                  <IconStar filled={p.is_featured} />
+                  {p.is_featured ? "Pinned" : "Pin"}
+                </button>
               </td>
               <td>
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
