@@ -5,37 +5,75 @@ from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
 
-from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
+from .models import Shop, Category, Product, ProductImage
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
     ProductSerializer,
     ProductImageSerializer,
-    OrderSerializer,
-    OrderItemSerializer,
-    ShippingAddressSerializer,
-    PaymentSerializer,
 )
+
 
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+    lookup_field = 'slug'
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'record_visit', 'products']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
-        if self.action in ['list', 'retrieve']:
-            return Shop.objects.all()
-        return Shop.objects.filter(owner=self.request.user)
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return Shop.objects.filter(owner=self.request.user)
+        queryset = Shop.objects.all()
+        category = self.request.query_params.get('category')
+        ordering = self.request.query_params.get('ordering')
+        if category:
+            queryset = queryset.filter(
+                owner__products__category__iexact=category,
+                owner__products__is_active=True
+            ).distinct()
+        if ordering in ['visit_count', '-visit_count', 'created_at', '-created_at', 'name', '-name']:
+            queryset = queryset.order_by(ordering)
+        else:
+            queryset = queryset.order_by('-created_at')
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='mine', permission_classes=[permissions.IsAuthenticated])
+    def mine(self, request):
+        try:
+            shop = Shop.objects.get(owner=request.user)
+            serializer = self.get_serializer(shop, context={'request': request})
+            return Response(serializer.data)
+        except Shop.DoesNotExist:
+            return Response(None)
+
+    @action(detail=True, methods=['post'], url_path='visit')
+    def record_visit(self, request, slug=None):
+        shop = self.get_object()
+        Shop.objects.filter(pk=shop.pk).update(visit_count=shop.visit_count + 1)
+        return Response({'visit_count': shop.visit_count + 1})
+
+    @action(detail=True, methods=['get'], url_path='products')
+    def products(self, request, slug=None):
+        shop = self.get_object()
+        queryset = Product.objects.filter(owner=shop.owner, is_active=True)
+        serializer = ProductSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-# ======= PRODUCT LOGIC SECTION =======
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -43,9 +81,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(
-            is_active=True, quantity__gt=0
-        )
+        queryset = super().get_queryset().filter(is_active=True, quantity__gt=0)
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
@@ -56,13 +92,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        # If the request explicitly sets is_active, use it; otherwise, default to True.
         is_active = self.request.data.get('is_active')
         if is_active is not None:
             is_active = str(is_active).lower() in ['true', '1', 'yes']
         else:
             is_active = True
-
         product = serializer.save(owner=self.request.user, is_active=is_active)
         images = self.request.FILES.getlist('images')
         for image in images:
@@ -70,16 +104,15 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         product = serializer.save()
-        # Auto-deactivate if quantity goes to zero
         if product.quantity == 0 and product.is_active:
             product.is_active = False
             product.save(update_fields=['is_active'])
-
         images = self.request.FILES.getlist('images')
         if images:
             product.images.all().delete()
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
+
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
@@ -89,6 +122,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
 
 class OwnerProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
@@ -110,7 +144,6 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
             is_active = str(is_active).lower() in ['true', '1', 'yes']
         else:
             is_active = True
-
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             product = serializer.save(owner=self.request.user, is_active=is_active)
@@ -125,11 +158,9 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             product = serializer.save()
-            # Auto-deactivate if quantity goes to zero
             if product.quantity == 0 and product.is_active:
                 product.is_active = False
                 product.save(update_fields=['is_active'])
-
             images = request.FILES.getlist('images')
             if images:
                 product.images.all().delete()
@@ -142,41 +173,3 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Order.objects.all()
-        return Order.objects.filter(buyer=self.request.user)
-
-    def perform_create(self, serializer):
-        shop = get_object_or_404(Shop, id=self.request.data.get('shop'))
-        serializer.save(buyer=self.request.user, shop=shop)
-
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def add_item(self, request, pk=None):
-        order = self.get_object()
-        product = get_object_or_404(Product, id=request.data.get('product'))
-        quantity = int(request.data.get('quantity', 1))
-        order_item = OrderItem(order=order, product=product, quantity=quantity, price=product.price * quantity)
-        order_item.save()
-        return Response({'message': 'Item added successfully.'}, status=status.HTTP_201_CREATED)
-
-class OrderItemViewSet(viewsets.ModelViewSet):
-    queryset = OrderItem.objects.all()
-    serializer_class = OrderItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class ShippingAddressViewSet(viewsets.ModelViewSet):
-    queryset = ShippingAddress.objects.all()
-    serializer_class = ShippingAddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-    permission_classes = [permissions.IsAuthenticated]

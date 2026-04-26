@@ -11,71 +11,81 @@ import "../layouts/horizontal-light-menu/css/dark/plugins.css";
 import "./assets/css/light/components/media_object.css";
 import "./assets/css/dark/components/media_object.css";
 
-import EditProduct from "./components/EditProduct";
-import SellerProductListTest from "./components/SellerProductListTest";
-import Home from "./pages/Home";
-import SignIn from "./pages/Signin";
-import SignUp from "./pages/Signup";
-import CartPage from "./pages/Cart";
-import UserProfile from "./pages/UserProfile";
-import ProductDetails from "./pages/ProductDetails";
-import BecomeASeller from "./pages/BecomeASeller";
-import SellerSignUp from "./pages/SellerSignup";
-import UpdateProfile from "./pages/UpdateProfile";
-import NotFound from "./pages/NotFound";
-import ComingSoon from "./pages/ComingSoon";
-import AddProduct from "./pages/AddProduct";
+// Pages
+import Home           from "./pages/Home";
+import SignIn          from "./pages/Signin";
+import SignUp          from "./pages/Signup";
+import SellerSignUp    from "./pages/SellerSignup";
+import UserProfile     from "./pages/UserProfile";
+import UpdateProfile   from "./pages/UpdateProfile";
+import ShopPage        from "./pages/ShopPage";
+import ProductDetails  from "./pages/ProductDetails";
+import CategoryPage    from "./pages/CategoryPage";
+import Cart            from "./pages/Cart";
+import Checkout        from "./pages/Checkout";
+import Orders          from "./pages/Orders";
+import SellerDashboard from "./pages/SellerDashboard";
+import AddProduct      from "./pages/AddProduct";
+import BecomeASeller   from "./pages/BecomeASeller";
+import NotFound        from "./pages/NotFound";
+import ComingSoon      from "./pages/ComingSoon";
 
-// ADD THIS IMPORT - The CategoryPage we built
-import CategoryPage from "./pages/CategoryPage";
-
-import { AuthProvider } from "./context/AuthContext";
-import { SearchProvider } from "./context/SearchContext";
-import { NotificationProvider } from "./context/NotificationContext";
-import { CartProvider } from "./context/CartContext";
+// Components
+import EditProduct       from "./components/EditProduct";
+import ProductList       from "./components/ProductList";
+import SearchResults     from "./components/SearchResults";
 import GlobalNotification from "./components/GlobalNotification";
-import ProductList from "./components/ProductList";
-import SearchResults from "./components/SearchResults";
-import CookieConsent from "./components/CookieConsent";
+import CookieConsent     from "./components/CookieConsent";
+
+// Contexts
+import { AuthProvider }         from "./context/AuthContext";
+import { CartProvider }         from "./context/CartContext";
+import { SearchProvider }       from "./context/SearchContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 const App = () => {
   return (
     <AuthProvider>
-      <SearchProvider>
-        <NotificationProvider>
-          <CartProvider>
+      <CartProvider>
+        <SearchProvider>
+          <NotificationProvider>
             <Router>
               <GlobalNotification />
-              {/* Cookie prompt is always available at the root */}
               <CookieConsent />
               <main>
                 <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/signin" element={<SignIn />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/user-profile" element={<UserProfile />} />
-                  <Route path="/product/:id" element={<ProductDetails />} />
-                  <Route path="/becomeaseller" element={<BecomeASeller />} />
-                  <Route path="/sellersignup" element={<SellerSignUp />} />
-                  <Route path="/edit-profile" element={<UpdateProfile />} />
-                  <Route path="/add-product" element={<AddProduct />} />
-                  <Route path="/coming-soon" element={<ComingSoon />} />
-                  <Route path="/seller-dashboard" element={<SellerProductListTest />} />
-                  <Route path="/edit-product/:id" element={<EditProduct />} />
-                  
-                  {/* ADD THIS ROUTE - Category system we built */}
+                  {/* Public */}
+                  <Route path="/"                      element={<Home />} />
+                  <Route path="/signin"                element={<SignIn />} />
+                  <Route path="/signup"                element={<SignUp />} />
+                  <Route path="/sellersignup"          element={<SellerSignUp />} />
+                  <Route path="/becomeaseller"         element={<BecomeASeller />} />
+                  <Route path="/shop/:slug"            element={<ShopPage />} />
+                  <Route path="/product/:id"           element={<ProductDetails />} />
                   <Route path="/category/:categoryName" element={<CategoryPage />} />
-                  
+                  <Route path="/products"              element={<ProductList />} />
+                  <Route path="/search"                element={<SearchResults />} />
+                  <Route path="/coming-soon"           element={<ComingSoon />} />
+
+                  {/* Buyer */}
+                  <Route path="/cart"                  element={<Cart />} />
+                  <Route path="/checkout"              element={<Checkout />} />
+                  <Route path="/orders"                element={<Orders />} />
+                  <Route path="/user-profile"          element={<UserProfile />} />
+                  <Route path="/edit-profile"          element={<UpdateProfile />} />
+
+                  {/* Seller */}
+                  <Route path="/seller-dashboard"      element={<SellerDashboard />} />
+                  <Route path="/add-product"           element={<AddProduct />} />
+                  <Route path="/edit-product/:id"      element={<EditProduct />} />
+
                   <Route path="*" element={<NotFound />} />
-                  <Route path="/products" element={<ProductList />} />
-                  <Route path="/search" element={<SearchResults />} />
                 </Routes>
               </main>
             </Router>
-          </CartProvider>
-        </NotificationProvider>
-      </SearchProvider>
+          </NotificationProvider>
+        </SearchProvider>
+      </CartProvider>
     </AuthProvider>
   );
 };

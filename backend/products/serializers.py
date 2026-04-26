@@ -1,17 +1,71 @@
 from rest_framework import serializers
-from .models import Shop, Category, Product, ProductImage, Order, OrderItem, ShippingAddress, Payment
+from .models import Shop, Category, Product, ProductImage
+
 
 class ShopSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner_email = serializers.ReadOnlyField(source='owner.email')
+    owner_name = serializers.SerializerMethodField()
+    product_count = serializers.SerializerMethodField()
+    logo_url = serializers.SerializerMethodField()
+    banner_url = serializers.SerializerMethodField()
+    preview_images = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Shop
-        fields = ['id', 'owner', 'name', 'description', 'created_at', 'updated_at']
+        fields = [
+            'id', 'owner_email', 'owner_name', 'name', 'slug', 'description',
+            'logo', 'logo_url', 'banner_image', 'banner_url',
+            'whatsapp', 'instagram', 'website',
+            'visit_count', 'product_count', 'preview_images', 'categories',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['slug', 'visit_count', 'created_at', 'updated_at']
+
+    def get_owner_name(self, obj):
+        u = obj.owner
+        if u.first_name:
+            return f"{u.first_name} {u.last_name or ''}".strip()
+        return u.email
+
+    def get_product_count(self, obj):
+        return obj.owner.products.filter(is_active=True).count()
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.logo.url) if request else obj.logo.url
+        return None
+
+    def get_banner_url(self, obj):
+        if obj.banner_image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.banner_image.url) if request else obj.banner_image.url
+        return None
+
+    def get_preview_images(self, obj):
+        request = self.context.get('request')
+        images = []
+        products = obj.owner.products.filter(is_active=True).prefetch_related('images')[:4]
+        for product in products:
+            first_img = product.images.first()
+            if first_img and first_img.image:
+                url = request.build_absolute_uri(first_img.image.url) if request else first_img.image.url
+                images.append(url)
+            if len(images) >= 3:
+                break
+        return images
+
+    def get_categories(self, obj):
+        cats = obj.owner.products.filter(is_active=True).values_list('category', flat=True).distinct()
+        return list(set(c for c in cats if c))[:3]
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+
 
 class ProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -22,13 +76,17 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         if obj.image:
-            return obj.image.url  # This will return the Cloudinary URL
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
         return None
+
 
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
     images = ProductImageSerializer(many=True, read_only=True)
-    size = serializers.MultipleChoiceField(choices=Product.SIZE_CHOICES)  # Changed to MultipleChoiceField
+    size = serializers.MultipleChoiceField(choices=Product.SIZE_CHOICES)
     main_image_url = serializers.SerializerMethodField()
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
@@ -41,66 +99,31 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'owner', 'name', 'category', 'sub_category', 'description',
             'price', 'quantity', 'material_type', 'brand', 'size',
-            'is_active', 'created_at', 'updated_at', 'main_image_url', 
+            'is_active', 'created_at', 'updated_at', 'main_image_url',
             'images', 'uploaded_images'
         ]
 
     def get_main_image_url(self, obj):
         if obj.images.exists():
-            return obj.images.first().image.url  # This will return the Cloudinary URL
+            request = self.context.get('request')
+            image_url = obj.images.first().image.url
+            if request is not None:
+                return request.build_absolute_uri(image_url)
+            return image_url
         return None
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
         product = Product.objects.create(**validated_data)
-
         for image in uploaded_images:
             ProductImage.objects.create(product=product, image=image)
-
         return product
 
     def update(self, instance, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', None)
         instance = super().update(instance, validated_data)
-        
         if uploaded_images:
             instance.images.all().delete()
             for image in uploaded_images:
                 ProductImage.objects.create(product=instance, image=image)
-
         return instance
-
-# Keep other serializers the same
-class OrderSerializer(serializers.ModelSerializer):
-    buyer = serializers.ReadOnlyField(source='buyer.username')
-    shop = serializers.PrimaryKeyRelatedField(queryset=Shop.objects.all())
-    items = serializers.StringRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'buyer', 'shop', 'order_date', 'status', 'total_price', 'items']
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
-
-    class Meta:
-        model = OrderItem
-        fields = ['id', 'order', 'product', 'quantity', 'price']
-
-class ShippingAddressSerializer(serializers.ModelSerializer):
-    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
-
-    class Meta:
-        model = ShippingAddress
-        fields = [
-            'id', 'order', 'full_name', 'address', 'city',
-            'state', 'postal_code', 'country', 'phone_number'
-        ]
-
-class PaymentSerializer(serializers.ModelSerializer):
-    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
-
-    class Meta:
-        model = Payment
-        fields = ['id', 'order', 'payment_date', 'amount', 'payment_method', 'is_successful']

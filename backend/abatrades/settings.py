@@ -9,49 +9,33 @@ if os.path.exists('.env'):
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Cloudinary configuration
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-
-cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
-)
-
-STORAGES = {
-    'default': {
-        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-    },
-    'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-    },
-}
-
-# Cloudinary media settings - MUST be after cloudinary.config()
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = '/media/'
-
-# Force reload default storage to pick up our settings
-from django.core.files.storage import storages
-from django.core.files import storage
-
-# Clear the cached default storage and force reload
-if hasattr(storage, '_default_storage'):
-    storage._default_storage = None
-
-# Explicitly set the default storage
-from cloudinary_storage.storage import MediaCloudinaryStorage
-storage.default_storage = MediaCloudinaryStorage()
+# CRITICAL: Set DEBUG and ALLOWED_HOSTS early, before any Django imports
+DEBUG = True
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
 
+# Payment & Platform
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
-DEBUG = False
+# Local file storage for testing (Cloudinary disabled)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-ALLOWED_HOSTS = ['*']
+# Force reload default storage to pick up our settings
+# Temporarily commented out - causing settings load issues
+# from django.core.files.storage import storages
+# from django.core.files import storage
+
+# Clear the cached default storage and force reload
+# if hasattr(storage, '_default_storage'):
+#     storage._default_storage = None
+
+# Explicitly set the default storage
+# from cloudinary_storage.storage import MediaCloudinaryStorage
+# storage.default_storage = MediaCloudinaryStorage()
 
 # STATIC FILES (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
@@ -59,9 +43,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Application definition
 INSTALLED_APPS = [
-    'cloudinary_storage',
-    'cloudinary',
-    
+    # 'cloudinary_storage',  # Disabled for local testing
+    # 'cloudinary',  # Disabled for local testing
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -76,6 +60,9 @@ INSTALLED_APPS = [
     'accounts',
     'products',
     'cart',
+    'orders',
+    'subscriptions',
+    'inquiries',
     'recommendations',
 
     'django.contrib.sites',
@@ -105,8 +92,30 @@ MIDDLEWARE = [
 CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = False
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False  # More secure - specify allowed origins
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Frontend dev server
+    "http://localhost:3000",  # Alternative port
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True  # Required for HttpOnly cookies
+
+# Cookie settings for security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
+
+# CSRF settings
+CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read CSRF token
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
 
 ROOT_URLCONF = 'abatrades.urls'
 
@@ -153,7 +162,10 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.JWTCookieAuthentication',  # Read JWT from HttpOnly cookies
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Fallback to header auth
+    ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
 }
 

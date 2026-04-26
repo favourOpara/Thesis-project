@@ -17,17 +17,14 @@ const SignIn = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
 
-  const handleLoginSuccess = async (access, refresh) => {
+  const handleLoginSuccess = async (userData) => {
     try {
-      // Store tokens
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
+      localStorage.setItem("user", JSON.stringify(userData));
+      await login(); // fetches full user profile from /api/user-info/
 
-      // Call the login function from AuthContext
-      await login(access, refresh);
-
-      // Navigate after successful login
-      navigate("/");
+      // user_type comes from the login response directly
+      const isSeller = userData.user_type === "seller";
+      navigate(isSeller ? "/seller-dashboard" : "/", { replace: true });
     } catch (error) {
       console.error("Failed to process login:", error);
     }
@@ -37,7 +34,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // try {
-    //   const response = await axios.post("https://inspiring-spontaneity-production.up.railway.app/api/signin/", {
+    //   const response = await axios.post("http://localhost:8000/api/signin/", {
     //     email,
     //     password,
     //   }); // Update with your API endpoint
@@ -51,18 +48,23 @@ const SignIn = () => {
     //   // Handle error (e.g., show error message)
     // }
 
+    // Use environment variable or default to production
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
     toast.promise(
-      axios.post("https://inspiring-spontaneity-production.up.railway.app/api/signin/", {
+      axios.post(`${baseURL}/api/signin/`, {
         email,
         password,
+      }, {
+        withCredentials: true  // Send cookies with request
       }),
       {
         pending: "Logging in...", // Toast while waiting
         success: {
           render({ data }) {
-            const { access, refresh } = data.data;
-            // Store tokens
-            handleLoginSuccess(access, refresh);
+            const userData = data.data.user;
+            // Tokens are now in HttpOnly cookies - just store user data
+            handleLoginSuccess(userData);
             return "Login successful!";
           },
         },
@@ -120,10 +122,9 @@ const SignIn = () => {
             </a>
 
             {/* Header Text */}
-            <h2 className="mb-2">Welcome Back, Shop Smart!</h2>
+            <h2 className="mb-2">Welcome Back!</h2>
             <p className="text-muted">
-              Sign in to continue your shopping journey with exclusive deals and
-              personalized recommendations.
+              Sign in to manage your store, products, and customer inquiries.
             </p>
 
             {/* Return to Home */}
@@ -210,8 +211,8 @@ const SignIn = () => {
                       <div className="text-center">
                         <p className="mb-0">
                           Don't have an account?{" "}
-                          <a href="/signup" className="text-warning">
-                            Sign Up
+                          <a href="/sellersignup" className="text-warning">
+                            Own a Store
                           </a>
                         </p>
                       </div>

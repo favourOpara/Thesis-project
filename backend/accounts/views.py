@@ -30,11 +30,13 @@ class SignUpView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Login View - UPDATED for case-insensitive email
+# Login View - UPDATED for HttpOnly cookies
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        from django.conf import settings
+
         email = request.data.get('email')
         password = request.data.get('password')
 
@@ -57,12 +59,42 @@ class LoginView(APIView):
         if user.check_password(password):
             if user.is_active:
                 refresh = RefreshToken.for_user(user)
-                return Response({
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
+
+                # Create response without tokens in body
+                response = Response({
                     "success": True,
                     "message": "Login successful",
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh)
+                    "user": {
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "user_type": user.user_type,
+                        "has_shop": hasattr(user, "shop"),
+                    }
                 }, status=status.HTTP_200_OK)
+
+                # Set HttpOnly cookies
+                response.set_cookie(
+                    key='access_token',
+                    value=access_token,
+                    httponly=True,
+                    secure=not settings.DEBUG,  # HTTPS only in production
+                    samesite='Lax',
+                    max_age=60 * 60 * 24,  # 24 hours
+                )
+
+                response.set_cookie(
+                    key='refresh_token',
+                    value=refresh_token,
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite='Lax',
+                    max_age=60 * 60 * 24 * 7,  # 7 days
+                )
+
+                return response
             else:
                 return Response({
                     "success": False,
@@ -99,23 +131,40 @@ class ChangePasswordView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Logout View
+# Logout View - UPDATED for HttpOnly cookies
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
-            refresh_token = request.data.get("refresh")
-            if not refresh_token:
-                return Response({"success": False, "message": "Refresh token not provided"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Blacklist the refresh token
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            # Try to get refresh token from cookie
+            refresh_token = request.COOKIES.get("refresh_token")
 
-            return Response({"success": True, "message": "Logout successful"}, status=status.HTTP_200_OK)
+            if refresh_token:
+                # Blacklist the refresh token
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+
+            # Create response
+            response = Response({
+                "success": True,
+                "message": "Logout successful"
+            }, status=status.HTTP_200_OK)
+
+            # Delete cookies
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+
+            return response
         except Exception as e:
-            return Response({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # Even if blacklisting fails, clear cookies
+            response = Response({
+                "success": True,
+                "message": "Logout successful"
+            }, status=status.HTTP_200_OK)
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
 
 # Delete Account View
 class DeleteAccountView(APIView):
@@ -141,19 +190,21 @@ class DeleteAccountView(APIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info(request):
-    if request.user.is_authenticated:
-        user = request.user
-        return Response({
-            "name": user.first_name or user.email,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone_number": user.phone_number,
-            "address": user.address,
-            "user_type": getattr(user, 'user_type', 'Unknown')
-        })
-    else:
-        return Response({"error": "User is anonymous"}, status=401)
+    user = request.user
+    has_shop = hasattr(user, 'shop')
+    shop_slug = user.shop.slug if has_shop else None
+    return Response({
+        "name": user.first_name or user.email,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "phone_number": user.phone_number,
+        "address": user.address,
+        "user_type": user.user_type,
+        "loyalty_points": user.loyalty_points,
+        "has_shop": has_shop,
+        "shop_slug": shop_slug,
+    })
 
 # Profile Update View
 class UpdateProfileView(APIView):

@@ -657,10 +657,11 @@ const EditProduct = () => {
     const fetchProduct = async () => {
       setFetchLoading(true);
       try {
-        const token = localStorage.getItem("accessToken");
+        // Use environment variable or default to production
+        const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
         const response = await axios.get(
-          `https://inspiring-spontaneity-production.up.railway.app/api/owner-products/${id}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `${baseURL}/api/owner-products/${id}/`,
+          { withCredentials: true }  // Send HttpOnly cookies
         );
 
         // Handle size as array (convert if it's a string)
@@ -841,7 +842,6 @@ const EditProduct = () => {
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
       const dataToSend = new FormData();
 
       // Append all regular fields
@@ -866,9 +866,12 @@ const EditProduct = () => {
         dataToSend.append("images", file);
       });
 
-      await axios.put(`https://inspiring-spontaneity-production.up.railway.app/api/owner-products/${id}/`, dataToSend, {
+      // Use environment variable or default to production
+      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+      await axios.put(`${baseURL}/api/owner-products/${id}/`, dataToSend, {
+        withCredentials: true,  // Send HttpOnly cookies
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });

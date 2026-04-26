@@ -2,7 +2,7 @@
 
 /* Use Bootstrap's .container for layout—no need for flex container here */
 .search-results-outer {
-  padding-top: 70px;  /* or whatever your header height is */
+  padding-top: 56px;
   min-height: 80vh;
   width: 100%;
   box-sizing: border-box;

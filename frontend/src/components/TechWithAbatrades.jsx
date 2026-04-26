@@ -8,7 +8,7 @@ const TechWithAbatrades = () => {
 
   useEffect(() => {
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("http://localhost:8000/api/products/")
       .then((response) => setProducts(response.data))
       .catch((error) => console.error("Error fetching products:", error));
   }, []);

@@ -10,7 +10,6 @@ const SellerProductList = () => {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
-  const token = localStorage.getItem("accessToken");
 
   // Handle window resize to detect mobile/desktop
   useEffect(() => {
@@ -23,11 +22,12 @@ const SellerProductList = () => {
   }, []);
 
   useEffect(() => {
+    // Use environment variable or default to production
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/owner-products", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      .get(`${baseURL}/api/owner-products`, {
+        withCredentials: true  // Send HttpOnly cookies
       })
       .then((response) => {
         setProducts(response.data);
@@ -52,8 +52,11 @@ const SellerProductList = () => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await axios.delete(`https://inspiring-spontaneity-production.up.railway.app/api/owner-products/${productId}/`, {
-        headers: { Authorization: `Bearer ${token}` },
+      // Use environment variable or default to production
+      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+      await axios.delete(`${baseURL}/api/owner-products/${productId}/`, {
+        withCredentials: true  // Send HttpOnly cookies
       });
 
       setProducts((prevProducts) => prevProducts.filter((product) => product.id !== productId));

@@ -8,7 +8,7 @@ const SleepwithAbatrades = () => {
 
   useEffect(() => {
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get("http://localhost:8000/api/products/")
       .then((res) => setProducts(res.data))
       .catch((err) => console.error("Error fetching SleepwithAbatrades:", err));
   }, []);

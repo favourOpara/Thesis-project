@@ -1,120 +1,65 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
+  const [cart, setCart]       = useState({ items: [], total: 0, item_count: 0 });
+  const [loading, setLoading] = useState(false);
 
-  console.log("CartContext - User from Auth:", user);
-
-  // Use email (sanitized) as unique identifier for cart, or "guest" if not logged in.
-  const userId = user?.email
-    ? user.email.replace(/[^a-zA-Z0-9]/g, "_")
-    : "guest";
-
-  console.log("CartContext - Cart Key:", `cart_${userId}`);
-  const CART_STORAGE_KEY = `cart_${userId}`;
-
-  // Function to load cart from localStorage
-  const loadCart = () => {
+  const fetchCart = useCallback(async () => {
+    if (!user) { setCart({ items: [], total: 0, item_count: 0 }); return; }
+    setLoading(true);
     try {
-      const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-      return storedCart ? JSON.parse(storedCart) : [];
-    } catch (error) {
-      console.error("Error loading cart from localStorage:", error);
-      return [];
+      const { data } = await axios.get(`${BASE}/api/cart/`, { withCredentials: true });
+      setCart(data);
+    } catch {
+      // silently fail — user is browsing
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [user]);
 
-  // Initial state: if user is not logged in, load from localStorage;
-  // if logged in, we will fetch from backend.
-  const [cartItems, setCartItems] = useState(user?.token ? [] : loadCart());
+  useEffect(() => { fetchCart(); }, [fetchCart]);
 
-  // If user is logged in, fetch updated cart from backend.
-  const fetchUpdatedCart = async () => {
-    if (!user || !user.token) return;
-    try {
-      const response = await axios.get("https://inspiring-spontaneity-production.up.railway.app/api/check-cart-items/", {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      console.log("Fetched updated cart from backend:", response.data);
-      setCartItems(response.data);
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(response.data));
-    } catch (error) {
-      console.error("Error fetching updated cart:", error);
-    }
-  };
-
-  // On mount or when user changes, if logged in, fetch updated cart.
-  useEffect(() => {
-    if (user?.token) {
-      setCartItems([]); 
-      fetchUpdatedCart();
-    } else {
-      setCartItems(loadCart());
-    }
-  }, [user, userId]);
-
-  // Sync localStorage whenever cartItems change.
-  useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
-    } catch (error) {
-      console.error("Error saving cart to localStorage:", error);
-    }
-  }, [cartItems, CART_STORAGE_KEY]);
-
-  // Listen for localStorage changes in other tabs/windows.
-  useEffect(() => {
-    const handleStorageChange = (event) => {
-      if (event.key === CART_STORAGE_KEY) {
-        setCartItems(JSON.parse(event.newValue) || []);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [CART_STORAGE_KEY]);
-
-  // Add product to cart; when adding from ProductCard, we don't update quantity.
-  const addToCart = (product) => {
-    setCartItems((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id);
-      // If already in cart, do nothing (quantity updates happen in CartPage)
-      return existingItem ? prevCart : [...prevCart, { ...product, quantity: 1 }];
-    });
-    // After updating local state, if logged in, update from backend.
-    if (user?.token) {
-      fetchUpdatedCart();
-    }
-  };
-
-  // Update item quantity (for use in CartPage)
-  const updateCartItemQuantity = (productId, change) => {
-    setCartItems((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(item.quantity + change, 1) }
-          : item
-      )
+  const addToCart = async (productId, quantity = 1) => {
+    if (!user) return false;
+    const { data } = await axios.post(
+      `${BASE}/api/cart/add/`,
+      { product_id: productId, quantity },
+      { withCredentials: true }
     );
-    if (user?.token) {
-      fetchUpdatedCart();
-    }
+    setCart(data);
+    return true;
   };
 
-  // Remove an item from the cart.
-  const removeFromCart = (productId) => {
-    setCartItems((prevCart) => prevCart.filter((item) => item.id !== productId));
-    if (user?.token) {
-      fetchUpdatedCart();
-    }
+  const updateItem = async (itemId, quantity) => {
+    const { data } = await axios.patch(
+      `${BASE}/api/cart/${itemId}/update/`,
+      { quantity },
+      { withCredentials: true }
+    );
+    setCart(data);
+  };
+
+  const removeItem = async (itemId) => {
+    const { data } = await axios.delete(
+      `${BASE}/api/cart/${itemId}/remove/`,
+      { withCredentials: true }
+    );
+    setCart(data);
+  };
+
+  const clearCart = async () => {
+    const { data } = await axios.delete(`${BASE}/api/cart/clear/`, { withCredentials: true });
+    setCart(data);
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateCartItemQuantity }}>
+    <CartContext.Provider value={{ cart, loading, fetchCart, addToCart, updateItem, removeItem, clearCart }}>
       {children}
     </CartContext.Provider>
   );

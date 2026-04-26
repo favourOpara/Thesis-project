@@ -12,7 +12,7 @@
   flex: 1;
   padding: 20px;
   margin-left: 0;
-  margin-top: 120px; /* Added margin to push content below header (70px header + 40px sidebar + 10px buffer) */
+  margin-top: 70px; /* 56px header + 14px buffer */
   transition: margin-left 0.3s ease;
   max-width: 100%;
   background-color: white; /* Ensure white background */
@@ -494,7 +494,7 @@
 @media screen and (max-width: 768px) {
   .category-main-content {
     padding: 12px;
-    margin-top: 80px; /* Reduced margin for mobile (70px header + 10px buffer) */
+    margin-top: 66px; /* 56px header + 10px buffer */
   }
   
   .category-header {

@@ -20,58 +20,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Track loading state
   const [error, setError] = useState(null); // Track errors
 
-  // Function to fetch user data
+  // Function to fetch user data - now works with HttpOnly cookies!
   const fetchUserData = async () => {
-    const token = localStorage.getItem("accessToken");
-    console.log("AuthContext - Access Token:", token); // Debugging
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await axios.get("https://inspiring-spontaneity-production.up.railway.app/api/user-info/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      // Use environment variable or default to production
+      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const response = await axios.get(`${baseURL}/api/user-info/`, {
+        withCredentials: true  // Send HttpOnly cookies with request
       });
 
       setUser(response.data);
-      localStorage.setItem("user", JSON.stringify(response.data)); // **Store user in localStorage**
+      localStorage.setItem("user", JSON.stringify(response.data)); // Store user in localStorage
     } catch (err) {
       console.error("AuthContext - Error fetching user:", err);
       setUser(null);
-      localStorage.removeItem("user"); // **Remove user if request fails**
+      localStorage.removeItem("user"); // Remove user if request fails
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to handle login
-  const login = async (accessToken, refreshToken) => {
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-
-    // Fetch user data after login
+  // Function to handle login - tokens are in HttpOnly cookies
+  const login = async () => {
+    // Tokens are in HttpOnly cookies - just fetch user data
     await fetchUserData();
   };
 
-  // Function to handle logout and fully clear user data
-  const logout = () => {
+  // Function to handle logout - clear HttpOnly cookies via API
+  const logout = async () => {
     console.log("AuthContext - Logging out user");
-    
-    // Remove user-specific data
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser && storedUser.email) {
-      const cartKey = `cart_${storedUser.email.replace(/[^a-zA-Z0-9]/g, "_")}`;
-      localStorage.removeItem(cartKey); // Remove user's cart
+
+    try {
+      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      await axios.post(`${baseURL}/api/logout/`, {}, {
+        withCredentials: true  // Send cookies to be cleared
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
     }
-    
-    // Clear everything
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+
     localStorage.removeItem("user");
-    
+
     setUser(null); // Reset user state
   };
 

@@ -7,8 +7,9 @@ const TopPicksInYourRegion = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     axios
-      .get("https://inspiring-spontaneity-production.up.railway.app/api/products/")
+      .get(`${baseURL}/api/products/`)
       .then((response) => setProducts(response.data))
       .catch((error) =>
         console.error("Error fetching wholesale products:", error)

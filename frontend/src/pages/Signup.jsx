@@ -46,7 +46,10 @@ const SignUp = () => {
       user_type: "buyer",
     };
 
-    toast.promise(axios.post("https://inspiring-spontaneity-production.up.railway.app/api/signup/", userData), {
+    // Use environment variable or default to production
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+    toast.promise(axios.post(`${baseURL}/api/signup/`, userData), {
       pending: "Signing up...",
       success: {
         render({ data }) {

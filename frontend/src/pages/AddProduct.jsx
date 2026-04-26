@@ -758,7 +758,6 @@ const AddProduct = () => {
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
       const dataToSend = new FormData();
 
       // Append all regular fields
@@ -778,9 +777,12 @@ const AddProduct = () => {
         dataToSend.append("images", file);
       });
 
-      await axios.post("https://inspiring-spontaneity-production.up.railway.app/api/owner-products/", dataToSend, {
+      // Use environment variable or default to production
+      const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+      await axios.post(`${baseURL}/api/owner-products/`, dataToSend, {
+        withCredentials: true,  // Send HttpOnly cookies with request
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });

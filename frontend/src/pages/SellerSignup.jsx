@@ -58,17 +58,20 @@ const SellerSignUp = () => {
       confirm_password: confirmPassword,
       phone_number: phoneNumber,
       address,
-      user_type: "seller", // Default userType set to "buyer"
+      user_type: "seller",
     };
 
+    // Use environment variable or default to production
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
     // Use toast.promise to show loading, success, and error messages
-    toast.promise(axios.post("https://inspiring-spontaneity-production.up.railway.app/api/signup/", userData), {
+    toast.promise(axios.post(`${baseURL}/api/signup/`, userData), {
       pending: "Signing up...",
       success: {
         render({ data }) {
           if (data.status === 201) {
             navigate("/signin");
-            return "Signup successful! Redirecting to login...";
+            return "Account created! Please sign in to access your dashboard.";
           } else {
             console.log(data);
             throw new Error(

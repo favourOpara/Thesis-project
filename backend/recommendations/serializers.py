@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 from products.models import Product, ProductImage
+from .models import OutfitBundle
 
 class RecommendedProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -46,3 +47,27 @@ class RecommendedProductSerializer(serializers.ModelSerializer):
         if obj.images.exists():
             return request.build_absolute_uri(obj.images.first().image.url) if request else obj.images.first().image.url
         return None
+
+
+class OutfitBundleSerializer(serializers.ModelSerializer):
+    """
+    Serializer for OutfitBundle that includes full product details.
+    Returns the theme display name and all products in the bundle.
+    """
+    products = RecommendedProductSerializer(many=True, read_only=True)
+    theme_display = serializers.CharField(source='get_theme_display', read_only=True)
+    product_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = OutfitBundle
+        fields = [
+            'id',
+            'name',
+            'theme',
+            'theme_display',
+            'description',
+            'products',
+            'product_count',
+            'created_at',
+            'updated_at'
+        ]

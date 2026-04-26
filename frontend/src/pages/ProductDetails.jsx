@@ -1,30 +1,50 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Spinner from "../components/Spinner";
 import Header from "../components/Header";
+import InquiryModal from "../components/InquiryModal";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/splide/dist/css/splide.min.css";
 import { addProductToHistory } from "../utils/localHistory";
-import { hasConsentedToCookies } from "../utils/cookieConsent"; // <-- Import this
+import { hasConsentedToCookies } from "../utils/cookieConsent";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import "./ProductDetails.css";
 
 const ProductDetails = () => {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { id }    = useParams();
+  const navigate  = useNavigate();
+  const { addToCart } = useCart();
+  const { user }  = useAuth();
+  const isSeller  = user?.user_type === "seller";
+
+  const [product, setProduct]       = useState(null);
+  const [loading, setLoading]       = useState(true);
   const [selectedSizes, setSelectedSizes] = useState([]);
-  const [quantity, setQuantity] = useState(1);
+  const [shop, setShop]             = useState(null);
+  const [showInquiry, setShowInquiry] = useState(false);
+  const [qty, setQty]               = useState(1);
+  const [adding, setAdding]         = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get(
-          `https://inspiring-spontaneity-production.up.railway.app/api/products/${id}/`
+          `http://localhost:8000/api/products/${id}/`
         );
-        setProduct(response.data);
+        const productData = response.data;
+        setProduct(productData);
+
+        // Fetch the shop that owns this product
+        if (productData.owner) {
+          const shopsRes = await axios.get("http://localhost:8000/api/shops/");
+          const ownerShop = shopsRes.data.find((s) => s.owner_email === productData.owner);
+          if (ownerShop) setShop(ownerShop);
+        }
+
         setLoading(false);
       } catch (error) {
         setLoading(false);
@@ -71,14 +91,14 @@ const ProductDetails = () => {
   if (product?.main_image_url) {
     const mainImage = product.main_image_url.startsWith("http")
       ? product.main_image_url
-      : `https://inspiring-spontaneity-production.up.railway.app${product.main_image_url}`;
+      : `http://localhost:8000${product.main_image_url}`;
     productImagesSet.add(mainImage);
   }
   if (Array.isArray(product?.images) && product.images.length > 0) {
     product.images.forEach((img) => {
       const imageUrl = img.image_url.startsWith("http")
         ? img.image_url
-        : `https://inspiring-spontaneity-production.up.railway.app${img.image_url}`;
+        : `http://localhost:8000${img.image_url}`;
       productImagesSet.add(imageUrl);
     });
   }
@@ -197,31 +217,71 @@ const ProductDetails = () => {
                       </div>
                     </div>
 
-                    <div className="row quantity-selector mb-4">
-                      <div className="col-md-6">
-                        <strong>Quantity:</strong>
+                    {shop && (
+                      <div style={{ marginBottom: "16px" }}>
+                        <a
+                          href={`/shop/${shop.slug}`}
+                          style={{ fontSize: "14px", color: "#3b7bf8", textDecoration: "none", fontWeight: 500 }}
+                        >
+                          Sold by {shop.name} →
+                        </a>
                       </div>
-                      <div className="col-md-6">
-                        <input
-                          type="text" 
-                          className="form-control custom-input"
-                          value={quantity}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            if (value === "") {
-                              setQuantity("");
-                            } else {
-                              const numericValue = parseInt(value, 10);
-                              if (numericValue > product.quantity) {
-                                toast.error("Quantity exceeds available stock!");
-                              } else {
-                                setQuantity(numericValue);
-                              }
-                            }
-                          }}
-                        />
+                    )}
+
+                    {/* Quantity picker */}
+                    {!isSeller && product.quantity > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+                        <span style={{ fontWeight: 600, fontSize: "13px" }}>Qty:</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", border: "1.5px solid #e2e8f0", borderRadius: "8px", padding: "4px 10px" }}>
+                          <button onClick={() => setQty(q => Math.max(1, q - 1))}
+                            style={{ border: "none", background: "none", fontWeight: 700, fontSize: "18px", cursor: "pointer", lineHeight: 1 }}>−</button>
+                          <span style={{ fontWeight: 700, minWidth: "24px", textAlign: "center" }}>{qty}</span>
+                          <button onClick={() => setQty(q => Math.min(product.quantity, q + 1))}
+                            style={{ border: "none", background: "none", fontWeight: 700, fontSize: "18px", cursor: "pointer", lineHeight: 1 }}>+</button>
+                        </div>
+                        <span style={{ fontSize: "12px", color: "#64748b" }}>{product.quantity} available</span>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Add to Cart */}
+                    {!isSeller && (
+                      <button
+                        className="btn w-100 mb-2"
+                        onClick={async () => {
+                          if (!user) { navigate("/signin"); return; }
+                          setAdding(true);
+                          try {
+                            await addToCart(product.id, qty);
+                            toast.success("Added to cart!");
+                          } catch {
+                            toast.error("Could not add to cart.");
+                          } finally {
+                            setAdding(false);
+                          }
+                        }}
+                        disabled={adding || product.quantity === 0}
+                        style={{
+                          backgroundColor: product.quantity > 0 ? "#2563eb" : "#94a3b8",
+                          color: "white", border: "none", borderRadius: "8px",
+                          padding: "12px", fontWeight: 700, fontSize: "15px",
+                        }}
+                      >
+                        {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
+                      </button>
+                    )}
+
+                    <button
+                      className="btn w-100 mb-3"
+                      onClick={() => setShowInquiry(true)}
+                      disabled={!shop}
+                      style={{
+                        backgroundColor: "transparent", color: "#2563eb",
+                        border: "1.5px solid #2563eb", borderRadius: "8px",
+                        padding: "11px", fontWeight: 600, fontSize: "15px",
+                      }}
+                    >
+                      {shop ? "Ask Seller a Question" : "Loading seller info..."}
+                    </button>
 
                     <hr className="mb-5 mt-4" />
 
@@ -250,6 +310,15 @@ const ProductDetails = () => {
         </div>
       </div>
       <ToastContainer />
+
+      {shop && (
+        <InquiryModal
+          show={showInquiry}
+          onClose={() => setShowInquiry(false)}
+          shop={shop}
+          product={product}
+        />
+      )}
     </>
   );
 };

@@ -6,8 +6,9 @@ import ProductCard from "./ProductCard";
 import { hasConsentedToCookies } from "../utils/cookieConsent";
 
 const LOCAL_HISTORY_KEY = "viewed_products";
-const API_URL = "https://inspiring-spontaneity-production.up.railway.app/api/recommended-for-you/";
-const PRODUCT_DETAIL_URL = (id) => `https://inspiring-spontaneity-production.up.railway.app/api/products/${id}/`;
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = `${baseURL}/api/recommendations/recommended-for-you/`;
+const PRODUCT_DETAIL_URL = (id) => `${baseURL}/api/products/${id}/`;
 
 const RecommendedForYou = () => {
   const [products, setProducts] = useState([]);
@@ -27,8 +28,17 @@ const RecommendedForYou = () => {
           setIsPersonalized(true);
         })
         .catch(() => {
-          setProducts([]);
-          setIsPersonalized(false);
+          // If auth fails, try fallback generic recommendations
+          axios
+            .get(API_URL)
+            .then((response) => {
+              setProducts(response.data.slice(0, 4));
+              setIsPersonalized(false);
+            })
+            .catch(() => {
+              setProducts([]);
+              setIsPersonalized(false);
+            });
         });
       return;
     }
@@ -43,14 +53,29 @@ const RecommendedForYou = () => {
       }
       if (local && local.length > 0) {
         const ids = local.slice(0, 4).map(p => p.id);
-        Promise.all(ids.map(id => axios.get(PRODUCT_DETAIL_URL(id)).then(res => res.data)))
-          .then((freshProducts) => {
-            setProducts(freshProducts);
-            setIsPersonalized(true);
-          })
-          .catch(() => {
-            setProducts([]);
-            setIsPersonalized(false);
+        // Fetch products individually and filter out 404s
+        Promise.allSettled(ids.map(id => axios.get(PRODUCT_DETAIL_URL(id)).then(res => res.data)))
+          .then((results) => {
+            const successfulProducts = results
+              .filter(result => result.status === 'fulfilled')
+              .map(result => result.value);
+
+            if (successfulProducts.length > 0) {
+              setProducts(successfulProducts);
+              setIsPersonalized(true);
+            } else {
+              // If no products found, fetch fallback recommendations
+              axios
+                .get(API_URL)
+                .then((response) => {
+                  setProducts(response.data.slice(0, 4));
+                  setIsPersonalized(false);
+                })
+                .catch(() => {
+                  setProducts([]);
+                  setIsPersonalized(false);
+                });
+            }
           });
         return;
       }

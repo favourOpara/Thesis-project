@@ -1,9 +1,22 @@
-/* Default header styles (Desktop) */
-.fixed-header .navbar {
+/* ── Fixed header wrapper ── */
+.fixed-header {
   position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  z-index: 1030;
+  z-index: 1050;
 }
+
+/* ── Navbar base (position: static inside the fixed wrapper) ── */
+.fixed-header .navbar {
+  position: relative;   /* NOT fixed — the wrapper is already fixed */
+  width: 100%;
+  z-index: 1;
+  padding: 6px 12px;
+  min-height: 56px;
+}
+
+/* ── Search dropdown ── */
 .dropdown-menu.show {
   display: block;
   max-height: 250px;
@@ -11,13 +24,35 @@
   border: 1px solid #ddd;
 }
 
+/* ── Desktop icon spacing ── */
+@media (min-width: 992px) {
+  .navbar .d-flex > * {
+    margin-left: 4px;
+  }
+}
+
+/* ══════════════════════════════
+   MOBILE  (< 992px)
+══════════════════════════════ */
 @media (max-width: 991px) {
-  /* Hamburger icon */
-  .navbar-toggler {
-    display: block;
+  .fixed-header .navbar {
+    padding: 4px 8px;
+    min-height: 52px;
   }
 
-  /* Hide the search bar and show the search icon on mobile */
+  /* Mobile search bar drop-down */
+  .search-bar-mobile {
+    position: fixed;
+    top: 52px;
+    left: 8px;
+    right: 8px;
+    background-color: white;
+    z-index: 10001;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+
   .d-lg-none {
     display: block;
   }
@@ -26,68 +61,37 @@
     display: none !important;
   }
 
-  /* Mobile search input box when search icon is clicked */
-  .search-bar-mobile {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: white;
-    z-index: 1000;
-    padding: 10px;
-  }
-
-  /* Align the search, profile, and cart icons to the right */
+  /* Right-align icon group */
   .navbar .d-flex {
     justify-content: flex-end;
   }
 
-  /* Add spacing between the icons (search, profile, cart) */
+  /* Tighten gap between icons on small screens */
   .navbar .d-flex > * {
-    margin-left: -10px; /* Adjust this value to maintain the spacing */
-  }
-
-  /* Search icon should not be at the beginning on mobile, but at the end */
-  .search-animated.d-lg-none {
-    margin-left: auto; /* Ensure it's on the right end */
-  }
-
-  .navbar-brand {
-    margin-left: auto;
-  }
-
-  
-
-  .sidebar-wrapper {
-    /* Default styles for closed sidebar */
-    width: 80px; /* or any size */
-    transition: width 0.3s;
-  }
-  
-  .sidebar-wrapper.open {
-    width: 250px; /* Width when open */
-  }
-  
-  .sidebar-wrapper.closed {
-    width: 0px; /* Width when closed */
+    margin-left: 0;
   }
 }
 
-/* Larger screens (default) */
-@media (min-width: 991px) {
-  .navbar .d-flex > * {
-    margin-left: 3px; /* Adjust this value for wider screens if needed */
-  }
-}
-
-/* Hide button on larger screens (e.g., desktop) */
+/* ── Hamburger: mobile only ── */
 .mobile-menu-button {
   display: none;
 }
 
-/* Show button on screens smaller than 768px (tablet and mobile) */
 @media (max-width: 991px) {
   .mobile-menu-button {
-    display: flex; /* Show the button on smaller screens */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+}
+
+/* ── Sidebar ── */
+.sidebar-wrapper {
+  transition: width 0.3s;
+}
+.sidebar-wrapper.open {
+  width: 250px;
+}
+.sidebar-wrapper.closed {
+  width: 0;
 }
