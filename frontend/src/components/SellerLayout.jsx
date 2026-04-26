@@ -65,6 +65,7 @@ const SD_CSS = `
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     flex-shrink: 0;
     z-index: 50;
   }
@@ -714,23 +715,6 @@ const SellerLayout = () => {
             </div>
           </div>
 
-          <nav className="sd-nav">
-            {NAV.map(({ path, label, Icon }) => (
-              <NavLink
-                key={path}
-                to={path}
-                className={({ isActive }) => `sd-nav-link${isActive ? " active" : ""}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Icon />
-                {label}
-                {path === "/seller/inquiries" && unreadCount > 0 && (
-                  <span className="sd-badge">{unreadCount}</span>
-                )}
-              </NavLink>
-            ))}
-          </nav>
-
           <div className="sd-sidebar-footer">
             {shop && (
               <Link
@@ -758,6 +742,23 @@ const SellerLayout = () => {
               <IconLogout /> Sign Out
             </button>
           </div>
+
+          <nav className="sd-nav">
+            {NAV.map(({ path, label, Icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                className={({ isActive }) => `sd-nav-link${isActive ? " active" : ""}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <Icon />
+                {label}
+                {path === "/seller/inquiries" && unreadCount > 0 && (
+                  <span className="sd-badge">{unreadCount}</span>
+                )}
+              </NavLink>
+            ))}
+          </nav>
         </aside>
 
         {/* Main */}
