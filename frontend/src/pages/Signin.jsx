@@ -5,9 +5,9 @@ import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import GoogleAuth from "../components/GoogleAuth";
 import Logo from "../assets/img/abatrades-large-logo.png";
 import { useAuth } from "../context/AuthContext";
+import GoogleAuth from "../components/GoogleAuth";
 
 const SignIn = () => {
   // State for storing email, password, and remember me
@@ -16,6 +16,19 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
+
+  const handleGoogleSuccess = ({ user, access_token }) => {
+    handleLoginSuccess(user, access_token);
+  };
+
+  const handleGoogleError = (msg) => {
+    if (msg === 'no_account') {
+      toast.info("No account found. Redirecting you to sign up…");
+      setTimeout(() => navigate("/join"), 1800);
+    } else {
+      toast.error(msg);
+    }
+  };
 
   const handleLoginSuccess = (userData, accessToken) => {
     // Store token immediately
@@ -156,26 +169,30 @@ const SignIn = () => {
                       <p>Enter your email and password to login</p>
                     </div>
                     <div className="col-md-12">
-                      <div className="mb-3">
-                        <label className="form-label">Email</label>
+                      <div className="mb-4">
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 500, color: "#94a3b8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Email</label>
                         <input
                           type="email"
-                          className="form-control"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
+                          style={{ width: "100%", padding: "8px 0", fontSize: "14.5px", color: "#0f172a", background: "transparent", outline: "none", border: "none", borderBottom: "2px solid #e2e8f0", borderRadius: 0, transition: "border-color 0.2s", boxSizing: "border-box" }}
+                          onFocus={e => e.target.style.borderBottomColor = "#2563eb"}
+                          onBlur={e => e.target.style.borderBottomColor = "#e2e8f0"}
                         />
                       </div>
                     </div>
                     <div className="col-12">
                       <div className="mb-4">
-                        <label className="form-label">Password</label>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 500, color: "#94a3b8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Password</label>
                         <input
                           type="password"
-                          className="form-control"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
+                          style={{ width: "100%", padding: "8px 0", fontSize: "14.5px", color: "#0f172a", background: "transparent", outline: "none", border: "none", borderBottom: "2px solid #e2e8f0", borderRadius: 0, transition: "border-color 0.2s", boxSizing: "border-box" }}
+                          onFocus={e => e.target.style.borderBottomColor = "#2563eb"}
+                          onBlur={e => e.target.style.borderBottomColor = "#e2e8f0"}
                         />
                       </div>
                     </div>
@@ -199,6 +216,19 @@ const SignIn = () => {
                       </div>
                     </div>
                     <div className="col-12">
+                      <div className="mb-3">
+                        <GoogleAuth
+                          onSuccess={handleGoogleSuccess}
+                          onError={handleGoogleError}
+                        />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0 16px" }}>
+                        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+                        <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 500, whiteSpace: "nowrap" }}>or sign in with email</span>
+                        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+                      </div>
+                    </div>
+                    <div className="col-12">
                       <div className="mb-4">
                         <button
                           className="btn w-100"
@@ -207,16 +237,14 @@ const SignIn = () => {
                         >
                           SIGN IN
                         </button>
-                        {/* Google Auth Button */}
-                        {/* <GoogleAuth /> */}
                       </div>
                     </div>
                     <div className="col-12">
                       <div className="text-center">
                         <p className="mb-0">
                           Don't have an account?{" "}
-                          <a href="/sellersignup" className="text-warning">
-                            Own a Store
+                          <a href="/join" className="text-warning">
+                            Join Abatrades
                           </a>
                         </p>
                       </div>

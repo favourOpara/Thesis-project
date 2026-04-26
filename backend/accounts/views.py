@@ -229,6 +229,94 @@ class UpdateProfileView(APIView):
             return Response({"message": "Profile updated successfully!", "data": serializer.data})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Google OAuth Login / Sign-up View
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from django.conf import settings
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+
+        credential = request.data.get('credential')
+        user_type  = request.data.get('user_type', 'buyer')  # buyer | seller
+
+        if not credential:
+            return Response({'error': 'No credential provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            client_id = '199766904815-fppnog3lkofrudpd9jquqndg9a0rj18k.apps.googleusercontent.com'
+            id_info = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                client_id,
+            )
+        except ValueError as e:
+            return Response({'error': f'Invalid Google token: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email      = id_info.get('email')
+        first_name = id_info.get('given_name', '')
+        last_name  = id_info.get('family_name', '')
+
+        if not email:
+            return Response({'error': 'No email in Google token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the user already exists
+        try:
+            user = CustomUser.objects.get(email=email)
+            created = False
+        except CustomUser.DoesNotExist:
+            # New user — user_type must be explicitly provided (from /join role picker)
+            if not user_type:
+                return Response(
+                    {'error': 'no_account', 'message': 'No account found. Please sign up first.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            user = CustomUser.objects.create(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                user_type=user_type,
+                is_active=True,
+            )
+            created = True
+
+        if not user.is_active:
+            return Response({'error': 'Account is disabled'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        refresh      = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        samesite = 'Lax' if settings.DEBUG else 'None'
+
+        response = Response({
+            'success': True,
+            'created': created,
+            'access_token': access_token,
+            'user': {
+                'email':      user.email,
+                'first_name': user.first_name,
+                'last_name':  user.last_name,
+                'user_type':  user.user_type,
+                'has_shop':   hasattr(user, 'shop'),
+            }
+        }, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            key='access_token', value=access_token,
+            httponly=True, secure=not settings.DEBUG,
+            samesite=samesite, max_age=60 * 60 * 24,
+        )
+        response.set_cookie(
+            key='refresh_token', value=refresh_token,
+            httponly=True, secure=not settings.DEBUG,
+            samesite=samesite, max_age=60 * 60 * 24 * 7,
+        )
+
+        return response
+
+
 # Test View for CSRF Token (can be removed in production)
 @api_view(['GET', 'POST'])
 @csrf_exempt

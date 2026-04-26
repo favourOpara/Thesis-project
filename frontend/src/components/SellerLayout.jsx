@@ -464,10 +464,12 @@ const SD_CSS = `
 
   .sd-label {
     display: block;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #374151;
+    font-size: 12px;
+    font-weight: 500;
+    color: #94a3b8;
     margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .sd-input {
@@ -484,6 +486,22 @@ const SD_CSS = `
   }
 
   .sd-input:focus { border-color: #2563eb; }
+
+  .sd-input-line {
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 2px solid #e2e8f0;
+    border-radius: 0;
+    font-size: 14px;
+    color: #1e293b;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .sd-input-line:focus { border-bottom-color: #2563eb; }
+  .sd-input-line::placeholder { color: #cbd5e1; }
 
   .sd-upload-zone {
     border: 2px dashed #e2e8f0;
@@ -554,6 +572,11 @@ const SD_CSS = `
   .sd-quick-btn:hover { border-color: #2563eb; background: #f0f7ff; color: #2563eb; }
 
   @media (max-width: 768px) {
+    .sd-topbar-actions .sd-btn-primary {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
     .sd-sidebar {
       position: fixed;
       top: 0;

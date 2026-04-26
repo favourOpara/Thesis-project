@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/img/abatrades-large-logo.png";
+import GoogleAuth from "../components/GoogleAuth";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -22,22 +23,21 @@ const RuleRow = ({ ok, label }) => (
   </div>
 );
 
-/* ── Shared input style ── */
-const inp = {
-  width: "100%", padding: "11px 14px", borderRadius: "10px",
-  border: "1.5px solid #e2e8f0", fontSize: "14px", color: "#0f172a",
-  outline: "none", background: "#fff", boxSizing: "border-box",
-  transition: "border-color 0.15s",
-};
+/* ── Shared input style — underline only ── */
 const InputField = ({ label, error, ...props }) => {
   const [focused, setFocused] = useState(false);
   return (
-    <div style={{ marginBottom: "16px" }}>
-      <label style={{ display: "block", fontSize: "13px", fontWeight: 600,
-        color: "#374151", marginBottom: "6px" }}>{label}</label>
+    <div style={{ marginBottom: "20px" }}>
+      <label style={{ display: "block", fontSize: "12px", fontWeight: 500,
+        color: "#94a3b8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px" }}>{label}</label>
       <input
         {...props}
-        style={{ ...inp, borderColor: error ? "#ef4444" : focused ? "#2563eb" : "#e2e8f0" }}
+        style={{
+          width: "100%", padding: "8px 0", fontSize: "14.5px", color: "#0f172a",
+          background: "transparent", outline: "none", boxSizing: "border-box",
+          border: "none", borderBottom: `2px solid ${error ? "#ef4444" : focused ? "#2563eb" : "#e2e8f0"}`,
+          transition: "border-color 0.2s", borderRadius: 0,
+        }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
@@ -56,6 +56,13 @@ const BuyerForm = ({ onBack }) => {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const pw = rules(form.password);
+
+  const handleGoogleSuccess = ({ user, access_token }) => {
+    localStorage.setItem("access_token", access_token);
+    localStorage.setItem("user", JSON.stringify(user));
+    toast.success("Signed in with Google!");
+    setTimeout(() => navigate("/"), 1200);
+  };
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -90,7 +97,22 @@ const BuyerForm = ({ onBack }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ animation: "slideDown 0.32s ease" }}>
+    <div style={{ animation: "slideDown 0.32s ease" }}>
+      {/* Google sign-in */}
+      <GoogleAuth
+        userType="buyer"
+        onSuccess={handleGoogleSuccess}
+        onError={(msg) => toast.error(msg)}
+      />
+
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
+        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+        <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 500, whiteSpace: "nowrap" }}>or sign up with email</span>
+        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+      </div>
+
+    <form onSubmit={handleSubmit}>
       <InputField label="Email address" type="email" placeholder="you@email.com"
         value={form.email} onChange={set("email")} error={errors.email} />
       <InputField label="Password" type="password" placeholder="Create a password"
@@ -135,6 +157,7 @@ const BuyerForm = ({ onBack }) => {
         <Link to="/signin" style={{ color: "#2563eb", fontWeight: 600 }}>Sign in</Link>
       </p>
     </form>
+    </div>
   );
 };
 
@@ -153,6 +176,13 @@ const SellerForm = ({ onBack }) => {
   const pw = rules(form.password);
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const handleGoogleSuccess = ({ user, access_token }) => {
+    localStorage.setItem("access_token", access_token);
+    localStorage.setItem("user", JSON.stringify(user));
+    toast.success("Signed in with Google!");
+    setTimeout(() => navigate("/seller/overview"), 1200);
+  };
 
   const validate = () => {
     const e = {};
@@ -194,7 +224,22 @@ const SellerForm = ({ onBack }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ animation: "slideDown 0.32s ease" }}>
+    <div style={{ animation: "slideDown 0.32s ease" }}>
+      {/* Google sign-in */}
+      <GoogleAuth
+        userType="seller"
+        onSuccess={handleGoogleSuccess}
+        onError={(msg) => toast.error(msg)}
+      />
+
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
+        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+        <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 500, whiteSpace: "nowrap" }}>or sign up with email</span>
+        <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
+      </div>
+
+    <form onSubmit={handleSubmit}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
         <InputField label="First name" type="text" placeholder="Ada"
           value={form.firstName} onChange={set("firstName")} error={errors.firstName} />
@@ -209,6 +254,15 @@ const SellerForm = ({ onBack }) => {
         <InputField label="Address" type="text" placeholder="Lagos, Nigeria"
           value={form.address} onChange={set("address")} error={errors.address} />
       </div>
+      <p style={{
+        fontSize: "12px", color: "#94a3b8", margin: "-10px 0 20px",
+        display: "flex", alignItems: "center", gap: "5px",
+      }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Not visible to buyers — used for package delivery only.
+      </p>
       <InputField label="Password" type="password" placeholder="Create a password"
         value={form.password} onChange={set("password")} error={errors.password} />
       {form.password && (
@@ -251,13 +305,14 @@ const SellerForm = ({ onBack }) => {
         <Link to="/signin" style={{ color: "#2563eb", fontWeight: 600 }}>Sign in</Link>
       </p>
     </form>
+    </div>
   );
 };
 
 /* ════════════════════════════════════
-   ROLE PICKER
+   ROLE PICKER ROW
 ════════════════════════════════════ */
-const RoleCard = ({ icon, title, desc, accent, onClick }) => {
+const RoleRow = ({ icon, title, desc, accent, onClick }) => {
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -265,38 +320,29 @@ const RoleCard = ({ icon, title, desc, accent, onClick }) => {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        flex: "1 1 240px", padding: "32px 24px", borderRadius: "16px",
-        border: `2px solid ${hov ? accent : "#e2e8f0"}`,
-        background: hov ? `${accent}08` : "#fff",
-        cursor: "pointer", textAlign: "left",
-        transition: "all 0.18s cubic-bezier(0.4,0,0.2,1)",
-        transform: hov ? "translateY(-4px)" : "translateY(0)",
-        boxShadow: hov ? `0 12px 32px ${accent}22` : "0 2px 8px rgba(0,0,0,0.05)",
+        width: "100%", display: "flex", alignItems: "center", gap: "16px",
+        padding: "18px 0", background: "none", border: "none",
+        cursor: "pointer", textAlign: "left", transition: "opacity 0.15s",
+        opacity: hov ? 1 : 0.85,
       }}
     >
       <div style={{
-        width: "52px", height: "52px", borderRadius: "14px",
-        background: `${accent}18`, display: "flex", alignItems: "center",
-        justifyContent: "center", marginBottom: "18px",
-        color: accent, fontSize: "24px",
+        width: "44px", height: "44px", borderRadius: "12px", flexShrink: 0,
+        background: `${accent}14`, display: "flex", alignItems: "center",
+        justifyContent: "center", color: accent,
+        transition: "background 0.15s",
+        ...(hov ? { background: `${accent}28` } : {}),
       }}>
         {icon}
       </div>
-      <div style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", marginBottom: "8px" }}>
-        {title}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: "15px", color: "#0f172a", marginBottom: "2px" }}>{title}</div>
+        <div style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 }}>{desc}</div>
       </div>
-      <div style={{ fontSize: "13.5px", color: "#64748b", lineHeight: 1.6 }}>
-        {desc}
-      </div>
-      <div style={{
-        marginTop: "20px", display: "inline-flex", alignItems: "center", gap: "6px",
-        fontSize: "13px", fontWeight: 700, color: accent,
-      }}>
-        Get started
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5"
+        style={{ flexShrink: 0, opacity: hov ? 1 : 0.4, transition: "opacity 0.15s" }}>
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
     </button>
   );
 };
@@ -305,13 +351,7 @@ const RoleCard = ({ icon, title, desc, accent, onClick }) => {
    MAIN JOIN PAGE
 ════════════════════════════════════ */
 const Join = () => {
-  const [searchParams] = useSearchParams();
   const [step, setStep] = useState("pick"); // "pick" | "buyer" | "seller"
-
-  useEffect(() => {
-    const type = searchParams.get("type");
-    if (type === "buyer" || type === "seller") setStep(type);
-  }, []);
 
   const headings = {
     pick:   { title: "Join Abatrades",        sub: "How would you like to use the platform?" },
@@ -365,7 +405,7 @@ const Join = () => {
 
         {/* Heading */}
         <div style={{ marginBottom: "28px", animation: "slideDown 0.28s ease" }} key={step}>
-          <h1 style={{ fontWeight: 800, fontSize: "24px", color: "#0f172a", margin: "0 0 6px" }}>
+          <h1 style={{ fontWeight: 500, fontSize: "24px", color: "#374151", margin: "0 0 6px" }}>
             {headings[step].title}
           </h1>
           <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
@@ -375,28 +415,29 @@ const Join = () => {
 
         {/* Step content */}
         {step === "pick" && (
-          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", animation: "slideDown 0.32s ease" }}>
-            <RoleCard
+          <div style={{ animation: "slideDown 0.32s ease" }}>
+            <RoleRow
               icon={
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                   <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                 </svg>
               }
               title="I'm a Buyer"
-              desc="Browse storefronts, discover products, and shop from verified sellers across Nigeria."
+              desc="Browse storefronts and shop from verified sellers across Nigeria."
               accent="#2563eb"
               onClick={() => setStep("buyer")}
             />
-            <RoleCard
+            <div style={{ height: "1px", background: "#f1f5f9" }} />
+            <RoleRow
               icon={
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                   <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
               }
               title="I'm a Seller"
-              desc="Create your own store, list your products, and reach thousands of buyers — commission-free."
+              desc="Create your store, list products, and reach thousands of buyers — commission-free."
               accent="#f97316"
               onClick={() => setStep("seller")}
             />

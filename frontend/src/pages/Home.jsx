@@ -236,7 +236,7 @@ const DiasporaSection = () => (
 
       {/* CTA */}
       <div style={{ textAlign: "center", marginTop: "48px" }}>
-        <Link to="/join?type=seller" style={{
+        <Link to="/join" style={{
           display: "inline-flex", alignItems: "center", gap: "8px",
           background: "white", color: "#0284c7",
           padding: "14px 32px", borderRadius: "10px",
@@ -894,7 +894,7 @@ const Plans = () => (
               ))}
             </ul>
 
-            <Link to="/join?type=seller" style={{
+            <Link to="/join" style={{
               display: "block", textAlign: "center",
               background: p.highlight ? "#3b7bf8" : "transparent",
               color: p.highlight ? "white" : "#0f172a",
@@ -959,7 +959,7 @@ const FinalCTA = () => (
         Free to start, powerful to scale.
       </p>
       <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
-        <Link to="/join?type=seller" style={{
+        <Link to="/join" style={{
           background: "white", color: "#3b7bf8",
           padding: "16px 40px", borderRadius: "12px",
           fontWeight: 800, fontSize: "16px", textDecoration: "none",
@@ -1011,7 +1011,7 @@ const Home = () => {
               headline={"Your brand.\nYour storefront.\nYour rules."}
               body="Get a professional storefront you own. Showcase your products, connect with buyers, and manage everything from one dashboard — without paying anyone a commission."
               cta="Create your store"
-              ctaHref="/join?type=seller"
+              ctaHref="/join"
               visual={<SellerVisual />}
               flip={false}
             />
