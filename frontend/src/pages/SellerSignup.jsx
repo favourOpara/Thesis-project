@@ -65,31 +65,37 @@ const SellerSignUp = () => {
     const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
     // Use toast.promise to show loading, success, and error messages
-    toast.promise(axios.post(`${baseURL}/api/signup/`, userData), {
-      pending: "Signing up...",
-      success: {
-        render({ data }) {
-          if (data.status === 201) {
+    toast.promise(
+      axios.post(`${baseURL}/api/signup/`, userData, { withCredentials: true }),
+      {
+        pending: "Signing up...",
+        success: {
+          render({ data }) {
             navigate("/signin");
             return "Account created! Please sign in to access your dashboard.";
-          } else {
-            console.log(data);
-            throw new Error(
-              data.data.message || "Sign up failed. Please try again."
-            );
-          }
+          },
         },
-      },
-      error: {
-        render({ data }) {
-          return (
-            "Sign up failed " +
-            (data.response.request.response ||
-              "Sign up failed. Please try again.")
-          );
+        error: {
+          render({ data }) {
+            // Parse backend validation errors into a readable string
+            const responseData = data?.response?.data;
+            if (responseData && typeof responseData === "object") {
+              const messages = Object.entries(responseData)
+                .map(([field, errors]) => {
+                  const errList = Array.isArray(errors) ? errors.join(" ") : errors;
+                  return field === "non_field_errors" ? errList : `${errList}`;
+                })
+                .join(" ");
+              return messages || "Sign up failed. Please try again.";
+            }
+            if (data?.message === "Network Error") {
+              return "Cannot reach the server. Please check your connection.";
+            }
+            return "Sign up failed. Please try again.";
+          },
         },
-      },
-    });
+      }
+    );
   };
 
   // Inline styles
