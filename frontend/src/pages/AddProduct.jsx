@@ -638,14 +638,29 @@ const AddProduct = () => {
   ];
 
   const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      border: "none",
+      borderBottom: `1.5px solid ${state.isFocused ? "#3b7bf8" : "#cbd5e1"}`,
+      borderRadius: 0,
+      background: "transparent",
+      boxShadow: "none",
+      paddingLeft: 0,
+      minHeight: "38px",
+      "&:hover": { borderBottomColor: "#3b7bf8" },
+    }),
+    valueContainer: (provided) => ({ ...provided, paddingLeft: 0 }),
+    indicatorSeparator: () => ({ display: "none" }),
     menuList: (provided) => ({
       ...provided,
-      maxHeight: "150px",
+      maxHeight: "160px",
       overflowY: "auto",
     }),
-    option: (provided) => ({
+    option: (provided, state) => ({
       ...provided,
       padding: 10,
+      background: state.isSelected ? "#3b7bf8" : state.isFocused ? "#f1f5f9" : "#fff",
+      color: state.isSelected ? "#fff" : "#212529",
     }),
   };
 
@@ -803,7 +818,7 @@ const AddProduct = () => {
       });
       setImageFiles([]);
       setPreviewUrls([]);
-      setTimeout(() => navigate("/"), 500);
+      setTimeout(() => navigate(-1), 500);
     } catch (error) {
       console.error("Error adding product:", error);
       setErrorMessage(error.response?.data?.message || "Failed to add product");
@@ -825,24 +840,52 @@ const AddProduct = () => {
 
   return (
     <>
-      <div className="container" style={{ marginTop: "10px", paddingBottom: "50px" }}>
+      <style>{`
+        .ap-page { background: #fff; min-height: 100vh; }
+        .ap-page .form-control,
+        .ap-page .form-control:focus {
+          border: none;
+          border-bottom: 1.5px solid #cbd5e1;
+          border-radius: 0;
+          background: transparent;
+          padding-left: 0;
+          padding-right: 0;
+          box-shadow: none;
+          outline: none;
+        }
+        .ap-page .form-control:focus {
+          border-bottom-color: #3b7bf8;
+        }
+        .ap-page .form-control.is-invalid {
+          border-bottom-color: #dc3545;
+        }
+        .ap-page .form-label {
+          font-size: 12px;
+          color: #64748b;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .ap-page .form-group {
+          border-bottom: none;
+        }
+        .ap-page .img-thumbnail {
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+        }
+      `}</style>
+      <div className="ap-page">
+      <div className="container" style={{ paddingTop: "32px", paddingBottom: "60px" }}>
         <div className="row justify-content-center">
           <div className="col-lg-8 col-md-10">
-            <div className="card shadow-sm">
-              <div className="card-header bg-primary text-white">
-                <h2 className="mb-0">
-                  <i className="fas fa-plus-circle me-2"></i>
-                  Add New Product
-                </h2>
-              </div>
-              <div className="card-body">
+            <h2 style={{ fontWeight: 700, fontSize: "22px", marginBottom: "28px", color: "#0f172a" }}>
+              Add New Product
+            </h2>
+            <div>
                 <form onSubmit={handleSubmit}>
                   {/* Product Name */}
                   <div className="form-group mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-tag me-2"></i>
-                      Product Name *
-                    </label>
+                    <label className="form-label">Product Name *</label>
                     <input
                       type="text"
                       className={`form-control ${invalidFields.name ? "is-invalid" : ""}`}
@@ -856,10 +899,7 @@ const AddProduct = () => {
 
                   {/* Category */}
                   <div className="form-group mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-th-large me-2"></i>
-                      Category *
-                    </label>
+                    <label className="form-label">Category *</label>
                     <Select
                       options={enhancedCategoryOptions}
                       value={enhancedCategoryOptions.find(opt => opt.value === formData.category)}
@@ -878,10 +918,7 @@ const AddProduct = () => {
                   {/* Sub-Category */}
                   {formData.category && (
                     <div className="form-group mb-3">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-list me-2"></i>
-                        Sub-Category *
-                      </label>
+                      <label className="form-label">Sub-Category *</label>
                       <Select
                         options={filteredSubCategories}
                         value={filteredSubCategories.find(opt => opt.value === formData.sub_category)}
@@ -899,10 +936,7 @@ const AddProduct = () => {
                   {/* Gender */}
                   {showGenderDropdown && (
                     <div className="form-group mb-3">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-venus-mars me-2"></i>
-                        Gender *
-                      </label>
+                      <label className="form-label">Gender *</label>
                       <Select
                         options={genderOptions}
                         value={genderOptions.find(opt => opt.value === formData.gender)}
@@ -919,10 +953,7 @@ const AddProduct = () => {
 
                   {/* Description */}
                   <div className="form-group mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-align-left me-2"></i>
-                      Description *
-                    </label>
+                    <label className="form-label">Description *</label>
                     <textarea
                       className={`form-control ${invalidFields.description ? "is-invalid" : ""}`}
                       name="description"
@@ -939,10 +970,7 @@ const AddProduct = () => {
                   <div className="row">
                     <div className="col-md-6">
                       <div className="form-group mb-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-naira-sign me-2"></i>
-                          Price (₦) *
-                        </label>
+                        <label className="form-label">Price (₦) *</label>
                         <input
                           type="number"
                           className={`form-control ${invalidFields.price ? "is-invalid" : ""}`}
@@ -958,10 +986,7 @@ const AddProduct = () => {
                     </div>
                     <div className="col-md-6">
                       <div className="form-group mb-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-boxes me-2"></i>
-                          Quantity *
-                        </label>
+                        <label className="form-label">Quantity *</label>
                         <input
                           type="number"
                           className={`form-control ${invalidFields.quantity ? "is-invalid" : ""}`}
@@ -980,10 +1005,7 @@ const AddProduct = () => {
                   <div className="row">
                     <div className="col-md-6">
                       <div className="form-group mb-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-cube me-2"></i>
-                          Material Type *
-                        </label>
+                        <label className="form-label">Material Type *</label>
                         <input
                           type="text"
                           className={`form-control ${invalidFields.material_type ? "is-invalid" : ""}`}
@@ -997,10 +1019,7 @@ const AddProduct = () => {
                     </div>
                     <div className="col-md-6">
                       <div className="form-group mb-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-certificate me-2"></i>
-                          Brand *
-                        </label>
+                        <label className="form-label">Brand *</label>
                         <input
                           type="text"
                           className={`form-control ${invalidFields.brand ? "is-invalid" : ""}`}
@@ -1016,10 +1035,7 @@ const AddProduct = () => {
 
                   {/* Size */}
                   <div className="form-group mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-ruler me-2"></i>
-                      Available Sizes *
-                    </label>
+                    <label className="form-label">Available Sizes *</label>
                     <Select
                       options={sizeOptions}
                       isMulti
@@ -1036,10 +1052,7 @@ const AddProduct = () => {
 
                   {/* Image Upload */}
                   <div className="form-group mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-images me-2"></i>
-                      Product Images * (Max 8, 500KB each)
-                    </label>
+                    <label className="form-label">Product Images * (Max 8, 500KB each)</label>
                     <input
                       type="file"
                       multiple
@@ -1048,27 +1061,13 @@ const AddProduct = () => {
                       onChange={handleImageChange}
                     />
                     {invalidFields.images && <div className="invalid-feedback">At least one image is required</div>}
-                    <div className="mt-2">
-                      <small className="text-muted">
-                        <i className="fas fa-info-circle me-1"></i>
-                        {imageFiles.length} of 8 images selected
-                      </small>
-                      {imageFiles.length > 0 && (
-                        <span className="text-success ms-2">
-                          <i className="fas fa-check-circle me-1"></i>
-                          Images ready
-                        </span>
-                      )}
-                    </div>
+                    <small className="text-muted">{imageFiles.length} of 8 images selected</small>
                   </div>
 
                   {/* Image Previews */}
                   {previewUrls.length > 0 && (
                     <div className="mb-4">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-eye me-2"></i>
-                        Image Previews:
-                      </label>
+                      <label className="form-label">Image Previews</label>
                       <div className="row g-2 mt-1">
                         {previewUrls.map((url, index) => (
                           <div key={url} className="col-6 col-md-4 col-lg-3">
@@ -1081,15 +1080,12 @@ const AddProduct = () => {
                               />
                               <button
                                 type="button"
-                                className="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                                className="btn btn-sm position-absolute top-0 end-0 m-1"
+                                style={{ background: "rgba(0,0,0,0.5)", color: "#fff", lineHeight: 1, padding: "2px 6px" }}
                                 onClick={() => removeImage(index)}
-                                title="Remove image"
                               >
-                                <i className="fas fa-times"></i>
+                                ×
                               </button>
-                              <div className="position-absolute bottom-0 start-0 bg-dark text-white px-2 py-1 m-1 rounded">
-                                <small>{index + 1}</small>
-                              </div>
                             </div>
                           </div>
                         ))}
@@ -1100,7 +1096,6 @@ const AddProduct = () => {
                   {/* Error Message */}
                   {errorMessage && (
                     <div className="alert alert-danger mb-3" role="alert">
-                      <i className="fas fa-exclamation-triangle me-2"></i>
                       {errorMessage}
                     </div>
                   )}
@@ -1108,45 +1103,42 @@ const AddProduct = () => {
                   {/* Success Message */}
                   {successMessage && (
                     <div className="alert alert-success mb-3" role="alert">
-                      <i className="fas fa-check-circle me-2"></i>
                       {successMessage}
                     </div>
                   )}
 
                   {/* Submit Button */}
-                  <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <div className="d-flex gap-2 justify-content-end mt-2">
                     <button
                       type="button"
-                      className="btn btn-secondary me-md-2"
-                      onClick={() => navigate("/")}
+                      className="btn btn-outline-secondary"
+                      onClick={() => navigate(-1)}
                       disabled={loading}
                     >
-                      <i className="fas fa-times me-2"></i>
                       Cancel
                     </button>
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       className="btn btn-primary"
                       disabled={loading}
                     >
                       {loading ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Adding Product...
+                          Adding...
                         </>
                       ) : (
                         <>
-                          <i className="fas fa-plus me-2"></i>
                           Add Product
                         </>
                       )}
                     </button>
                   </div>
                 </form>
-              </div>
             </div>
           </div>
         </div>
+      </div>
       </div>
       <Footer />
     </>
