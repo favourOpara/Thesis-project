@@ -100,9 +100,6 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
   ];
 
   const NAV_LINKS = [
-    { label: "Trending", icon: "⭐", to: "/coming-soon", bg: "#fff7ed", color: "#f97316" },
-    { label: "New Arrivals", icon: "✨", to: "/coming-soon", bg: "#f0fdf4", color: "#16a34a" },
-    { label: "Top Deals", icon: "🏷️", to: "/coming-soon", bg: "#fdf4ff", color: "#9333ea" },
     { label: "Support", icon: "💬", to: "/coming-soon", bg: "#eff6ff", color: "#3b7bf8" },
     { label: "How It Works", icon: "❓", to: "/coming-soon", bg: "#f8fafc", color: "#64748b" },
   ];
