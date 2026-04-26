@@ -98,6 +98,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Alternative port
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://mine-production-1f69.up.railway.app",  # Production frontend
 ]
 CORS_ALLOW_CREDENTIALS = True  # Required for HttpOnly cookies
 
@@ -115,6 +116,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://mine-production-1f69.up.railway.app",  # Production frontend
 ]
 
 ROOT_URLCONF = 'abatrades.urls'
