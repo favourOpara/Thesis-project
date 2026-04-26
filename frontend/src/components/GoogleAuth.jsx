@@ -2,7 +2,7 @@ import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 
-const CLIENT_ID = "199766904815-fppnog3lkofrudpd9jquqndg9a0rj18k.apps.googleusercontent.com";
+const CLIENT_ID = "511673314104-k9amdvbfte68hu6deovsk0r9h9r40ftb.apps.googleusercontent.com";
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /**
