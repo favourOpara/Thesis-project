@@ -282,18 +282,18 @@ const RafikiSection = () => (
           padding: "6px 16px", marginBottom: "20px",
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="#d97706"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+          <span style={{ fontSize: "12px", fontWeight: 500, color: "#d97706", letterSpacing: "0.8px", textTransform: "uppercase" }}>
             Official Partner
           </span>
         </div>
 
         <h2 style={{
-          fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 900,
-          color: "#0f172a", lineHeight: 1.15, marginBottom: "14px",
-          letterSpacing: "-0.3px",
+          fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 500,
+          color: "#374151", lineHeight: 1.15, marginBottom: "14px",
+          letterSpacing: "-0.2px",
         }}>
           Don't know how to source products abroad?<br />
-          <span style={{ color: "#f59e0b" }}>We've got you covered.</span>
+          <span style={{ color: "#f59e0b", fontWeight: 700 }}>We've got you covered.</span>
         </h2>
         <p style={{
           fontSize: "16px", color: "#64748b", maxWidth: "620px",
@@ -596,13 +596,13 @@ const FeatureSection = ({ eyebrow, headline, body, cta, ctaHref, visual, flip })
       {/* Text always first in DOM; CSS flips visually */}
       <div className={flip ? "feature-text order-2-mobile" : "feature-text"} style={{ order: flip ? 2 : 1 }}>
         <p style={{
-          color: "#3b7bf8", fontWeight: 700, fontSize: "12px",
-          letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: "14px",
+          color: "#94a3b8", fontWeight: 500, fontSize: "12px",
+          letterSpacing: "1px", textTransform: "uppercase", marginBottom: "14px",
         }}>{eyebrow}</p>
         <h2 style={{
           fontSize: "clamp(26px, 3.5vw, 42px)",
-          fontWeight: 900, color: "#0f172a",
-          lineHeight: 1.12, letterSpacing: "-0.5px",
+          fontWeight: 500, color: "#374151",
+          lineHeight: 1.12, letterSpacing: "-0.3px",
           marginBottom: "20px",
         }}>{headline}</h2>
         <p style={{ fontSize: "16px", color: "#475569", lineHeight: 1.75, marginBottom: "32px" }}>
@@ -727,10 +727,10 @@ const LiveSellers = () => {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "48px", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <p style={{ color: "#3b7bf8", fontWeight: 700, fontSize: "12px", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: "10px" }}>
+            <p style={{ color: "#94a3b8", fontWeight: 500, fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "10px" }}>
               Live on Abatrades
             </p>
-            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.5px", margin: 0 }}>
+            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 500, color: "#374151", letterSpacing: "-0.3px", margin: 0 }}>
               Meet our sellers
             </h2>
           </div>
@@ -794,10 +794,10 @@ const Plans = () => (
   <section style={{ background: "#f8fafc", padding: "96px 0" }}>
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
       <div style={{ textAlign: "center", marginBottom: "56px" }}>
-        <p style={{ color: "#3b7bf8", fontWeight: 700, fontSize: "12px", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: "12px" }}>
+        <p style={{ color: "#94a3b8", fontWeight: 500, fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px" }}>
           Pricing
         </p>
-        <h2 style={{ fontSize: "clamp(26px, 3.5vw, 42px)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.5px", marginBottom: "14px" }}>
+        <h2 style={{ fontSize: "clamp(26px, 3.5vw, 42px)", fontWeight: 500, color: "#374151", letterSpacing: "-0.3px", marginBottom: "14px" }}>
           Simple, transparent pricing
         </h2>
         <p style={{ color: "#64748b", fontSize: "16px", maxWidth: "480px", margin: "0 auto", lineHeight: 1.65 }}>

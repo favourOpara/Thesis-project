@@ -25,10 +25,24 @@ class ShopViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
+    def _has_active_products(self, shop):
+        return shop.owner.products.filter(is_active=True).exists()
+
+    def _is_owner(self, shop):
+        return (
+            self.request.user.is_authenticated
+            and self.request.user == shop.owner
+        )
+
     def get_queryset(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return Shop.objects.filter(owner=self.request.user)
         queryset = Shop.objects.all()
+        # Public listing/searching: only expose shops that have at least one active product
+        if self.action in ['list']:
+            queryset = queryset.filter(
+                owner__products__is_active=True
+            ).distinct()
         category = self.request.query_params.get('category')
         ordering = self.request.query_params.get('ordering')
         if category:
@@ -41,6 +55,14 @@ class ShopViewSet(viewsets.ModelViewSet):
         else:
             queryset = queryset.order_by('-created_at')
         return queryset
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not self._has_active_products(instance) and not self._is_owner(instance):
+            from rest_framework.exceptions import NotFound
+            raise NotFound("Shop not found.")
+        serializer = self.get_serializer(instance, context={'request': request})
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -57,12 +79,18 @@ class ShopViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='visit')
     def record_visit(self, request, slug=None):
         shop = self.get_object()
+        # Don't count visits for shops with no active products
+        if not self._has_active_products(shop):
+            return Response({'visit_count': shop.visit_count})
         Shop.objects.filter(pk=shop.pk).update(visit_count=shop.visit_count + 1)
         return Response({'visit_count': shop.visit_count + 1})
 
     @action(detail=True, methods=['get'], url_path='products')
     def products(self, request, slug=None):
         shop = self.get_object()
+        # Block public access to product list if shop has no active products
+        if not self._has_active_products(shop) and not self._is_owner(shop):
+            return Response([])
         queryset = Product.objects.filter(owner=shop.owner, is_active=True)
         serializer = ProductSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
