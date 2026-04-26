@@ -18,16 +18,40 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(','
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
-# Cloudinary — enabled automatically when credentials are present (production)
-CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "")
-USE_CLOUDINARY = bool(CLOUDINARY_URL)
+# Cloudinary — enabled automatically when credentials are present (production).
+# Supports both a combined CLOUDINARY_URL string and individual component vars,
+# since Railway can provide either depending on the plugin used.
+_cloudinary_url = os.environ.get("CLOUDINARY_URL", "")
+_cloud_name     = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+_api_key        = os.environ.get("CLOUDINARY_API_KEY", "")
+_api_secret     = os.environ.get("CLOUDINARY_API_SECRET", "")
+
+USE_CLOUDINARY = bool(_cloudinary_url or (_cloud_name and _api_key and _api_secret))
 
 if USE_CLOUDINARY:
-    import cloudinary
-    cloudinary.config(url=CLOUDINARY_URL)
-    CLOUDINARY_STORAGE = {'CLOUDINARY_URL': CLOUDINARY_URL}
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'  # Cloudinary overrides this internally
+    if _cloudinary_url:
+        import cloudinary
+        cloudinary.config(url=_cloudinary_url)
+        _parsed = cloudinary.config()
+        _cloud_name = _parsed.cloud_name
+        _api_key    = _parsed.api_key
+        _api_secret = _parsed.api_secret
+
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': _cloud_name,
+        'API_KEY':    _api_key,
+        'API_SECRET': _api_secret,
+    }
+    # Django 4.2+ uses STORAGES dict; DEFAULT_FILE_STORAGE is deprecated in 5.x
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    MEDIA_URL = '/media/'
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
