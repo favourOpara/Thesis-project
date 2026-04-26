@@ -245,7 +245,7 @@ class GoogleLoginView(APIView):
             return Response({'error': 'No credential provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            client_id = '199766904815-fppnog3lkofrudpd9jquqndg9a0rj18k.apps.googleusercontent.com'
+            client_id = '511673314104-k9amdvbfte68hu6deovsk0r9h9r40ftb.apps.googleusercontent.com'
             id_info = id_token.verify_oauth2_token(
                 credential,
                 google_requests.Request(),
