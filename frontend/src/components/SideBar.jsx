@@ -20,12 +20,11 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close on outside click + lock background scroll (mobile only)
+  // Close on outside click (mobile only)
   useEffect(() => {
+    if (!isMobile || !isOpen) return;
     const handleClickOutside = (event) => {
       if (
-        isMobile &&
-        isOpen &&
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target) &&
         !event.target.closest('.mobile-menu-button')
@@ -33,34 +32,38 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
         toggleSidebar();
       }
     };
-
-    // Prevent background page from scrolling when sidebar is open.
-    // Only blocks touches that are outside the sidebar panel itself.
-    const preventBackgroundScroll = (e) => {
-      if (sidebarRef.current && sidebarRef.current.contains(e.target)) return;
-      e.preventDefault();
-    };
-
-    if (isMobile && isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
-      // iOS rubber-band fix: if the page is at the very top, a 1px nudge
-      // stops Safari from triggering its native top-bounce before our
-      // touchmove handler can intercept it.
-      if (window.scrollY === 0) {
-        window.scrollTo(0, 1);
-      }
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchmove', preventBackgroundScroll, { passive: false });
-      // Restore to true top if we nudged it
-      if (window.scrollY === 1) {
-        window.scrollTo(0, 0);
-      }
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, toggleSidebar, isMobile]);
+
+  // Lock background page scroll while sidebar is open (iOS-safe)
+  useEffect(() => {
+    if (!isMobile) return;
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.dataset.sidebarScrollY = String(scrollY);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+    } else {
+      const scrollY = Number(document.body.dataset.sidebarScrollY || 0);
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      if (scrollY) window.scrollTo(0, scrollY);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+    };
+  }, [isOpen, isMobile]);
 
   const toggleCategory = (categoryName) => {
     setOpenCategories(prev => ({

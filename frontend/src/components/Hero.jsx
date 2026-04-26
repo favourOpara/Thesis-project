@@ -258,7 +258,7 @@ const Hero = () => {
         .hero-mobile-logo { display: none; }
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; gap: 0 !important; padding: 40px 20px 40px !important; }
-          .hero-visual { height: 420px !important; width: 100% !important; margin-top: 60px !important; overflow: hidden !important; }
+          .hero-visual { height: 420px !important; width: 100% !important; margin-top: 60px !important; }
           .hero-logo-col { display: none !important; }
           .hero-mobile-logo { display: block !important; }
           .hero-card-overflow { left: 140px !important; }
