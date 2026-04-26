@@ -218,207 +218,170 @@ const ShopPage = () => {
         ══════════════════════════════ */}
         <div style={{
           ...bannerBg,
-          height: "300px",
+          height: "220px",
           marginTop: "56px",
           position: "relative",
         }}>
-          {/* gradient overlay */}
           <div style={{
             position: "absolute", inset: 0,
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%)",
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.45) 100%)",
           }} />
         </div>
 
         {/* ══════════════════════════════
             STORE IDENTITY CARD
         ══════════════════════════════ */}
-        <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 20px" }}>
+        <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 16px" }}>
           <div style={{
             background: "#fff",
-            borderRadius: "20px",
-            marginTop: "-72px",
+            borderRadius: "16px",
+            marginTop: "-44px",
             position: "relative",
             zIndex: 10,
-            padding: "0 32px 28px",
-            boxShadow: "0 8px 40px rgba(0,0,0,0.10)",
+            padding: "0 20px 16px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             border: "1px solid #f1f5f9",
-          }}
-            className="shop-identity-card"
-          >
-            {/* Logo row */}
+          }}>
+            {/* Single compact row: logo · name/meta · stats · actions */}
             <div style={{
               display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "14px",
+              marginTop: "-28px",
               flexWrap: "wrap",
-              gap: "16px",
-              marginTop: "-40px",
-              marginBottom: "20px",
             }}
-              className="shop-identity-top"
+              className="shop-identity-row"
             >
               {/* Logo */}
-              <div style={{ flexShrink: 0 }}>
-                {shop.logo_url ? (
-                  <img
-                    src={shop.logo_url}
-                    alt={shop.name}
-                    style={{
-                      width: "90px", height: "90px",
-                      borderRadius: "18px",
-                      border: "4px solid #fff",
-                      objectFit: "cover",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
-                      display: "block",
-                      background: "#f1f5f9",
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    width: "90px", height: "90px",
-                    borderRadius: "18px",
-                    border: "4px solid #fff",
-                    background: "linear-gradient(135deg, #3b7bf8, #7c3aed)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "32px", fontWeight: 900, color: "#fff",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
-                    flexShrink: 0,
-                  }}>
-                    {shop.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+              {shop.logo_url ? (
+                <img
+                  src={shop.logo_url}
+                  alt={shop.name}
+                  style={{
+                    width: "60px", height: "60px", borderRadius: "12px",
+                    border: "3px solid #fff", objectFit: "cover",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
+                    flexShrink: 0, background: "#f1f5f9",
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: "60px", height: "60px", borderRadius: "12px",
+                  border: "3px solid #fff",
+                  background: "linear-gradient(135deg, #3b7bf8, #7c3aed)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "22px", fontWeight: 700, color: "#fff",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.12)", flexShrink: 0,
+                }}>
+                  {shop.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              {/* Name + meta */}
+              <div style={{ flex: "1 1 160px", minWidth: 0, paddingTop: "10px" }}>
+                <h1 style={{
+                  fontWeight: 600, fontSize: "16px", color: "#0f172a",
+                  margin: "0 0 2px", lineHeight: 1.2,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {shop.name}
+                </h1>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  {shop.owner_name && (
+                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>by {shop.owner_name}</span>
+                  )}
+                  <span style={{ fontSize: "12px", color: "#cbd5e1" }}>·</span>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>
+                    {shop.product_count} product{shop.product_count !== 1 ? "s" : ""}
+                  </span>
+                  <span style={{ fontSize: "12px", color: "#cbd5e1" }}>·</span>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>
+                    {shop.visit_count?.toLocaleString()} visits
+                  </span>
+                </div>
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", paddingBottom: "2px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", paddingTop: "10px", flexShrink: 0, flexWrap: "wrap" }}>
                 {shop.whatsapp && (
                   <a
                     href={`https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, "")}`}
                     target="_blank" rel="noopener noreferrer"
+                    title="WhatsApp"
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: "7px",
-                      padding: "9px 16px", borderRadius: "10px",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: "34px", height: "34px", borderRadius: "8px",
                       border: "1.5px solid #dcfce7", background: "#f0fdf4",
-                      color: "#16a34a", fontWeight: 700, fontSize: "13px",
-                      textDecoration: "none", transition: "all 0.15s",
+                      color: "#16a34a", textDecoration: "none", transition: "all 0.15s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#16a34a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#16a34a"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.color = "#16a34a"; e.currentTarget.style.borderColor = "#dcfce7"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#16a34a"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.color = "#16a34a"; }}
                   >
-                    <WaIcon /> WhatsApp
+                    <WaIcon />
                   </a>
                 )}
                 {shop.instagram && (
                   <a
                     href={`https://instagram.com/${shop.instagram.replace("@", "")}`}
                     target="_blank" rel="noopener noreferrer"
+                    title="Instagram"
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: "7px",
-                      padding: "9px 16px", borderRadius: "10px",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: "34px", height: "34px", borderRadius: "8px",
                       border: "1.5px solid #fce7f3", background: "#fdf2f8",
-                      color: "#be185d", fontWeight: 700, fontSize: "13px",
-                      textDecoration: "none", transition: "all 0.15s",
+                      color: "#be185d", textDecoration: "none", transition: "all 0.15s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#be185d"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#be185d"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#fdf2f8"; e.currentTarget.style.color = "#be185d"; e.currentTarget.style.borderColor = "#fce7f3"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#be185d"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#fdf2f8"; e.currentTarget.style.color = "#be185d"; }}
                   >
-                    <IgIcon /> Instagram
+                    <IgIcon />
                   </a>
                 )}
                 {shop.website && (
                   <a
                     href={shop.website}
                     target="_blank" rel="noopener noreferrer"
+                    title="Website"
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: "7px",
-                      padding: "9px 16px", borderRadius: "10px",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: "34px", height: "34px", borderRadius: "8px",
                       border: "1.5px solid #e0e7ff", background: "#eef2ff",
-                      color: "#4338ca", fontWeight: 700, fontSize: "13px",
-                      textDecoration: "none", transition: "all 0.15s",
+                      color: "#4338ca", textDecoration: "none", transition: "all 0.15s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#4338ca"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#4338ca"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.color = "#4338ca"; e.currentTarget.style.borderColor = "#e0e7ff"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#4338ca"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.color = "#4338ca"; }}
                   >
-                    <WebIcon /> Website
+                    <WebIcon />
                   </a>
                 )}
                 <button
                   onClick={() => setShowInquiry(true)}
                   style={{
-                    display: "inline-flex", alignItems: "center", gap: "7px",
-                    padding: "9px 20px", borderRadius: "10px",
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    padding: "7px 14px", borderRadius: "8px",
                     border: "none", background: "#2563eb",
-                    color: "#fff", fontWeight: 700, fontSize: "13px",
-                    cursor: "pointer", transition: "background 0.15s",
+                    color: "#fff", fontWeight: 600, fontSize: "12.5px",
+                    cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#1d4ed8"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "#2563eb"; }}
                 >
-                  <MsgIcon /> Send Message
+                  <MsgIcon /> Message
                 </button>
               </div>
             </div>
 
-            {/* Store name + description + stats */}
-            <div style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "flex-start" }}
-              className="shop-identity-body"
-            >
-              <div style={{ flex: "1 1 320px", minWidth: 0 }}>
-                <h1 style={{
-                  fontWeight: 900, fontSize: "clamp(20px, 3vw, 28px)",
-                  color: "#0f172a", margin: "0 0 6px", lineHeight: 1.15,
-                }}>
-                  {shop.name}
-                </h1>
-                {shop.owner_name && (
-                  <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 10px", fontWeight: 500 }}>
-                    by {shop.owner_name}
-                  </p>
-                )}
-                {shop.description && (
-                  <p style={{
-                    fontSize: "14px", color: "#475569", margin: 0,
-                    lineHeight: 1.7, maxWidth: "560px",
-                  }}>
-                    {shop.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Stats */}
-              <div style={{
-                display: "flex", gap: "0",
-                background: "#f8fafc", borderRadius: "14px",
-                border: "1px solid #e2e8f0",
-                overflow: "hidden", alignSelf: "flex-start", flexShrink: 0,
-              }}
-                className="shop-stats-row"
-              >
-                {[
-                  { Icon: PkgIcon, value: shop.product_count, label: "Products" },
-                  { Icon: EyeIcon, value: shop.visit_count?.toLocaleString(), label: "Store visits" },
-                  ...(shop.categories?.length > 0
-                    ? [{ Icon: null, value: shop.categories.length, label: "Categories" }]
-                    : []),
-                ].map((s, i, arr) => (
-                  <div key={i} style={{
-                    padding: "16px 24px", textAlign: "center",
-                    borderRight: i < arr.length - 1 ? "1px solid #e2e8f0" : "none",
-                  }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      gap: "5px", color: "#2563eb", marginBottom: "4px",
-                    }}>
-                      {s.Icon && <s.Icon />}
-                      <span style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>
-                        {s.value}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 500 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Description — only if present, slim */}
+            {shop.description && (
+              <p style={{
+                fontSize: "13px", color: "#64748b", margin: "10px 0 0",
+                lineHeight: 1.6, maxWidth: "640px",
+                overflow: "hidden", display: "-webkit-box",
+                WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+              }}>
+                {shop.description}
+              </p>
+            )}
           </div>
 
           {/* ══════════════════════════════
@@ -502,35 +465,13 @@ const ShopPage = () => {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
-          .shop-identity-card {
-            padding: 0 18px 22px !important;
-            margin-top: -48px !important;
-            border-radius: 16px !important;
-          }
-          .shop-identity-top {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            margin-top: -36px !important;
-          }
-          .shop-identity-body {
-            flex-direction: column !important;
-            gap: 20px !important;
-          }
-          .shop-stats-row {
-            width: 100% !important;
-          }
-          .shop-stats-row > div {
-            flex: 1;
+        @media (max-width: 640px) {
+          .shop-identity-row {
+            gap: 10px !important;
           }
           .shop-product-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .shop-product-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
           }
         }
       `}</style>
