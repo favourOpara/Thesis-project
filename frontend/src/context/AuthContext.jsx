@@ -16,9 +16,13 @@ export const useAuth = () => {
 
 // AuthProvider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Store user data
-  const [loading, setLoading] = useState(true); // Track loading state
-  const [error, setError] = useState(null); // Track errors
+  // Seed from localStorage immediately so protected pages don't flash a redirect
+  const cachedUser = (() => {
+    try { return JSON.parse(localStorage.getItem("user")); } catch { return null; }
+  })();
+  const [user, setUser] = useState(cachedUser);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 

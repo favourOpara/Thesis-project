@@ -11,22 +11,27 @@ import { useAuth } from "../context/AuthContext";
 
 const SignIn = () => {
   // State for storing email, password, and remember me
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate(); // Hook for navigation
 
-  const handleLoginSuccess = async (userData, accessToken) => {
-    try {
-      if (accessToken) localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(userData));
-      await login(); // fetches full user profile from /api/user-info/
-      const isSeller = userData.user_type === "seller";
-      navigate(isSeller ? "/seller-dashboard" : "/", { replace: true });
-    } catch (error) {
-      console.error("Failed to process login:", error);
-    }
+  const handleLoginSuccess = (userData, accessToken) => {
+    // Store token immediately
+    if (accessToken) localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("user", JSON.stringify(userData));
+
+    // Set user in context immediately from login response —
+    // don't wait for fetchUserData so the dashboard auth check
+    // finds a valid user right away
+    setUser(userData);
+
+    const isSeller = userData.user_type === "seller";
+    navigate(isSeller ? "/seller-dashboard" : "/", { replace: true });
+
+    // Refresh full profile in background
+    login();
   };
 
   // Handle form submission

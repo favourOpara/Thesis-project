@@ -10,11 +10,9 @@ if os.path.exists('.env'):
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # CRITICAL: Set DEBUG and ALLOWED_HOSTS early, before any Django imports
-DEBUG = True
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-3lw7520nzk4a4&6gf$=^iphhhpyuj$a5(+avs6#ghx%y@9v8-!')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Payment & Platform
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
