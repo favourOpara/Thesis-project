@@ -19,7 +19,7 @@ const TICKER_ITEMS = [
   "Your own branded online store",
   "Import goods directly from global suppliers",
   "Manage orders & sales in one dashboard",
-  "Store your inventory in our warehouse",
+  "Use our warehouse and logistics",
   "Reach thousands of buyers daily",
   "Grow your business — commission-free",
 ];
@@ -67,7 +67,7 @@ const Marquee = () => (
 ───────────────────────────────────────── */
 const STATS = [
   { value: "Order from overseas",     label: "Source global products directly" },
-  { value: "Use our warehouse",       label: "Store your inventory safely" },
+  { value: "Use our warehouse & logistics", label: "We store, pack, and deliver for you" },
   { value: "Advertise your products", label: "Reach thousands of buyers" },
   { value: "Get paid",                label: "Secure & instant payments" },
 ];
@@ -101,6 +101,161 @@ const StatsStrip = () => (
       @media (max-width: 640px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .stats-grid > div { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      }
+    `}</style>
+  </section>
+);
+
+/* ─────────────────────────────────────────
+   DIASPORA / INTERNATIONAL SECTION
+───────────────────────────────────────── */
+const DiasporaSection = () => (
+  <section style={{
+    background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #075985 100%)",
+    padding: "80px 24px",
+    position: "relative",
+    overflow: "hidden",
+  }}>
+
+    {/* Background flight path arcs */}
+    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.07, pointerEvents: "none" }} viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+      <path d="M-100,350 Q300,50 700,200 Q1000,320 1350,80" fill="none" stroke="white" strokeWidth="2" strokeDasharray="12 8"/>
+      <path d="M-100,200 Q400,350 800,100 Q1050,0 1350,250" fill="none" stroke="white" strokeWidth="2" strokeDasharray="12 8"/>
+      <circle cx="700" cy="200" r="6" fill="white"/>
+      <circle cx="300" cy="180" r="4" fill="white"/>
+      <circle cx="1000" cy="130" r="5" fill="white"/>
+    </svg>
+
+    {/* Dot grid */}
+    <div style={{
+      position: "absolute", inset: 0, pointerEvents: "none",
+      backgroundImage: "radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)",
+      backgroundSize: "28px 28px",
+    }} />
+
+    <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
+
+      {/* Top label */}
+      <div style={{ textAlign: "center", marginBottom: "56px" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "rgba(255,255,255,0.15)", borderRadius: "999px",
+          padding: "6px 16px", marginBottom: "20px",
+        }}>
+          {/* Airplane icon */}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white" style={{ flexShrink: 0 }}>
+            <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>
+          </svg>
+          <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.9)", letterSpacing: "1px", textTransform: "uppercase" }}>
+            For local &amp; international businesses
+          </span>
+        </div>
+        <h2 style={{
+          fontSize: "clamp(26px, 4vw, 48px)", fontWeight: 900,
+          color: "white", lineHeight: 1.1, letterSpacing: "-0.5px",
+          marginBottom: "16px",
+        }}>
+          Sell in Nigeria.<br />
+          <span style={{ color: "#bae6fd" }}>From anywhere in the world.</span>
+        </h2>
+        <p style={{
+          fontSize: "16px", color: "rgba(255,255,255,0.75)",
+          maxWidth: "560px", margin: "0 auto", lineHeight: 1.75,
+        }}>
+          You don't need to be in Lagos to sell to Lagos. Whether you're in London, Houston, or Dubai —
+          we handle the warehousing, fulfilment, and last-mile delivery so your customers get their orders on time.
+        </p>
+      </div>
+
+      {/* Cards row */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "16px",
+      }}
+        className="diaspora-grid"
+      >
+        {[
+          {
+            icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#0ea5e9" stroke="none"/>
+              </svg>
+            ),
+            title: "Ship your goods to us",
+            body: "Send your products from abroad directly to our warehouse in Nigeria. We receive, inspect, and catalogue everything for you.",
+          },
+          {
+            icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+              </svg>
+            ),
+            title: "We store & list for you",
+            body: "Your products live in our secure warehouse and go live on your Abatrades storefront — visible to thousands of Nigerian buyers every day.",
+          },
+          {
+            icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+            ),
+            title: "We deliver to your customers",
+            body: "When an order comes in, we pack and deliver directly to your buyer's doorstep — anywhere in Nigeria. You just collect your money.",
+          },
+        ].map((card, i) => (
+          <div key={i} style={{
+            background: "rgba(255,255,255,0.1)",
+            backdropFilter: "blur(8px)",
+            borderRadius: "16px",
+            padding: "28px 24px",
+            border: "1px solid rgba(255,255,255,0.18)",
+          }}>
+            <div style={{
+              width: "48px", height: "48px", borderRadius: "12px",
+              background: "rgba(255,255,255,0.95)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: "16px",
+            }}>
+              {card.icon}
+            </div>
+            <h4 style={{ color: "white", fontWeight: 800, fontSize: "15px", marginBottom: "10px" }}>
+              {card.title}
+            </h4>
+            <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "13.5px", lineHeight: 1.65, margin: 0 }}>
+              {card.body}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div style={{ textAlign: "center", marginTop: "48px" }}>
+        <Link to="/sellersignup" style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "white", color: "#0284c7",
+          padding: "14px 32px", borderRadius: "10px",
+          fontWeight: 800, fontSize: "15px", textDecoration: "none",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+          transition: "transform 0.15s",
+        }}
+          onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          Start selling in Nigeria
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </Link>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px", marginTop: "14px" }}>
+          No Nigerian warehouse needed. No local agent required.
+        </p>
+      </div>
+    </div>
+
+    <style>{`
+      @media (max-width: 768px) {
+        .diaspora-grid { grid-template-columns: 1fr !important; }
       }
     `}</style>
   </section>
@@ -630,6 +785,7 @@ const Home = () => {
             <Hero />
             <Marquee />
             <StatsStrip />
+            <DiasporaSection />
             <FeatureSection
               eyebrow="For sellers"
               headline={"Your brand.\nYour storefront.\nYour rules."}
