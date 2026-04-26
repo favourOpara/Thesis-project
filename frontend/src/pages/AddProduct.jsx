@@ -780,10 +780,11 @@ const AddProduct = () => {
       // Use environment variable or default to production
       const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+      const token = localStorage.getItem("access_token");
       await axios.post(`${baseURL}/api/owner-products/`, dataToSend, {
-        withCredentials: true,  // Send HttpOnly cookies with request
+        withCredentials: true,
         headers: {
-          "Content-Type": "multipart/form-data",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 

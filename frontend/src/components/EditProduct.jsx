@@ -659,9 +659,10 @@ const EditProduct = () => {
       try {
         // Use environment variable or default to production
         const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const token = localStorage.getItem("access_token");
         const response = await axios.get(
           `${baseURL}/api/owner-products/${id}/`,
-          { withCredentials: true }  // Send HttpOnly cookies
+          { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
 
         // Handle size as array (convert if it's a string)
@@ -869,11 +870,10 @@ const EditProduct = () => {
       // Use environment variable or default to production
       const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+      const token = localStorage.getItem("access_token");
       await axios.put(`${baseURL}/api/owner-products/${id}/`, dataToSend, {
-        withCredentials: true,  // Send HttpOnly cookies
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       setSuccessMessage("Product updated successfully!");
