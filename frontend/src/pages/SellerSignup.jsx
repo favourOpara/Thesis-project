@@ -71,7 +71,7 @@ const SellerSignUp = () => {
         pending: "Signing up...",
         success: {
           render({ data }) {
-            navigate("/signin");
+            setTimeout(() => navigate("/signin"), 2500);
             return "Account created! Please sign in to access your dashboard.";
           },
         },

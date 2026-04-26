@@ -49,29 +49,33 @@ const SignUp = () => {
     // Use environment variable or default to production
     const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-    toast.promise(axios.post(`${baseURL}/api/signup/`, userData), {
-      pending: "Signing up...",
-      success: {
-        render({ data }) {
-          if (data.status === 201) {
-            navigate("/signin");
-            return "Signup successful! Redirecting to login...";
-          } else {
-            throw new Error(
-              data.data.message || "Sign up failed. Please try again."
-            );
-          }
+    toast.promise(
+      axios.post(`${baseURL}/api/signup/`, userData, { withCredentials: true }),
+      {
+        pending: "Signing up...",
+        success: {
+          render({ data }) {
+            setTimeout(() => navigate("/signin"), 2500);
+            return "Account created! Redirecting to sign in...";
+          },
         },
-      },
-      error: {
-        render({ data }) {
-          return (
-            "Sign up failed " + data.response.request.response ||
-            "Sign up failed. Please try again."
-          );
+        error: {
+          render({ data }) {
+            const responseData = data?.response?.data;
+            if (responseData && typeof responseData === "object") {
+              const messages = Object.entries(responseData)
+                .map(([, errors]) => Array.isArray(errors) ? errors.join(" ") : errors)
+                .join(" ");
+              return messages || "Sign up failed. Please try again.";
+            }
+            if (data?.message === "Network Error") {
+              return "Cannot reach the server. Please check your connection.";
+            }
+            return "Sign up failed. Please try again.";
+          },
         },
-      },
-    });
+      }
+    );
   };
 
   const errorStyle = { color: "red", fontSize: "0.875rem" };

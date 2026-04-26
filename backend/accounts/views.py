@@ -75,13 +75,17 @@ class LoginView(APIView):
                     }
                 }, status=status.HTTP_200_OK)
 
+                # SameSite=None is required in production because the frontend
+                # and backend are on different Railway subdomains (cross-domain).
+                samesite = 'Lax' if settings.DEBUG else 'None'
+
                 # Set HttpOnly cookies
                 response.set_cookie(
                     key='access_token',
                     value=access_token,
                     httponly=True,
-                    secure=not settings.DEBUG,  # HTTPS only in production
-                    samesite='Lax',
+                    secure=not settings.DEBUG,
+                    samesite=samesite,
                     max_age=60 * 60 * 24,  # 24 hours
                 )
 
@@ -90,7 +94,7 @@ class LoginView(APIView):
                     value=refresh_token,
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite='Lax',
+                    samesite=samesite,
                     max_age=60 * 60 * 24 * 7,  # 7 days
                 )
 

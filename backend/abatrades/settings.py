@@ -103,13 +103,17 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True  # Required for HttpOnly cookies
 
 # Cookie settings for security
+# In production the frontend and backend are on different Railway subdomains,
+# so SameSite must be 'None' (with Secure=True) to allow cross-domain cookies.
+_SAMESITE = 'Lax' if DEBUG else 'None'
+
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
+SESSION_COOKIE_SAMESITE = _SAMESITE
+SESSION_COOKIE_SECURE = not DEBUG
 
 # CSRF settings
 CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read CSRF token
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = _SAMESITE
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
