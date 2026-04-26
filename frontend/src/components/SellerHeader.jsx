@@ -26,7 +26,7 @@ const SellerHeader = () => {
 
             <div className="d-flex align-items-center ms-auto">
               {/* Shopping Cart */}
-              <Link to="/sellersignup">
+              <Link to="/join">
                 <button
                   style={{
                     backgroundColor: "#3b7bf8",

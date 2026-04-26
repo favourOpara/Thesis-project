@@ -32,7 +32,7 @@ const SellerIntro = () => {
             >
               Become a Seller on Abatrades
             </h2>
-            <Link to="/sellersignup">
+            <Link to="/join">
               <button
                 style={{
                   backgroundColor: "#3b7bf8",

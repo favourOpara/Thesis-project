@@ -150,7 +150,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
               <Link to="/signin" onClick={closeAllAndSidebar} style={{ flex: 1, padding: "9px", background: "#3b7bf8", color: "white", borderRadius: "8px", textAlign: "center", fontSize: "13px", fontWeight: 700, textDecoration: "none" }}>
                 Sign In
               </Link>
-              <Link to="/sellersignup" onClick={closeAllAndSidebar} style={{ flex: 1, padding: "9px", background: "white", color: "#374151", borderRadius: "8px", textAlign: "center", fontSize: "13px", fontWeight: 600, textDecoration: "none", border: "1.5px solid #e2e8f0" }}>
+              <Link to="/join" onClick={closeAllAndSidebar} style={{ flex: 1, padding: "9px", background: "white", color: "#374151", borderRadius: "8px", textAlign: "center", fontSize: "13px", fontWeight: 600, textDecoration: "none", border: "1.5px solid #e2e8f0" }}>
                 Register
               </Link>
             </div>
@@ -242,7 +242,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
           {/* ── Bottom CTA ── */}
           {!user && (
             <div className="sidebar-bottom">
-              <Link to="/sellersignup" className="sidebar-cta-btn" onClick={closeAllAndSidebar}>
+              <Link to="/join" className="sidebar-cta-btn" onClick={closeAllAndSidebar}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                   <polyline points="9 22 9 12 15 12 15 22"/>

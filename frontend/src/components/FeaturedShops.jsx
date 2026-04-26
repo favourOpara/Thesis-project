@@ -205,7 +205,7 @@ const FeaturedShops = () => {
             Be the first seller on Abatrades and reach thousands of buyers.
           </p>
           <Link
-            to="/sellersignup"
+            to="/join"
             style={{
               background: "#3b7bf8",
               color: "white",
