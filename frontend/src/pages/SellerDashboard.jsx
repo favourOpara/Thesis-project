@@ -310,6 +310,7 @@ const SellerDashboard = () => {
           flex: 1;
           padding: 20px;
           overflow-y: auto;
+          background: #fff;
         }
 
         /* ── Loading ── */
@@ -1300,117 +1301,114 @@ const TabShopSettings = ({ shop, onSaved }) => {
   };
 
   return (
-    <div style={{ maxWidth: "680px" }}>
-      <div className="sd-card">
-        <div className="sd-card-header">
-          <p className="sd-card-title">{isNew ? "Create Your Store" : "Store Settings"}</p>
+    <div>
+      <h2 style={{ fontWeight: 800, fontSize: "20px", color: "#0f172a", margin: "0 0 20px" }}>
+        {isNew ? "Create Your Store" : "Store Settings"}
+      </h2>
+
+      {status && (
+        <div className={`sd-alert ${status.ok ? "success" : "error"}`} style={{ marginBottom: "16px" }}>
+          <span style={{ fontSize: "13.5px", fontWeight: 500 }}>{status.msg}</span>
         </div>
-        <div className="sd-card-body">
-          {status && (
-            <div className={`sd-alert ${status.ok ? "success" : "error"}`} style={{ marginBottom: "16px" }}>
-              <span style={{ fontSize: "13.5px", fontWeight: 500 }}>{status.msg}</span>
-            </div>
-          )}
+      )}
 
-          <form onSubmit={handleSubmit}>
-            {/* Name + Description */}
-            <div className="sd-form-grid">
-              <div className="sd-form-full">
-                <label className="sd-label">Store Name *</label>
-                <input
-                  className="sd-input"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Ade Fashion House"
-                  required
-                />
-              </div>
-              <div className="sd-form-full">
-                <label className="sd-label">Description</label>
-                <textarea
-                  className="sd-input"
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Describe what you sell..."
-                  rows={3}
-                  style={{ resize: "vertical" }}
-                />
-              </div>
-            </div>
-
-            <hr className="sd-divider" />
-            <p className="sd-section-label">Branding</p>
-
-            {/* Logo + Banner */}
-            <div className="sd-form-grid" style={{ marginBottom: "0" }}>
-              <div>
-                <label className="sd-label">Store Logo</label>
-                <div
-                  className="sd-upload-zone"
-                  onClick={() => logoRef.current.click()}
-                  style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  <PreviewImage file={logo} existing={shop?.logo_url} style={{ height: "60px", borderRadius: "6px" }} />
-                </div>
-                <input ref={logoRef} type="file" accept="image/*" style={{ display: "none" }}
-                  onChange={e => setLogo(e.target.files[0])} />
-              </div>
-              <div>
-                <label className="sd-label">Banner Image</label>
-                <div
-                  className="sd-upload-zone"
-                  onClick={() => bannerRef.current.click()}
-                  style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  <PreviewImage file={banner} existing={shop?.banner_url}
-                    style={{ height: "60px", width: "100%", borderRadius: "6px" }} />
-                </div>
-                <input ref={bannerRef} type="file" accept="image/*" style={{ display: "none" }}
-                  onChange={e => setBanner(e.target.files[0])} />
-              </div>
-            </div>
-
-            <hr className="sd-divider" />
-            <p className="sd-section-label">Contact & Social</p>
-
-            <div className="sd-form-grid">
-              <div>
-                <label className="sd-label">WhatsApp Number</label>
-                <input className="sd-input" name="whatsapp" value={form.whatsapp}
-                  onChange={handleChange} placeholder="+2348012345678" />
-              </div>
-              <div>
-                <label className="sd-label">Instagram Handle</label>
-                <input className="sd-input" name="instagram" value={form.instagram}
-                  onChange={handleChange} placeholder="yourhandle (no @)" />
-              </div>
-              <div className="sd-form-full">
-                <label className="sd-label">Website</label>
-                <input className="sd-input" name="website" value={form.website}
-                  onChange={handleChange} placeholder="https://yourwebsite.com" />
-              </div>
-            </div>
-
-            <div style={{ marginTop: "20px" }}>
-              <button
-                type="submit"
-                className="sd-btn-primary"
-                disabled={saving}
-                style={{
-                  width: "100%", justifyContent: "center",
-                  padding: "11px", fontSize: "14px",
-                  opacity: saving ? 0.7 : 1,
-                  cursor: saving ? "not-allowed" : "pointer",
-                }}
-              >
-                {saving ? "Saving…" : isNew ? "Create Store" : "Save Changes"}
-              </button>
-            </div>
-          </form>
+      <form onSubmit={handleSubmit}>
+        {/* Name + Description */}
+        <div className="sd-form-grid">
+          <div className="sd-form-full">
+            <label className="sd-label">Store Name *</label>
+            <input
+              className="sd-input"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="e.g. Ade Fashion House"
+              required
+            />
+          </div>
+          <div className="sd-form-full">
+            <label className="sd-label">Description</label>
+            <textarea
+              className="sd-input"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Describe what you sell..."
+              rows={3}
+              style={{ resize: "vertical" }}
+            />
+          </div>
         </div>
-      </div>
+
+        <hr className="sd-divider" />
+        <p className="sd-section-label">Branding</p>
+
+        {/* Logo + Banner */}
+        <div className="sd-form-grid" style={{ marginBottom: "0" }}>
+          <div>
+            <label className="sd-label">Store Logo</label>
+            <div
+              className="sd-upload-zone"
+              onClick={() => logoRef.current.click()}
+              style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <PreviewImage file={logo} existing={shop?.logo_url} style={{ height: "60px", borderRadius: "6px" }} />
+            </div>
+            <input ref={logoRef} type="file" accept="image/*" style={{ display: "none" }}
+              onChange={e => setLogo(e.target.files[0])} />
+          </div>
+          <div>
+            <label className="sd-label">Banner Image</label>
+            <div
+              className="sd-upload-zone"
+              onClick={() => bannerRef.current.click()}
+              style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <PreviewImage file={banner} existing={shop?.banner_url}
+                style={{ height: "60px", width: "100%", borderRadius: "6px" }} />
+            </div>
+            <input ref={bannerRef} type="file" accept="image/*" style={{ display: "none" }}
+              onChange={e => setBanner(e.target.files[0])} />
+          </div>
+        </div>
+
+        <hr className="sd-divider" />
+        <p className="sd-section-label">Contact & Social</p>
+
+        <div className="sd-form-grid">
+          <div>
+            <label className="sd-label">WhatsApp Number</label>
+            <input className="sd-input" name="whatsapp" value={form.whatsapp}
+              onChange={handleChange} placeholder="+2348012345678" />
+          </div>
+          <div>
+            <label className="sd-label">Instagram Handle</label>
+            <input className="sd-input" name="instagram" value={form.instagram}
+              onChange={handleChange} placeholder="yourhandle (no @)" />
+          </div>
+          <div className="sd-form-full">
+            <label className="sd-label">Website</label>
+            <input className="sd-input" name="website" value={form.website}
+              onChange={handleChange} placeholder="https://yourwebsite.com" />
+          </div>
+        </div>
+
+        <div style={{ marginTop: "20px" }}>
+          <button
+            type="submit"
+            className="sd-btn-primary"
+            disabled={saving}
+            style={{
+              width: "100%", justifyContent: "center",
+              padding: "11px", fontSize: "14px",
+              opacity: saving ? 0.7 : 1,
+              cursor: saving ? "not-allowed" : "pointer",
+            }}
+          >
+            {saving ? "Saving…" : isNew ? "Create Store" : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
