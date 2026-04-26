@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import Logo from "../assets/img/abatrades-large-logo.png";
 
 /* ── Decorative seller-card mockup shown in the hero ── */
-const MockCard = ({ name, tag, visits, color, rotate, top, left, zIndex, animDelay = "0s" }) => (
-  <div style={{
+const MockCard = ({ name, tag, visits, color, rotate, top, left, zIndex, animDelay = "0s", className = "" }) => (
+  <div className={className} style={{
     position: "absolute", top, left, zIndex,
     animation: `heroFloat 3.2s ease-in-out infinite`,
     animationDelay: animDelay,
@@ -216,6 +216,7 @@ const Hero = () => {
             left="200px"
             zIndex={2}
             animDelay="0.8s"
+            className="hero-card-overflow"
           />
           <MockCard
             name="Lagos Glam"
@@ -257,9 +258,11 @@ const Hero = () => {
         .hero-mobile-logo { display: none; }
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; gap: 0 !important; padding: 40px 20px 40px !important; }
-          .hero-visual { height: 420px !important; width: 100% !important; margin-top: 60px !important; }
+          .hero-visual { height: 420px !important; width: 100% !important; margin-top: 60px !important; overflow: hidden !important; }
           .hero-logo-col { display: none !important; }
           .hero-mobile-logo { display: block !important; }
+          .hero-card-overflow { left: 140px !important; }
+          .hero-card-overflow > div { transform: rotate(3deg) scale(0.78) !important; transform-origin: top left; }
         }
       `}</style>
     </section>
