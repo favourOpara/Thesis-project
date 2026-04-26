@@ -232,53 +232,54 @@ const ShopPage = () => {
             STORE IDENTITY CARD
         ══════════════════════════════ */}
         <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 16px" }}>
+          {/* Logo — overlaps banner, sits outside the card flow */}
+          <div style={{ marginTop: "-30px", paddingLeft: "20px", marginBottom: "-8px", position: "relative", zIndex: 11 }}>
+            {shop.logo_url ? (
+              <img
+                src={shop.logo_url}
+                alt={shop.name}
+                style={{
+                  width: "56px", height: "56px", borderRadius: "12px",
+                  border: "3px solid #fff", objectFit: "cover",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.14)",
+                  display: "block", background: "#f1f5f9",
+                }}
+              />
+            ) : (
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "12px",
+                border: "3px solid #fff",
+                background: "linear-gradient(135deg, #3b7bf8, #7c3aed)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "20px", fontWeight: 700, color: "#fff",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.14)",
+              }}>
+                {shop.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+
           <div style={{
             background: "#fff",
             borderRadius: "16px",
-            marginTop: "-44px",
+            marginTop: "-28px",
             position: "relative",
             zIndex: 10,
-            padding: "0 20px 16px",
+            padding: "44px 20px 14px",
             boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             border: "1px solid #f1f5f9",
           }}>
-            {/* Single compact row: logo · name/meta · stats · actions */}
+            {/* Name · meta · actions — all safely inside the white card */}
             <div style={{
               display: "flex",
               alignItems: "center",
-              gap: "14px",
-              marginTop: "-28px",
+              gap: "12px",
               flexWrap: "wrap",
             }}
               className="shop-identity-row"
             >
-              {/* Logo */}
-              {shop.logo_url ? (
-                <img
-                  src={shop.logo_url}
-                  alt={shop.name}
-                  style={{
-                    width: "60px", height: "60px", borderRadius: "12px",
-                    border: "3px solid #fff", objectFit: "cover",
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
-                    flexShrink: 0, background: "#f1f5f9",
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: "60px", height: "60px", borderRadius: "12px",
-                  border: "3px solid #fff",
-                  background: "linear-gradient(135deg, #3b7bf8, #7c3aed)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "22px", fontWeight: 700, color: "#fff",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.12)", flexShrink: 0,
-                }}>
-                  {shop.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-
               {/* Name + meta */}
-              <div style={{ flex: "1 1 160px", minWidth: 0, paddingTop: "10px" }}>
+              <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <h1 style={{
                   fontWeight: 600, fontSize: "16px", color: "#0f172a",
                   margin: "0 0 2px", lineHeight: 1.2,
@@ -286,7 +287,7 @@ const ShopPage = () => {
                 }}>
                   {shop.name}
                 </h1>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   {shop.owner_name && (
                     <span style={{ fontSize: "12px", color: "#94a3b8" }}>by {shop.owner_name}</span>
                   )}
@@ -302,7 +303,7 @@ const ShopPage = () => {
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: "8px", alignItems: "center", paddingTop: "10px", flexShrink: 0, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0, flexWrap: "wrap" }}>
                 {shop.whatsapp && (
                   <a
                     href={`https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, "")}`}
