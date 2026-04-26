@@ -6,6 +6,15 @@ import Logo from "../assets/img/abatrades-logo-other.png";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// Attach stored token so requests work cross-domain on Railway (cookies are blocked)
+const ac = (extraHeaders = {}) => {
+  const token = localStorage.getItem("access_token");
+  return {
+    withCredentials: true,
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extraHeaders },
+  };
+};
+
 const fmtDate = (d) => {
   if (!d) return "";
   const dt = new Date(d);
@@ -57,14 +66,14 @@ const SellerDashboard = () => {
   }, [user]);
 
   const fetchShop = () => {
-    axios.get(`${BASE}/api/shops/mine/`, { withCredentials: true })
+    axios.get(`${BASE}/api/shops/mine/`, ac())
       .then(r => setShop(r.data || false))
       .catch(() => setShop(false))
       .finally(() => setShopLoading(false));
   };
 
   const fetchUnread = () => {
-    axios.get(`${BASE}/api/inquiries/mine/`, { withCredentials: true })
+    axios.get(`${BASE}/api/inquiries/mine/`, ac())
       .then(r => setUnreadCount(r.data.filter(i => !i.is_read).length))
       .catch(() => {});
   };
@@ -782,13 +791,13 @@ const TabOverview = ({ shop, user, setTab, navigate, unreadCount }) => {
   const [revenue,      setRevenue]      = useState("—");
 
   useEffect(() => {
-    axios.get(`${BASE}/api/owner-products/`, { withCredentials: true })
+    axios.get(`${BASE}/api/owner-products/`, ac())
       .then(r => setProductCount(r.data.length)).catch(() => {});
     if (shop) {
-      axios.get(`${BASE}/api/inquiries/mine/`, { withCredentials: true })
+      axios.get(`${BASE}/api/inquiries/mine/`, ac())
         .then(r => setInquiryCount(r.data.length)).catch(() => {});
     }
-    axios.get(`${BASE}/api/orders/seller/`, { withCredentials: true })
+    axios.get(`${BASE}/api/orders/seller/`, ac())
       .then(r => {
         setOrderCount(r.data.length);
         const total = r.data.reduce((sum, o) =>
@@ -888,7 +897,7 @@ const TabProducts = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${BASE}/api/owner-products/`, { withCredentials: true })
+    axios.get(`${BASE}/api/owner-products/`, ac())
       .then(r => setProducts(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -896,7 +905,7 @@ const TabProducts = ({ navigate }) => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this product? This cannot be undone.")) return;
-    await axios.delete(`${BASE}/api/owner-products/${id}/`, { withCredentials: true });
+    await axios.delete(`${BASE}/api/owner-products/${id}/`, ac());
     setProducts(p => p.filter(x => x.id !== id));
   };
 
@@ -1002,14 +1011,14 @@ const TabInquiries = ({ shop, onRead }) => {
 
   useEffect(() => {
     if (!shop) { setLoading(false); return; }
-    axios.get(`${BASE}/api/inquiries/mine/`, { withCredentials: true })
+    axios.get(`${BASE}/api/inquiries/mine/`, ac())
       .then(r => setInquiries(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [shop]);
 
   const markRead = async (id) => {
-    await axios.patch(`${BASE}/api/inquiries/${id}/read/`, {}, { withCredentials: true });
+    await axios.patch(`${BASE}/api/inquiries/${id}/read/`, {}, ac());
     setInquiries(prev => prev.map(i => i.id === id ? { ...i, is_read: true } : i));
     onRead();
   };
@@ -1124,7 +1133,7 @@ const TabOrders = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchOrders = () => {
-    axios.get(`${BASE}/api/orders/seller/`, { withCredentials: true })
+    axios.get(`${BASE}/api/orders/seller/`, ac())
       .then(r => setOrders(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -1136,7 +1145,7 @@ const TabOrders = () => {
     await axios.patch(
       `${BASE}/api/orders/seller/${orderId}/status/`,
       { status: newStatus },
-      { withCredentials: true }
+      ac()
     );
     fetchOrders();
   };
@@ -1277,12 +1286,10 @@ const TabShopSettings = ({ shop, onSaved }) => {
 
     try {
       if (isNew) {
-        await axios.post(`${BASE}/api/shops/`, fd,
-          { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } });
+        await axios.post(`${BASE}/api/shops/`, fd, ac());
         setStatus({ ok: true, msg: "Store created successfully." });
       } else {
-        await axios.patch(`${BASE}/api/shops/${shop.slug}/`, fd,
-          { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } });
+        await axios.patch(`${BASE}/api/shops/${shop.slug}/`, fd, ac());
         setStatus({ ok: true, msg: "Changes saved." });
       }
       onSaved();
