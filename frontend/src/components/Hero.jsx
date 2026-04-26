@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Logo from "../assets/img/abatrades-large-logo.png";
 
 /* ── Decorative seller-card mockup shown in the hero ── */
 const MockCard = ({ name, tag, visits, color, rotate, top, left, zIndex, animDelay = "0s" }) => (
@@ -77,11 +78,11 @@ const Hero = () => {
       }} />
 
       <div style={{
-        maxWidth: "1200px", margin: "0 auto",
+        maxWidth: "1280px", margin: "0 auto",
         padding: "32px 24px 56px",
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "60px",
+        gridTemplateColumns: "1fr auto 1fr",
+        gap: "48px",
         alignItems: "center",
         position: "relative",
         width: "100%",
@@ -91,20 +92,30 @@ const Hero = () => {
 
         {/* ── LEFT: Copy ── */}
         <div>
-          <h1 style={{
-            fontSize: "clamp(36px, 5.5vw, 64px)",
-            fontWeight: 900,
-            lineHeight: 1.05,
-            color: "#0f172a",
-            letterSpacing: "-1.5px",
-            marginBottom: "22px",
-          }}>
-            <span style={{ fontWeight: 400 }}>Sell more.</span><br />
-            <span style={{ color: "#f97316" }}>
-              Grow faster.
-            </span><br />
-            <span style={{ fontWeight: 400 }}>Own your store.</span>
-          </h1>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "22px" }}>
+            <h1 style={{
+              fontSize: "clamp(36px, 5.5vw, 64px)",
+              fontWeight: 900,
+              lineHeight: 1.05,
+              color: "#0f172a",
+              letterSpacing: "-1.5px",
+              margin: 0,
+              flex: 1,
+            }}>
+              <span style={{ fontWeight: 400 }}>Sell more.</span><br />
+              <span style={{ color: "#f97316" }}>
+                Grow faster.
+              </span><br />
+              <span style={{ fontWeight: 400 }}>Own your store.</span>
+            </h1>
+            {/* Logo — visible on mobile only, beside the headline */}
+            <img
+              src={Logo}
+              alt="Abatrades"
+              className="hero-mobile-logo"
+              style={{ width: "120px", height: "auto", flexShrink: 0, objectFit: "contain" }}
+            />
+          </div>
 
           <p style={{
             fontSize: "17px",
@@ -148,6 +159,19 @@ const Hero = () => {
               Browse stores →
             </a>
           </div>
+        </div>
+
+        {/* ── MIDDLE: Logo ── */}
+        <div className="hero-logo-col" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <img
+            src={Logo}
+            alt="Abatrades"
+            style={{ height: "clamp(80px, 10vw, 140px)", width: "auto", display: "block" }}
+          />
         </div>
 
         {/* ── RIGHT: Decorative mockup ── */}
@@ -230,9 +254,12 @@ const Hero = () => {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-12px); }
         }
+        .hero-mobile-logo { display: none; }
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; gap: 0 !important; padding: 40px 20px 40px !important; }
           .hero-visual { height: 420px !important; width: 100% !important; margin-top: 60px !important; }
+          .hero-logo-col { display: none !important; }
+          .hero-mobile-logo { display: block !important; }
         }
       `}</style>
     </section>
