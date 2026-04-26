@@ -292,17 +292,15 @@ const RafikiSection = () => (
           color: "#374151", lineHeight: 1.15, marginBottom: "14px",
           letterSpacing: "-0.2px",
         }}>
-          Don't know how to source products directly from China?<br />
-          <span style={{ color: "#f59e0b", fontWeight: 700 }}>Get started with our official partner Rafiki.</span>
+          Importing from China?<br />
+          <span style={{ color: "#f59e0b", fontWeight: 700 }}>Get started with our official partner, Rafiki.</span>
         </h2>
         <p style={{
           fontSize: "16px", color: "#64748b", maxWidth: "640px",
-          margin: "0 auto", lineHeight: 1.75,
+          margin: "0 auto", lineHeight: 1.75, textAlign: "justify",
         }}>
-          Through our partnership with Rafiki, we make business ownership in Nigeria simpler than ever.
-          Set up your store on our platform, source products directly from China, and have them delivered
-          straight to our warehouse. From there, we handle storage, packaging, and delivery to your
-          customers — so you can run your business from anywhere, with ease and full control.
+          Source products from China through Rafiki, ship them to our warehouse,
+          and we handle the rest — storage, packaging, and delivery to your buyers across Nigeria.
         </p>
         <p style={{ fontSize: "15px", color: "#0f172a", fontWeight: 600, marginTop: "14px" }}>
           Source from China. Sell in Nigeria. Never leave your house.
@@ -343,14 +341,11 @@ const RafikiSection = () => (
             color: "white", fontWeight: 900, fontSize: "clamp(20px, 2.5vw, 28px)",
             lineHeight: 1.25, marginBottom: "20px",
           }}>
-            Your full supply chain,<br />completely handled.
+            From China to your buyers —<br />we handle everything.
           </h3>
 
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "14.5px", lineHeight: 1.75, marginBottom: "32px" }}>
-            Through Rafiki, you can easily source products from China and have them
-            shipped directly to our warehouse — no middlemen, no stress. Once your
-            stock arrives, we store it, package it, and deliver every order to your
-            buyers across Nigeria. You focus on selling. We handle the rest.
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "14.5px", lineHeight: 1.75, marginBottom: "32px", textAlign: "justify" }}>
+            Source through Rafiki, ship to our warehouse, and we take care of storage, packaging, and delivery. You just sell.
           </p>
 
           <a
@@ -386,18 +381,18 @@ const RafikiSection = () => (
           {[
             {
               icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-              title: "Source your products with ease",
-              body: "Tell Rafiki what you want to sell. They connect you to trusted manufacturers in China, handle quality checks, and get your goods moving.",
+              title: "Importing from China",
+              body: "Tell Rafiki what you need. They find the manufacturer, handle quality checks, and get it moving.",
             },
             {
               icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
-              title: "Ship directly to our warehouse",
-              body: "Rafiki delivers your stock straight to the Abatrades warehouse — no customs stress, no third-party logistics on your end.",
+              title: "Straight to our warehouse",
+              body: "Rafiki ships your stock directly to us. No customs runs, no logistics headache.",
             },
             {
               icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>,
-              title: "We store, pack, and deliver",
-              body: "We hold your inventory, package each order, and ship it to your buyers anywhere in Nigeria. You just collect your earnings.",
+              title: "We store, pack & deliver",
+              body: "We hold your stock, pack each order, and deliver to your buyers. You collect your money.",
             },
           ].map((item, i) => (
             <div key={i} style={{
@@ -417,7 +412,7 @@ const RafikiSection = () => (
                 <div style={{ color: "white", fontWeight: 700, fontSize: "13.5px", marginBottom: "4px" }}>
                   {item.title}
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12.5px", lineHeight: 1.6 }}>
+                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12.5px", lineHeight: 1.6, textAlign: "justify" }}>
                   {item.body}
                 </div>
               </div>
