@@ -149,9 +149,12 @@ const ProductDetails = () => {
       <ToastContainer position="top-center" />
 
       <div style={{
+        background: "#fff", minHeight: "100vh",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}>
+      <div style={{
         maxWidth: "1100px", margin: "0 auto",
         padding: "100px 16px 60px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}>
 
         {/* ── Top nav row: back button + breadcrumb ── */}
@@ -633,6 +636,7 @@ const ProductDetails = () => {
           </div>
         )}
 
+      </div>
       </div>
 
       {/* Responsive */}
