@@ -156,6 +156,57 @@ const ProductCard = ({ product }) => {
   );
 };
 
+/* ── Store card for "Other Stores" section ── */
+const StoreCard = ({ store }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link to={`/shop/${store.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: "#fff", borderRadius: "14px",
+          border: "1px solid #f1f5f9",
+          boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.1)" : "0 2px 8px rgba(0,0,0,0.04)",
+          transform: hovered ? "translateY(-3px)" : "translateY(0)",
+          transition: "all 0.2s", overflow: "hidden", cursor: "pointer",
+        }}
+      >
+        {/* Mini banner */}
+        <div style={{
+          height: "64px",
+          background: store.banner_url
+            ? `url(${store.banner_url}) center/cover`
+            : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #7c3aed 100%)",
+          position: "relative",
+        }}>
+          {/* Logo */}
+          <div style={{
+            position: "absolute", bottom: "-18px", left: "14px",
+            width: "36px", height: "36px", borderRadius: "8px",
+            border: "2px solid #fff",
+            background: store.logo_url ? `url(${store.logo_url}) center/cover` : "linear-gradient(135deg, #3b7bf8, #7c3aed)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "14px", fontWeight: 700, color: "#fff",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+          }}>
+            {!store.logo_url && store.name.charAt(0).toUpperCase()}
+          </div>
+        </div>
+        <div style={{ padding: "26px 14px 14px" }}>
+          <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a", marginBottom: "3px",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {store.name}
+          </div>
+          <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+            {store.product_count} product{store.product_count !== 1 ? "s" : ""}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
 /* ── Main Component ── */
 const ShopPage = () => {
   const { slug } = useParams();
@@ -166,6 +217,7 @@ const ShopPage = () => {
   const [showInquiry, setShowInquiry] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [otherStores, setOtherStores] = useState([]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
@@ -179,6 +231,13 @@ const ShopPage = () => {
         setShop(shopRes.data);
         setProducts(productsRes.data);
         axios.post(`${BASE}/api/shops/${slug}/visit/`).catch(() => {});
+
+        // Fetch other stores
+        const allShopsRes = await axios.get(`${BASE}/api/shops/`);
+        const others = allShopsRes.data.filter(s => s.slug !== slug);
+        // Shuffle and take up to 6
+        const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 6);
+        setOtherStores(shuffled);
       } catch (err) {
         if (err.response?.status === 404) setNotFound(true);
       } finally {
@@ -277,12 +336,36 @@ const ShopPage = () => {
             position: "absolute", inset: 0,
             background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.45) 100%)",
           }} />
+          {/* Browse other stores — top-right of banner */}
+          <Link
+            to="/browse"
+            style={{
+              position: "absolute", top: "14px", right: "16px",
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              fontSize: "12.5px", fontWeight: 600, color: "#fff",
+              textDecoration: "none", padding: "6px 13px",
+              borderRadius: "8px",
+              background: "rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              backdropFilter: "blur(6px)",
+              zIndex: 12,
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.55)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Browse Other Stores
+          </Link>
         </div>
 
         {/* ══════════════════════════════
             STORE IDENTITY CARD
         ══════════════════════════════ */}
         <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 16px" }}>
+
           {/* Logo — overlaps banner, sits outside the card flow */}
           <div style={{ marginTop: "-30px", paddingLeft: "20px", marginBottom: "-8px", position: "relative", zIndex: 11 }}>
             {shop.logo_url ? (
@@ -320,6 +403,7 @@ const ShopPage = () => {
             boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             border: "1px solid #f1f5f9",
           }}>
+
             {/* Name · meta · actions — all safely inside the white card */}
             <div style={{
               display: "flex",
@@ -572,6 +656,56 @@ const ShopPage = () => {
               </div>
             )}
           </div>
+
+          {/* ══════════════════════════════
+              OTHER STORES SECTION
+          ══════════════════════════════ */}
+          {otherStores.length > 0 && (
+            <div style={{ paddingBottom: "60px" }}>
+              <div style={{ height: "1px", background: "#e2e8f0", margin: "8px 0 32px" }} />
+
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: "20px", flexWrap: "wrap", gap: "10px",
+              }}>
+                <div>
+                  <h3 style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", margin: "0 0 3px" }}>
+                    Explore More Stores
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "#94a3b8", margin: 0 }}>
+                    Discover other sellers on Abatrades
+                  </p>
+                </div>
+                <Link
+                  to="/browse"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    fontSize: "13px", fontWeight: 600, color: "#2563eb",
+                    textDecoration: "none", padding: "7px 14px",
+                    borderRadius: "8px", border: "1.5px solid #bfdbfe",
+                    background: "#eff6ff", transition: "all 0.15s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Browse All Stores
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </Link>
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                gap: "16px",
+              }} className="other-stores-grid">
+                {otherStores.map(store => (
+                  <StoreCard key={store.slug} store={store} />
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -583,6 +717,10 @@ const ShopPage = () => {
           .shop-product-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 10px !important;
+          }
+          .other-stores-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
           }
         }
       `}</style>
