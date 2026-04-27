@@ -10,6 +10,7 @@ const ShopRow = ({ shops }) => {
   if (shops.length === 0) return null;
   return (
     <div
+      className="shop-grid"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
@@ -135,6 +136,9 @@ const FeaturedShops = () => {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showMore, setShowMore] = useState(false);
+
+  const INITIAL_COUNT = 4;
 
   useEffect(() => {
     axios
@@ -333,20 +337,69 @@ const FeaturedShops = () => {
               <p style={{ color: "#6b7280" }}>Try a different search or filter.</p>
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                gap: "22px",
-              }}
-            >
-              {filtered.map((shop) => (
-                <ShopCard key={shop.id} shop={shop} />
-              ))}
-            </div>
+            <>
+              <div
+                className="shop-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                  gap: "22px",
+                }}
+              >
+                {(showMore ? filtered : filtered.slice(0, INITIAL_COUNT)).map((shop) => (
+                  <ShopCard key={shop.id} shop={shop} />
+                ))}
+              </div>
+
+              {filtered.length > INITIAL_COUNT && (
+                <div style={{ textAlign: "center", marginTop: "32px" }}>
+                  <button
+                    onClick={() => setShowMore(p => !p)}
+                    style={{
+                      padding: "11px 32px",
+                      background: showMore ? "#f1f5f9" : "#0f172a",
+                      color: showMore ? "#374151" : "#fff",
+                      border: "none", borderRadius: "10px",
+                      fontWeight: 700, fontSize: "14px",
+                      cursor: "pointer", transition: "all 0.15s",
+                    }}
+                  >
+                    {showMore
+                      ? "Show Less"
+                      : `Show More (${filtered.length - INITIAL_COUNT} more)`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
+      <style>{`
+        @media (max-width: 640px) {
+          .shop-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          .shop-card-banner {
+            height: 56px !important;
+          }
+          .shop-card-avatar-row {
+            margin-top: -20px !important;
+          }
+          .shop-card-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 14px !important;
+            border-radius: 10px !important;
+          }
+          .shop-card-desc {
+            display: none !important;
+          }
+          .shop-card-cats {
+            display: none !important;
+          }
+        }
+      `}</style>
     </>
   );
 };

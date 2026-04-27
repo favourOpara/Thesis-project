@@ -218,6 +218,8 @@ const ShopPage = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [otherStores, setOtherStores] = useState([]);
+  const [showMoreStores, setShowMoreStores] = useState(false);
+  const INITIAL = 4;
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
@@ -699,10 +701,27 @@ const ShopPage = () => {
                 gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
                 gap: "16px",
               }} className="other-stores-grid">
-                {otherStores.map(store => (
+                {(showMoreStores ? otherStores : otherStores.slice(0, INITIAL)).map(store => (
                   <StoreCard key={store.slug} store={store} />
                 ))}
               </div>
+
+              {otherStores.length > INITIAL && (
+                <div style={{ textAlign: "center", marginTop: "24px" }}>
+                  <button
+                    onClick={() => setShowMoreStores(p => !p)}
+                    style={{
+                      padding: "10px 28px",
+                      background: showMoreStores ? "#f1f5f9" : "#0f172a",
+                      color: showMoreStores ? "#374151" : "#fff",
+                      border: "none", borderRadius: "9px",
+                      fontWeight: 700, fontSize: "13.5px", cursor: "pointer",
+                    }}
+                  >
+                    {showMoreStores ? "Show Less" : `Show More (${otherStores.length - INITIAL} more)`}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

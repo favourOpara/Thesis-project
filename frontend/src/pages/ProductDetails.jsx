@@ -58,6 +58,9 @@ const ProductDetails = () => {
   const [descOpen, setDescOpen]           = useState(true);
   const [otherStores, setOtherStores]     = useState([]);
   const [similarProducts, setSimilarProducts] = useState([]);
+  const [showMoreSimilar, setShowMoreSimilar] = useState(false);
+  const [showMoreStores, setShowMoreStores]   = useState(false);
+  const INITIAL = 4;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -306,7 +309,7 @@ const ProductDetails = () => {
             </h1>
 
             {/* Price */}
-            <div style={{ fontSize: "26px", fontWeight: 800, color: "#2563eb", marginBottom: "16px" }}>
+            <div style={{ fontSize: "26px", fontWeight: 800, color: "#f97316", marginBottom: "16px" }}>
               {fmtPrice(product.price)}
             </div>
 
@@ -501,7 +504,7 @@ const ProductDetails = () => {
               gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
               gap: "16px",
             }} className="pd-similar-grid">
-              {similarProducts.map(p => {
+              {(showMoreSimilar ? similarProducts : similarProducts.slice(0, INITIAL)).map(p => {
                 const img = p.main_image_url ||
                   (p.images?.length > 0 ? p.images[0].image_url : "/OIP.png");
                 return (
@@ -547,6 +550,23 @@ const ProductDetails = () => {
                 );
               })}
             </div>
+
+            {similarProducts.length > INITIAL && (
+              <div style={{ textAlign: "center", marginTop: "24px" }}>
+                <button
+                  onClick={() => setShowMoreSimilar(p => !p)}
+                  style={{
+                    padding: "10px 28px",
+                    background: showMoreSimilar ? "#f1f5f9" : "#0f172a",
+                    color: showMoreSimilar ? "#374151" : "#fff",
+                    border: "none", borderRadius: "9px",
+                    fontWeight: 700, fontSize: "13.5px", cursor: "pointer",
+                  }}
+                >
+                  {showMoreSimilar ? "Show Less" : `Show More (${similarProducts.length - INITIAL} more)`}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -589,7 +609,7 @@ const ProductDetails = () => {
               gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
               gap: "16px",
             }} className="pd-other-stores-grid">
-              {otherStores.map(store => (
+              {(showMoreStores ? otherStores : otherStores.slice(0, INITIAL)).map(store => (
                 <Link key={store.slug} to={`/shop/${store.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <div style={{
                     background: "#fff", borderRadius: "14px",
@@ -633,6 +653,23 @@ const ProductDetails = () => {
                 </Link>
               ))}
             </div>
+
+            {otherStores.length > INITIAL && (
+              <div style={{ textAlign: "center", marginTop: "24px" }}>
+                <button
+                  onClick={() => setShowMoreStores(p => !p)}
+                  style={{
+                    padding: "10px 28px",
+                    background: showMoreStores ? "#f1f5f9" : "#0f172a",
+                    color: showMoreStores ? "#374151" : "#fff",
+                    border: "none", borderRadius: "9px",
+                    fontWeight: 700, fontSize: "13.5px", cursor: "pointer",
+                  }}
+                >
+                  {showMoreStores ? "Show Less" : `Show More (${otherStores.length - INITIAL} more)`}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

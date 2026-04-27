@@ -47,6 +47,7 @@ const ShopCard = ({ shop }) => {
       >
         {/* Banner */}
         <div
+          className="shop-card-banner"
           style={{
             height: "80px",
             background: shop.banner_url
@@ -58,8 +59,9 @@ const ShopCard = ({ shop }) => {
 
         {/* Avatar + name row */}
         <div style={{ padding: "0 16px" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", marginTop: "-26px" }}>
+          <div className="shop-card-avatar-row" style={{ display: "flex", alignItems: "flex-end", gap: "12px", marginTop: "-26px" }}>
             <div
+              className="shop-card-avatar"
               style={{
                 width: "52px",
                 height: "52px",
@@ -124,6 +126,7 @@ const ShopCard = ({ shop }) => {
 
           {shop.description && (
             <p
+              className="shop-card-desc"
               style={{
                 fontSize: "12.5px",
                 color: "#6b7280",
@@ -141,7 +144,7 @@ const ShopCard = ({ shop }) => {
 
           {/* Category pills */}
           {categories.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "12px" }}>
+            <div className="shop-card-cats" style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "12px" }}>
               {categories.map((cat, i) => (
                 <span
                   key={i}
