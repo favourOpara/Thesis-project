@@ -2,6 +2,25 @@ import React from "react";
 
 const Footer = () => {
   return (
+    <footer className="footer-wrapper">
+      <p>
+        Copyright © 2025{" "}
+        <a href="#" target="_blank" rel="noreferrer">
+          Abatrades
+        </a>
+        , All rights reserved.
+      </p>
+    </footer>
+  );
+};
+
+
+
+
+/*import React from "react";
+
+const Footer = () => {
+  return (
     <div className="footer-wrapper mt-0">
       <div className="footer-section f-section-1">
         <p className="">
@@ -17,4 +36,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default Footer;*/
