@@ -34,6 +34,7 @@ import SellerSettings  from "./pages/SellerSettings";
 import AddProduct      from "./pages/AddProduct";
 import BecomeASeller   from "./pages/BecomeASeller";
 import Join            from "./pages/Join";
+import BrowsePage      from "./pages/BrowsePage";
 import NotFound        from "./pages/NotFound";
 import ComingSoon      from "./pages/ComingSoon";
 
@@ -74,6 +75,7 @@ const App = () => {
                   <Route path="/products"              element={<ProductList />} />
                   <Route path="/search"                element={<SearchResults />} />
                   <Route path="/coming-soon"           element={<ComingSoon />} />
+                  <Route path="/browse"                element={<BrowsePage />} />
 
                   {/* Buyer */}
                   <Route path="/cart"                  element={<Cart />} />

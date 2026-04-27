@@ -144,7 +144,7 @@ const Hero = () => {
             >
               Start for free
             </Link>
-            <a href="#discover" style={{
+            <Link to="/browse" style={{
               background: "white", color: "#0f172a",
               padding: "15px 32px", borderRadius: "10px",
               fontWeight: 600, fontSize: "15px",
@@ -157,7 +157,7 @@ const Hero = () => {
               onMouseLeave={e => e.currentTarget.style.borderColor = "#e2e8f0"}
             >
               Browse stores →
-            </a>
+            </Link>
           </div>
         </div>
 

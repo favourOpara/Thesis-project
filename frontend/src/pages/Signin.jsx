@@ -41,7 +41,7 @@ const SignIn = () => {
     setUser(userData);
 
     const isSeller = userData.user_type === "seller";
-    navigate(isSeller ? "/seller/overview" : "/", { replace: true });
+    navigate(isSeller ? "/seller/overview" : "/browse", { replace: true });
 
     // Refresh full profile in background
     login();

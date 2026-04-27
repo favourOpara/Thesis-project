@@ -101,7 +101,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
 
   const NAV_LINKS = [
     { label: "Support", icon: "💬", to: "/coming-soon", bg: "#eff6ff", color: "#3b7bf8" },
-    { label: "How It Works", icon: "❓", to: "/coming-soon", bg: "#f8fafc", color: "#64748b" },
+    { label: "How It Works", icon: "❓", to: "/becomeaseller", bg: "#f8fafc", color: "#64748b" },
   ];
 
   const MobileChevron = () => (

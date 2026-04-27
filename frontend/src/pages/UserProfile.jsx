@@ -1,20 +1,93 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
+import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../assets/img/abatrades-logo-other.png";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+const SectionLabel = ({ children }) => (
+  <p style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.8px", margin: "0 0 10px" }}>
+    {children}
+  </p>
+);
+
+const InfoRow = ({ label, value }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f1f5f9" }}>
+    <span style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 500 }}>{label}</span>
+    <span style={{ fontSize: "13.5px", color: "#0f172a", fontWeight: 400, maxWidth: "60%", textAlign: "right", wordBreak: "break-word" }}>{value || "—"}</span>
+  </div>
+);
+
+const ActionRow = ({ icon, label, sublabel, onClick, color = "#0f172a", danger, last }) => (
+  <button
+    onClick={onClick}
+    style={{
+      width: "100%", display: "flex", alignItems: "center", gap: "14px",
+      padding: "13px 16px", background: danger ? "#fff5f5" : "#fff",
+      border: "none", borderBottom: last ? "none" : "1px solid #f1f5f9",
+      cursor: "pointer", textAlign: "left", transition: "background 0.12s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.background = danger ? "#fee2e2" : "#f8fafc"}
+    onMouseLeave={e => e.currentTarget.style.background = danger ? "#fff5f5" : "#fff"}
+  >
+    <span style={{
+      width: "36px", height: "36px", borderRadius: "10px",
+      background: danger ? "#fee2e2" : "#f1f5f9",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, color: danger ? "#ef4444" : "#475569",
+    }}>
+      {icon}
+    </span>
+    <span style={{ flex: 1 }}>
+      <span style={{ display: "block", fontSize: "13.5px", fontWeight: 500, color: danger ? "#ef4444" : color }}>{label}</span>
+      {sublabel && <span style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginTop: "1px" }}>{sublabel}</span>}
+    </span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={danger ? "#ef4444" : "#cbd5e1"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  </button>
+);
+
+const Card = ({ children, style }) => (
+  <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", overflow: "hidden", marginBottom: "16px", ...style }}>
+    {children}
+  </div>
+);
+
+const CardHead = ({ children }) => (
+  <div style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+    <SectionLabel>{children}</SectionLabel>
+  </div>
+);
+
 const Profile = () => {
   const navigate = useNavigate();
-
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const [switching, setSwitching] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
+  useEffect(() => {
+    if (localStorage.getItem("profileUpdateSuccess") === "true") {
+      toast.success("Profile updated successfully!");
+      localStorage.removeItem("profileUpdateSuccess");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("access_token");
+    axios.get(`${BASE}/api/orders/my/`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => setOrders(r.data.slice(0, 3)))
+      .catch(() => {})
+      .finally(() => setOrdersLoading(false));
+  }, [user]);
 
   const handleSwitchToSeller = async () => {
     setSwitching(true);
@@ -33,278 +106,178 @@ const Profile = () => {
     }
   };
 
-  const handleEditProfile = () => {
-    navigate("/edit-profile");
-  };
-
   const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem("refreshToken");
-
-      if (!refreshToken) {
-        console.error("No refresh token found");
-        navigate("/signin");
-        return;
-      }
-
-      // Send logout request to the backend
-      await axios.post(
-        `${BASE}/api/signout/`,
-        { refresh: refreshToken },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
-
-      // Clear tokens from localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      // Navigate to the signin page
-      navigate("/signin");
-    } catch (error) {
-      console.error("Error during logout:", error);
-      // Even if the backend logout fails, proceed with local logout
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      navigate("/signin");
-    }
+    await logout();
+    navigate("/", { replace: true });
   };
 
-  const shoppingHistory = [
-    {
-      item: "Wireless Headphones",
-      date: "2024-11-12",
-      quantity: 1,
-      price: 150,
-    },
-    { item: "Laptop Stand", date: "2024-11-10", quantity: 2, price: 40 },
-    { item: "Ergonomic Chair", date: "2024-11-08", quantity: 1, price: 250 },
-  ];
+  const fmtNGN = n => parseFloat(n || 0).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
+  const fmtDate = d => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
-  const totalSpent = shoppingHistory.reduce(
-    (acc, purchase) => acc + purchase.quantity * purchase.price,
-    0
-  );
+  const STATUS_COLOR = {
+    pending:    "#854d0e", paid: "#15803d", processing: "#1d4ed8",
+    shipped:    "#4338ca", delivered: "#166534", cancelled: "#b91c1c",
+  };
+  const STATUS_BG = {
+    pending:    "#fef9c3", paid: "#dcfce7", processing: "#dbeafe",
+    shipped:    "#e0e7ff", delivered: "#f0fdf4", cancelled: "#fee2e2",
+  };
 
-  useEffect(() => {
-    // Check if profile update was successful
-    if (localStorage.getItem("profileUpdateSuccess") === "true") {
-      toast.success("Profile updated successfully!");
-      setTimeout(() => {
-        localStorage.removeItem("profileUpdateSuccess");
-      }, 3000);
-    }
-  }, []);
+  const initials = ((user?.first_name || user?.email || "U").charAt(0)).toUpperCase();
+  const displayName = user?.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user?.email;
 
   return (
-    <>
-      <Header />
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(to bottom right, #f0f4f8, #d9e6f2)",
-          padding: "20px",
-        }}
-      >
-        <div className="container mt-5">
-          <ToastContainer />
-          <div
-            className="row"
-            style={{ marginTop: window.innerWidth <= 992 ? "70px" : "120px" }}
-          >
-            {/* Profile Card */}
-            <div className="col-lg-4 mb-4">
-              <div
-                className="card"
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                <div
-                  className="card-header text-center"
-                  style={{ backgroundColor: "#3b7bf8", color: "white" }}
-                >
-                  <h3>{`${user.first_name || "N/A"} ${
-                    user.last_name || ""
-                  }`}</h3>
-                  <p className="mb-0 text-white-50">{user.email}</p>
-                  <p className="mb-0 text-white-50">{user.phone_number}</p>
-                  <p className="text-white-50">{user.address}</p>
-                </div>
-                <div className="card-body text-center">
-                  <button
-                    className="btn btn-primary w-100 mb-2"
-                    onClick={handleEditProfile}
-                    style={{
-                      backgroundColor: "#3b7bf8",
-                      border: "none",
-                      padding: "10px 20px",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    className="btn w-100"
-                    onClick={handleSwitchToSeller}
-                    disabled={switching}
-                    style={{
-                      backgroundColor: "#f0fdf4",
-                      color: "#15803d",
-                      border: "1.5px solid #86efac",
-                      padding: "10px 20px",
-                      borderRadius: "8px",
-                      fontWeight: 600,
-                      fontSize: "13.5px",
-                    }}
-                  >
-                    {switching ? "Switching…" : "Switch to Seller Account"}
-                  </button>
-                </div>
-              </div>
-            </div>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      <ToastContainer position="top-center" />
 
-            {/* Main Content */}
-            <div className="col-lg-8">
-              <div className="row">
-                {/* Shopping History */}
-                <div className="col-12 mb-4">
-                  <div className="card" style={{ borderRadius: "12px" }}>
-                    <div className="card-header">
-                      <h5>Shopping History</h5>
-                    </div>
-                    <div className="card-body">
-                      <div className="table-responsive">
-                        {/* Responsive Table */}
-                        <table className="table table-bordered">
-                          <thead>
-                            <tr>
-                              <th>Item</th>
-                              <th>Date</th>
-                              <th>Quantity</th>
-                              <th>Price</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {shoppingHistory.map((purchase, index) => (
-                              <tr key={index}>
-                                <td>{purchase.item}</td>
-                                <td>{purchase.date}</td>
-                                <td>{purchase.quantity}</td>
-                                <td>${purchase.price.toFixed(2)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="text-end">
-                        <h6>
-                          <strong>Total Spent: </strong>${totalSpent.toFixed(2)}
-                        </h6>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      {/* ── Topbar ── */}
+      <div style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #f1f5f9", padding: "0 20px", height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Link to="/browse"><img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} /></Link>
+        <Link to="/browse" style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, textDecoration: "none", padding: "5px 12px", borderRadius: "7px", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Browse
+        </Link>
+      </div>
 
-                {/* Pro Plan */}
-                {user && user.user_type == "seller" && (
-                  <div className="col-md-6 mb-4">
-                    <div
-                      className="card"
-                      style={{
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                      }}
-                    >
-                      <div className="card-header">
-                        <h5>Pro Plan</h5>
-                      </div>
-                      <div className="card-body">
-                        <p>20,000 Monthly Visitors</p>
-                        <p>Unlimited Data Storage</p>
-                        <div className="progress mb-2">
-                          <div
-                            className="progress-bar bg-info"
-                            style={{ width: "75%" }}
-                          ></div>
-                        </div>
-                        <p>
-                          <strong>$25/month</strong>
-                        </p>
-                        <button className="btn btn-primary w-100">
-                          Renew Plan
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+      {/* ── Page ── */}
+      <div style={{ maxWidth: "960px", margin: "0 auto", padding: "28px 16px 60px" }}>
 
-                {/* Payment History */}
-                <div className="col-md-6 mb-4">
-                  <div className="card" style={{ borderRadius: "12px" }}>
-                    <div className="card-header">
-                      <h5>Payment History</h5>
-                    </div>
-                    <div className="card-body">
-                      <ul className="list-group">
-                        <li className="list-group-item d-flex justify-content-between">
-                          <span>Pro Membership</span>
-                          <span>$45</span>
-                        </li>
-                        <li className="list-group-item d-flex justify-content-between">
-                          <span>Pro Membership</span>
-                          <span>$45</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Methods */}
-                <div className="col-12">
-                  <div className="card" style={{ borderRadius: "12px" }}>
-                    <div className="card-header">
-                      <h5>Payment Methods</h5>
-                    </div>
-                    <div className="card-body">
-                      <ul className="list-group">
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                          <span>American Express</span>
-                          <span className="badge bg-success">Active</span>
-                        </li>
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                          <span>Visa</span>
-                          <span>Expires 12/25</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  className="btn btn-danger mt-2"
-                  onClick={handleLogout}
-                  style={{
-                    backgroundColor: "#ff5e57",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "8px",
-                    width: "100px",
-                    marginLeft: "40%",
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
+        {/* Name + avatar hero */}
+        <div style={{ display: "flex", alignItems: "center", gap: "18px", marginBottom: "28px" }}>
+          <div style={{ width: "64px", height: "64px", borderRadius: "18px", background: "linear-gradient(135deg, #3b7bf8, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+            {initials}
+          </div>
+          <div>
+            <h1 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 4px" }}>{displayName}</h1>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 600, background: "#eff6ff", color: "#2563eb", padding: "3px 10px", borderRadius: "999px" }}>Buyer Account</span>
+              {user?.loyalty_points > 0 && (
+                <span style={{ fontSize: "11.5px", fontWeight: 600, background: "#fef9c3", color: "#854d0e", padding: "3px 10px", borderRadius: "999px" }}>
+                  {user.loyalty_points.toLocaleString()} loyalty pts
+                </span>
+              )}
             </div>
           </div>
         </div>
-        <Footer />
+
+        {/* ── Two-column grid on desktop, single on mobile ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "0 24px", alignItems: "start" }}>
+
+          {/* LEFT COLUMN */}
+          <div>
+            {/* Account details */}
+            <Card>
+              <CardHead>Account Details</CardHead>
+              <div style={{ padding: "0 16px" }}>
+                <InfoRow label="Full name" value={displayName} />
+                <InfoRow label="Email" value={user?.email} />
+                <InfoRow label="Phone" value={user?.phone_number} />
+                <InfoRow label="Address" value={user?.address} />
+              </div>
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>}
+                label="Edit Profile"
+                sublabel="Update your name, phone, and address"
+                onClick={() => navigate("/edit-profile")}
+                last
+              />
+            </Card>
+
+            {/* Account actions */}
+            <Card>
+              <CardHead>Account</CardHead>
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+                label={switching ? "Switching…" : "Switch to Seller Account"}
+                sublabel="Start selling on Abatrades"
+                onClick={handleSwitchToSeller}
+                color="#15803d"
+              />
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>}
+                label="Sign Out"
+                onClick={handleLogout}
+                danger
+                last
+              />
+            </Card>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div>
+            {/* Quick links */}
+            <Card>
+              <CardHead>Quick Links</CardHead>
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>}
+                label="My Cart"
+                sublabel="View items saved in your cart"
+                onClick={() => navigate("/cart")}
+              />
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
+                label="Browse Stores"
+                sublabel="Discover sellers on Abatrades"
+                onClick={() => navigate("/browse")}
+                last
+              />
+            </Card>
+
+            {/* Recent orders */}
+            <Card>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <SectionLabel>Recent Orders</SectionLabel>
+                <button onClick={() => navigate("/orders")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#2563eb", fontWeight: 600, padding: 0 }}>
+                  View all →
+                </button>
+              </div>
+
+              {ordersLoading ? (
+                <div style={{ padding: "28px", textAlign: "center" }}>
+                  <div className="spinner-border" style={{ width: "1.4rem", height: "1.4rem", color: "#2563eb" }} />
+                </div>
+              ) : orders.length === 0 ? (
+                <div style={{ padding: "32px 20px", textAlign: "center" }}>
+                  <p style={{ fontSize: "32px", margin: "0 0 8px" }}>📦</p>
+                  <p style={{ fontSize: "13.5px", color: "#0f172a", fontWeight: 500, margin: "0 0 4px" }}>No orders yet</p>
+                  <p style={{ fontSize: "12.5px", color: "#94a3b8", margin: "0 0 14px" }}>Your purchases will appear here.</p>
+                  <button onClick={() => navigate("/browse")} style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", padding: "8px 20px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+                    Start Shopping
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {orders.map((order, i) => {
+                    const bg = ({ pending:"#fef9c3",paid:"#dcfce7",processing:"#dbeafe",shipped:"#e0e7ff",delivered:"#f0fdf4",cancelled:"#fee2e2" })[order.status] || "#f1f5f9";
+                    const cl = ({ pending:"#854d0e",paid:"#15803d",processing:"#1d4ed8",shipped:"#4338ca",delivered:"#166534",cancelled:"#b91c1c" })[order.status] || "#475569";
+                    return (
+                      <div key={order.id} style={{ padding: "12px 16px", borderBottom: i < orders.length - 1 ? "1px solid #f1f5f9" : "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                        <div>
+                          <p style={{ fontSize: "13.5px", fontWeight: 600, color: "#0f172a", margin: "0 0 3px" }}>Order #{order.id}</p>
+                          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+                            {new Date(order.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                            {" · "}{order.items?.length} item{order.items?.length !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <p style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
+                            {parseFloat(order.total_amount || 0).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })}
+                          </p>
+                          <span style={{ fontSize: "11px", fontWeight: 600, background: bg, color: cl, padding: "2px 8px", borderRadius: "999px" }}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          </div>
+
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

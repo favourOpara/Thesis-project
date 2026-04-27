@@ -1,9 +1,28 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../assets/img/abatrades-logo-other.png";
+
+const BuyerTopbar = ({ backTo = "/browse", backLabel = "Browse" }) => (
+  <div style={{
+    position: "sticky", top: 0, zIndex: 100, background: "#fff",
+    borderBottom: "1px solid #f1f5f9", padding: "0 20px", height: "52px",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+  }}>
+    <Link to="/browse"><img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} /></Link>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <Link to="/user-profile" style={{ fontSize: "13px", color: "#374151", textDecoration: "none", padding: "5px 10px", borderRadius: "7px", background: "#f1f5f9", fontWeight: 500 }}>
+        Account
+      </Link>
+      <Link to={backTo} style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, textDecoration: "none", padding: "5px 12px", borderRadius: "7px", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        {backLabel}
+      </Link>
+    </div>
+  </div>
+);
 
 const fmtNGN = (n) =>
   parseFloat(n || 0).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
@@ -17,7 +36,7 @@ const CartPage = () => {
   if (!user) {
     return (
       <>
-        <Header />
+        <BuyerTopbar />
         <div style={styles.empty}>
           <div style={styles.emptyIcon}>🛒</div>
           <h3 style={styles.emptyTitle}>Sign in to view your cart</h3>
@@ -42,7 +61,7 @@ const CartPage = () => {
 
   if (loading) return (
     <>
-      <Header />
+      <BuyerTopbar />
       <div style={{ ...styles.empty, gap: 0 }}>
         <div className="spinner-border" style={{ color: "#2563eb" }} />
       </div>
@@ -54,7 +73,7 @@ const CartPage = () => {
 
   return (
     <>
-      <Header />
+      <BuyerTopbar />
       <div style={styles.page}>
         <div style={styles.container}>
 
@@ -64,7 +83,7 @@ const CartPage = () => {
               Shopping Cart
               {item_count > 0 && <span style={styles.countBadge}>{item_count}</span>}
             </h1>
-            <Link to="/" style={styles.continueLink}>← Continue Shopping</Link>
+            <Link to="/browse" style={styles.continueLink}>← Continue Shopping</Link>
           </div>
 
           {items.length === 0 ? (
@@ -72,7 +91,7 @@ const CartPage = () => {
               <div style={styles.emptyIcon}>🛒</div>
               <h3 style={styles.emptyTitle}>Your cart is empty</h3>
               <p style={styles.emptyText}>Browse our marketplace and add items you love.</p>
-              <Link to="/" style={styles.ctaBtn}>Start Shopping</Link>
+              <Link to="/browse" style={styles.ctaBtn}>Start Shopping</Link>
             </div>
           ) : (
             <div style={styles.layout}>

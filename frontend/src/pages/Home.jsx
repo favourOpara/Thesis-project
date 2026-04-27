@@ -768,7 +768,7 @@ const LiveSellers = () => {
               Meet our sellers
             </h2>
           </div>
-          <Link to="/sellers" style={{
+          <Link to="/browse" style={{
             color: "#3b7bf8", fontWeight: 700, fontSize: "14px",
             textDecoration: "none", display: "flex", alignItems: "center", gap: "6px",
           }}>
@@ -971,7 +971,7 @@ const FinalCTA = () => (
         >
           Own a Store — It's Free
         </Link>
-        <a href="#discover" style={{
+        <Link to="/browse" style={{
           background: "rgba(255,255,255,0.12)", color: "white",
           padding: "16px 40px", borderRadius: "12px",
           fontWeight: 700, fontSize: "16px", textDecoration: "none",
@@ -979,7 +979,7 @@ const FinalCTA = () => (
           backdropFilter: "blur(8px)",
         }}>
           Browse sellers
-        </a>
+        </Link>
       </div>
     </div>
   </section>
@@ -1020,7 +1020,7 @@ const Home = () => {
               headline={"Discover sellers\nyou can trust."}
               body="Browse storefronts from verified Nigerian sellers. See their full catalogue, check reviews, message them directly, and shop with confidence via secure Paystack checkout."
               cta="Start browsing"
-              ctaHref="/signin"
+              ctaHref="/browse"
               visual={<BuyerVisual />}
               flip={true}
             />
