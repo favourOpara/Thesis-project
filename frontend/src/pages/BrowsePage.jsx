@@ -319,6 +319,67 @@ const BrowsePage = () => {
       )}
 
       {/* ════════════════════════════
+          HERO BANNER
+      ════════════════════════════ */}
+      <div style={{
+        position: "relative",
+        width: "100%",
+        height: "340px",
+        overflow: "hidden",
+        background: "#fff",
+      }}>
+        {/* Background image */}
+        <img
+          src="/hero/banner.jpg"
+          alt="Hero banner"
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            objectPosition: "center top",
+          }}
+        />
+        {/* Fade to white at bottom */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to bottom, rgba(255,255,255,0) 30%, rgba(255,255,255,0.7) 70%, #fff 100%)",
+        }} />
+        {/* CTA overlay */}
+        <div style={{
+          position: "absolute",
+          bottom: "32px",
+          left: 0, right: 0,
+          textAlign: "center",
+          padding: "0 20px",
+        }}>
+          <p style={{
+            margin: "0 0 12px",
+            fontSize: "15px",
+            color: "#1f2937",
+            fontWeight: 600,
+          }}>
+            Want to own a store like these?
+          </p>
+          <a
+            href="/seller-signup"
+            style={{
+              display: "inline-block",
+              background: "#f97316",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "13px",
+              padding: "10px 28px",
+              textDecoration: "none",
+              letterSpacing: "0.4px",
+              boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
+            }}
+          >
+            Become a Seller
+          </a>
+        </div>
+      </div>
+
+      {/* ════════════════════════════
           CATEGORY GRID  (4×4 / 3×3)
       ════════════════════════════ */}
       <div className="cat-grid-wrapper" style={{ background: "#fff", padding: "20px 40px" }}>
