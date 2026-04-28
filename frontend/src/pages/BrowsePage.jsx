@@ -383,7 +383,7 @@ const BrowsePage = () => {
 
         {/* Mobile expanded search bar */}
         {mobileSearchOpen && (
-          <div ref={searchRef} style={{ padding: "8px 12px", borderTop: "1px solid #f3f4f6", position: "relative" }}>
+          <div ref={searchRef} className="search-mobile-expanded" style={{ padding: "8px 12px", borderTop: "1px solid #f3f4f6", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", background: "#f1f5f9", border: "1.5px solid #e2e8f0", overflow: "hidden" }}>
               <svg style={{ flexShrink: 0, marginLeft: "12px", color: "#9ca3af" }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -563,6 +563,7 @@ const BrowsePage = () => {
           .cat-tile-label { font-size: 11px !important; }
           .cat-grid-wrapper { padding: 20px 100px !important; }
           .search-mobile-btn { display: none !important; }
+          .search-mobile-expanded { display: none !important; }
         }
 
         /* Mobile: hide desktop search bar, show icon */
