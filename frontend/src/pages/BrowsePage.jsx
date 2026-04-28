@@ -138,16 +138,16 @@ const ProductRow = ({ title, products, onCardClick }) => {
   if (products.length === 0) return null;
   return (
     <div style={{ paddingBottom: "4px" }}>
-      <p style={{
+      <p className="browse-pad" style={{
         fontWeight: 700, fontSize: "15px", color: "#111827",
-        margin: "0 0 12px", padding: "0 16px",
+        margin: "0 0 12px", padding: "0 40px",
       }}>
         {title}
       </p>
-      <div style={{
+      <div className="browse-pad-scroll" style={{
         display: "flex", gap: "2px",
         overflowX: "auto", overflowY: "hidden",
-        padding: "0 16px 4px",
+        padding: "0 40px 4px",
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
       }}>
         {products.map(p => (
@@ -174,6 +174,14 @@ const BrowsePage = () => {
   const [newProducts, setNewProducts]     = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [allProducts, setAllProducts]     = useState([]);
+  const [allShops, setAllShops]           = useState([]);
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [searchResults, setSearchResults] = useState({ products: [], shops: [] });
+  const [showDropdown, setShowDropdown]   = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+  const mobileInputRef = useRef(null);
 
   useEffect(() => {
     axios.get(`${BASE}/api/products/`)
@@ -195,11 +203,39 @@ const BrowsePage = () => {
         });
         setCategoryImages(imgMap);
 
+        setAllProducts(all);
         setNewProducts([...all].sort((a, b) => b.id - a.id).slice(0, 16));
         setFeaturedProducts(all.filter(p => p.is_featured).slice(0, 16));
       })
       .catch(() => {})
       .finally(() => setLoadingProducts(false));
+
+    axios.get(`${BASE}/api/shops/`).then(res => setAllShops(res.data)).catch(() => {});
+  }, []);
+
+  // Search logic
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) { setSearchResults({ products: [], shops: [] }); setShowDropdown(false); return; }
+    const products = allProducts.filter(p =>
+      (p.name || "").toLowerCase().includes(q) ||
+      (p.category || "").toLowerCase().includes(q) ||
+      (p.sub_category || "").toLowerCase().includes(q)
+    ).slice(0, 5);
+    const shops = allShops.filter(s =>
+      (s.name || "").toLowerCase().includes(q) ||
+      (s.description || "").toLowerCase().includes(q)
+    ).slice(0, 4);
+    setSearchResults({ products, shops });
+    setShowDropdown(true);
+  }, [searchQuery, allProducts, allShops]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowDropdown(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const handleCategoryClick = (tile) => {
@@ -211,12 +247,7 @@ const BrowsePage = () => {
   };
 
   const handleCardClick = (product) => {
-    const cat = product.category || "";
-    setCategoryFilter(cat);
-    navigate(`/browse?category=${encodeURIComponent(cat)}`, { replace: true });
-    setTimeout(() => {
-      storesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
+    navigate(`/product/${product.id}`);
   };
 
   useEffect(() => {
@@ -246,10 +277,85 @@ const BrowsePage = () => {
           display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: "12px",
         }}>
-          <Link to="/">
+          <Link to="/" style={{ flexShrink: 0 }}>
             <img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} />
           </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+          {/* Search bar — desktop */}
+          <div ref={searchRef} className="search-desktop" style={{ flex: 1, maxWidth: "520px", position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "#f1f5f9", border: "1.5px solid #e2e8f0", overflow: "hidden" }}>
+              <svg style={{ flexShrink: 0, marginLeft: "12px", color: "#9ca3af" }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search products or stores..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                style={{ flex: 1, border: "none", background: "transparent", padding: "9px 12px", fontSize: "13px", outline: "none", color: "#111827" }}
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(""); setShowDropdown(false); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 10px", color: "#9ca3af", fontSize: "16px", lineHeight: 1 }}>✕</button>
+              )}
+            </div>
+            {/* Dropdown */}
+            {showDropdown && (searchResults.products.length > 0 || searchResults.shops.length > 0) && (
+              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fff", border: "1px solid #e5e7eb", zIndex: 300, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", maxHeight: "400px", overflowY: "auto" }}>
+                {searchResults.products.length > 0 && (<>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase" }}>Products</div>
+                  {searchResults.products.map(p => {
+                    const img = p.main_image_url || p.images?.[0]?.image_url;
+                    return (
+                      <div key={p.id} onClick={() => { navigate(`/product/${p.id}`); setShowDropdown(false); setSearchQuery(""); }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <div style={{ width: "36px", height: "36px", flexShrink: 0, background: "#f3f4f6", overflow: "hidden" }}>
+                          {img && <img src={img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{p.name}</div>
+                          <div style={{ fontSize: "11px", color: "#9ca3af" }}>{p.category || p.sub_category}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>)}
+                {searchResults.shops.length > 0 && (<>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase", borderTop: searchResults.products.length > 0 ? "1px solid #f3f4f6" : "none" }}>Stores</div>
+                  {searchResults.shops.map(s => (
+                    <div key={s.id} onClick={() => { navigate(`/shop/${s.slug}`); setShowDropdown(false); setSearchQuery(""); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <div style={{ width: "36px", height: "36px", flexShrink: 0, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#3b7bf8", fontSize: "15px", overflow: "hidden" }}>
+                        {s.logo_url ? <img src={s.logo_url} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : s.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{s.name}</div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>{s.product_count} products</div>
+                      </div>
+                    </div>
+                  ))}
+                </>)}
+              </div>
+            )}
+          </div>
+
+          {/* Search icon — mobile only */}
+          <button
+            className="search-mobile-btn"
+            onClick={() => { setMobileSearchOpen(p => !p); setTimeout(() => mobileInputRef.current?.focus(), 50); }}
+            style={{ display: "none", background: "none", border: "none", cursor: "pointer", padding: "6px", color: "#374151" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
             {user ? (
               <Link to={user.user_type === "seller" ? "/seller/overview" : "/user-profile"}
                 style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "34px", height: "34px", borderRadius: "50%", background: "#eff6ff" }}>
@@ -275,6 +381,71 @@ const BrowsePage = () => {
           </div>
         </div>
 
+        {/* Mobile expanded search bar */}
+        {mobileSearchOpen && (
+          <div ref={searchRef} style={{ padding: "8px 12px", borderTop: "1px solid #f3f4f6", position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "#f1f5f9", border: "1.5px solid #e2e8f0", overflow: "hidden" }}>
+              <svg style={{ flexShrink: 0, marginLeft: "12px", color: "#9ca3af" }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                ref={mobileInputRef}
+                type="text"
+                placeholder="Search products or stores..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                style={{ flex: 1, border: "none", background: "transparent", padding: "9px 12px", fontSize: "13px", outline: "none", color: "#111827" }}
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(""); setShowDropdown(false); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: "0 10px", color: "#9ca3af", fontSize: "16px", lineHeight: 1 }}>✕</button>
+              )}
+            </div>
+            {showDropdown && (searchResults.products.length > 0 || searchResults.shops.length > 0) && (
+              <div style={{ position: "absolute", top: "calc(100% - 8px)", left: "12px", right: "12px", background: "#fff", border: "1px solid #e5e7eb", zIndex: 300, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", maxHeight: "360px", overflowY: "auto" }}>
+                {searchResults.products.length > 0 && (<>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase" }}>Products</div>
+                  {searchResults.products.map(p => {
+                    const img = p.main_image_url || p.images?.[0]?.image_url;
+                    return (
+                      <div key={p.id} onClick={() => { navigate(`/product/${p.id}`); setShowDropdown(false); setSearchQuery(""); setMobileSearchOpen(false); }}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <div style={{ width: "36px", height: "36px", flexShrink: 0, background: "#f3f4f6", overflow: "hidden" }}>
+                          {img && <img src={img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{p.name}</div>
+                          <div style={{ fontSize: "11px", color: "#9ca3af" }}>{p.category || p.sub_category}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>)}
+                {searchResults.shops.length > 0 && (<>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase", borderTop: searchResults.products.length > 0 ? "1px solid #f3f4f6" : "none" }}>Stores</div>
+                  {searchResults.shops.map(s => (
+                    <div key={s.id} onClick={() => { navigate(`/shop/${s.slug}`); setShowDropdown(false); setSearchQuery(""); setMobileSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <div style={{ width: "36px", height: "36px", flexShrink: 0, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#3b7bf8", fontSize: "15px", overflow: "hidden" }}>
+                        {s.logo_url ? <img src={s.logo_url} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : s.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{s.name}</div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>{s.product_count} products</div>
+                      </div>
+                    </div>
+                  ))}
+                </>)}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Orange nav */}
         <div style={{ background: "#f97316", overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
           <div style={{ display: "flex", alignItems: "stretch", minWidth: "max-content", padding: "0 12px" }}>
@@ -299,32 +470,14 @@ const BrowsePage = () => {
         </div>
       </div>
 
-      {/* ── Category filter banner ── */}
-      {categoryFilter && (
-        <div style={{
-          background: "#fff7ed", borderBottom: "1px solid #fed7aa",
-          padding: "10px 16px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <span style={{ fontSize: "13px", color: "#9a3412", fontWeight: 600 }}>
-            Showing stores for: <strong>{categoryFilter}</strong>
-          </span>
-          <button
-            onClick={() => { setCategoryFilter(""); navigate("/browse", { replace: true }); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#ea580c", fontWeight: 700 }}
-          >
-            Clear ✕
-          </button>
-        </div>
-      )}
 
       {/* ════════════════════════════
           HERO BANNER
       ════════════════════════════ */}
-      <div style={{
+      <div className="hero-banner" style={{
         position: "relative",
         width: "100%",
-        height: "340px",
+        height: "220px",
         overflow: "hidden",
         background: "#fff",
       }}>
@@ -344,39 +497,6 @@ const BrowsePage = () => {
           position: "absolute", inset: 0,
           background: "linear-gradient(to bottom, rgba(255,255,255,0) 30%, rgba(255,255,255,0.7) 70%, #fff 100%)",
         }} />
-        {/* CTA overlay */}
-        <div style={{
-          position: "absolute",
-          bottom: "32px",
-          left: 0, right: 0,
-          textAlign: "center",
-          padding: "0 20px",
-        }}>
-          <p style={{
-            margin: "0 0 12px",
-            fontSize: "15px",
-            color: "#1f2937",
-            fontWeight: 600,
-          }}>
-            Want to own a store like these?
-          </p>
-          <a
-            href="/seller-signup"
-            style={{
-              display: "inline-block",
-              background: "#f97316",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "13px",
-              padding: "10px 28px",
-              textDecoration: "none",
-              letterSpacing: "0.4px",
-              boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
-            }}
-          >
-            Become a Seller
-          </a>
-        </div>
       </div>
 
       {/* ════════════════════════════
@@ -405,7 +525,7 @@ const BrowsePage = () => {
           HORIZONTAL PRODUCT ROWS
       ════════════════════════════ */}
       {!loadingProducts && (
-        <div style={{ background: "#fff", marginTop: "2px", paddingTop: "20px", paddingBottom: "12px" }}>
+        <div className="product-rows-wrap" style={{ background: "#fff", marginTop: "2px", paddingTop: "20px", paddingBottom: "12px" }}>
 
           <ProductRow
             title="New Arrivals"
@@ -442,15 +562,37 @@ const BrowsePage = () => {
           .cat-hide-desktop { display: none !important; }
           .cat-tile-label { font-size: 11px !important; }
           .cat-grid-wrapper { padding: 20px 100px !important; }
+          .search-mobile-btn { display: none !important; }
         }
 
-        /* Mobile: 3-column grid (3×3 = 9 tiles) */
+        /* Mobile: hide desktop search bar, show icon */
         @media (max-width: 640px) {
+          .search-desktop { display: none !important; }
+          .search-mobile-btn { display: flex !important; align-items: center; justify-content: center; }
+        }
+
+        /* Mobile: 3-column grid (3×3 = 9 tiles) + consistent padding */
+        @media (max-width: 640px) {
+          .hero-banner {
+            height: 180px !important;
+          }
           .cat-grid {
             grid-template-columns: repeat(3, 1fr) !important;
           }
           .cat-grid-wrapper {
             padding: 16px !important;
+          }
+          .product-rows-wrap {
+            padding-top: 12px !important;
+            margin-top: 0 !important;
+          }
+          .browse-pad {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+          }
+          .browse-pad-scroll {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
           }
         }
       `}</style>

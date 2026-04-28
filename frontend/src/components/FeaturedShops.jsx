@@ -82,7 +82,7 @@ const CATEGORY_TILES = [
 
 const CategoryTiles = ({ onFilter }) => (
   <section style={{ padding: "40px 0 32px", background: "white" }}>
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+    <div className="featured-shops-inner" style={{ padding: "0 40px" }}>
       <SectionHead
         eyebrow="Shop by Category"
         title="What are you looking for?"
@@ -241,7 +241,7 @@ const FeaturedShops = ({ activeNav = "", categoryFilter = "" }) => {
       {/* Trending sellers section */}
       {trending.length > 0 && !search && !activeFilter && (
         <section style={{ padding: "48px 0 32px", background: "#f8faff" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+          <div className="featured-shops-inner" style={{ padding: "0 40px" }}>
             <SectionHead
               eyebrow="Most Popular"
               title="Trending Sellers"
@@ -255,7 +255,7 @@ const FeaturedShops = ({ activeNav = "", categoryFilter = "" }) => {
       {/* New sellers section */}
       {newest.length > 0 && !search && !activeFilter && (
         <section style={{ padding: "32px 0", background: "white" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+          <div className="featured-shops-inner" style={{ padding: "0 40px" }}>
             <SectionHead
               eyebrow="Recently Joined"
               title="New on Abatrades"
@@ -268,7 +268,7 @@ const FeaturedShops = ({ activeNav = "", categoryFilter = "" }) => {
 
       {/* Full directory */}
       <section id="discover" style={{ padding: "48px 0 64px", background: "#f8faff" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+        <div className="featured-shops-inner" style={{ padding: "0 40px" }}>
           <SectionHead
             eyebrow="Seller Directory"
             title={activeFilter ? `${activeFilter} Sellers` : "All Sellers"}
@@ -381,6 +381,9 @@ const FeaturedShops = ({ activeNav = "", categoryFilter = "" }) => {
       </section>
       <style>{`
         @media (max-width: 640px) {
+          .featured-shops-inner {
+            padding: 0 16px !important;
+          }
           .shop-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 10px !important;
