@@ -72,12 +72,12 @@ const SectionHead = ({ eyebrow, title, subtitle, action }) => (
 
 /* ── Category browse tiles ── */
 const CATEGORY_TILES = [
-  { label: "Fashion & Apparel", icon: "👗", color: "#eff6ff", accent: "#3b7bf8" },
-  { label: "Tech & Electronics", icon: "💻", color: "#f0fdf4", accent: "#16a34a" },
-  { label: "Beauty & Wellness", icon: "💄", color: "#fdf4ff", accent: "#9333ea" },
-  { label: "Food & Groceries", icon: "🛒", color: "#fff7ed", accent: "#ea580c" },
-  { label: "Home & Living", icon: "🏠", color: "#f0f9ff", accent: "#0284c7" },
-  { label: "Sports & Fitness", icon: "🏋️", color: "#f7fee7", accent: "#65a30d" },
+  { label: "Fashion & Apparel", color: "#eff6ff", accent: "#3b7bf8" },
+  { label: "Tech & Electronics", color: "#f0fdf4", accent: "#16a34a" },
+  { label: "Beauty & Wellness", color: "#fdf4ff", accent: "#9333ea" },
+  { label: "Food & Groceries", color: "#fff7ed", accent: "#ea580c" },
+  { label: "Home & Living", color: "#f0f9ff", accent: "#0284c7" },
+  { label: "Sports & Fitness", color: "#f7fee7", accent: "#65a30d" },
 ];
 
 const CategoryTiles = ({ onFilter }) => (
@@ -118,7 +118,6 @@ const CategoryTiles = ({ onFilter }) => (
               e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <div style={{ fontSize: "30px", marginBottom: "8px" }}>{cat.icon}</div>
             <div style={{ fontSize: "12.5px", fontWeight: 700, color: cat.accent }}>
               {cat.label}
             </div>
@@ -130,7 +129,7 @@ const CategoryTiles = ({ onFilter }) => (
 );
 
 /* ── Main FeaturedShops component ── */
-const FeaturedShops = () => {
+const FeaturedShops = ({ activeNav = "", categoryFilter = "" }) => {
   const [shops, setShops] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -169,8 +168,16 @@ const FeaturedShops = () => {
           s.categories.some((c) => c.toLowerCase().includes(activeFilter.toLowerCase()))
       );
     }
+    // Filter by product category clicked from discovery row
+    if (categoryFilter) {
+      result = result.filter(
+        (s) =>
+          s.categories &&
+          s.categories.some((c) => c.toLowerCase().includes(categoryFilter.toLowerCase()))
+      );
+    }
     setFiltered(result);
-  }, [search, activeFilter, shops]);
+  }, [search, activeFilter, shops, categoryFilter]);
 
   const handleCategoryFilter = (cat) => {
     setActiveFilter((prev) => (prev === cat ? "" : cat));
@@ -203,7 +210,6 @@ const FeaturedShops = () => {
     return (
       <section style={{ padding: "80px 0", background: "#f8faff", textAlign: "center" }}>
         <div style={{ maxWidth: "400px", margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ fontSize: "56px", marginBottom: "16px" }}>🏪</div>
           <h4 style={{ fontWeight: 800, color: "#111827" }}>No sellers yet</h4>
           <p style={{ color: "#6b7280", marginBottom: "24px" }}>
             Be the first seller on Abatrades and reach thousands of buyers.
@@ -330,7 +336,6 @@ const FeaturedShops = () => {
 
           {filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 20px" }}>
-              <div style={{ fontSize: "44px", marginBottom: "12px" }}>🔍</div>
               <h5 style={{ fontWeight: 700, color: "#111827" }}>
                 {search ? `No results for "${search}"` : `No ${activeFilter} sellers yet`}
               </h5>
