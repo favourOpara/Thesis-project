@@ -124,8 +124,7 @@ const Hero = () => {
             maxWidth: "460px",
             marginBottom: "40px",
           }}>
-            Abatrades puts your storefront in front of thousands of buyers.
-            List your products, manage orders, and grow your business — all in one place.
+            We handle importation, warehousing, marketing, and logistics for you. Just open your store, track orders from your customers in your account, and get paid.
           </p>
 
           {/* CTAs */}

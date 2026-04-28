@@ -158,15 +158,14 @@ const DiasporaSection = () => (
           color: "white", lineHeight: 1.1, letterSpacing: "-0.5px",
           marginBottom: "16px",
         }}>
-          Sell in Nigeria.<br />
-          <span style={{ color: "#bae6fd" }}>From anywhere in the world.</span>
+          In Nigeria or in the diaspora?<br />
+          <span style={{ color: "#bae6fd" }}>Nigeria's market is yours.</span>
         </h2>
         <p style={{
           fontSize: "16px", color: "rgba(255,255,255,0.75)",
-          maxWidth: "560px", margin: "0 auto", lineHeight: 1.75,
+          maxWidth: "580px", margin: "0 auto", lineHeight: 1.75,
         }}>
-          You don't need to be in Nigeria to sell to Nigeria. Whether you're in London, Houston, or Dubai —
-          we handle the warehousing, fulfilment, and last-mile delivery so your customers get their orders on time.
+          Do you stay in Nigeria or in the diaspora and you want to enjoy the Nigerian wholesale and retail market? We got you covered.
         </p>
       </div>
 
@@ -182,21 +181,12 @@ const DiasporaSection = () => (
           {
             icon: (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#0ea5e9" stroke="none"/>
-              </svg>
-            ),
-            title: "Ship your goods to us",
-            body: "Send your products from abroad directly to our warehouse in Nigeria. We receive, inspect, and catalogue everything for you.",
-          },
-          {
-            icon: (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
                 <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
               </svg>
             ),
-            title: "We store & list for you",
-            body: "Your products live in our secure warehouse and go live on your Abatrades storefront — visible to thousands of Nigerian buyers every day.",
+            title: "We store your products",
+            body: "We give you storage space in our warehouse. Your products are secured and ready to ship the moment an order comes in.",
           },
           {
             icon: (
@@ -205,8 +195,17 @@ const DiasporaSection = () => (
                 <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
               </svg>
             ),
-            title: "We deliver to your customers",
-            body: "When an order comes in, we pack and deliver directly to your buyer's doorstep — anywhere in Nigeria. You just collect your money.",
+            title: "We deliver, you get paid",
+            body: "Order comes in — we deliver to your customer's doorstep. You track everything in your account and get paid.",
+          },
+          {
+            icon: (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#0ea5e9" stroke="none"/>
+              </svg>
+            ),
+            title: "Need to import? Use Rafiki",
+            body: <>Use our partner <a href="https://rafiki.com.ng" target="_blank" rel="noopener noreferrer" style={{ color: "#f97316", fontWeight: 700, textDecoration: "none" }}>Rafiki</a> to source and ship to our warehouse. We store it, and deliver to your customers when you get an order. Just list it in your store and get paid.</>,
           },
         ].map((card, i) => (
           <div key={i} style={{
@@ -251,7 +250,7 @@ const DiasporaSection = () => (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </Link>
         <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px", marginTop: "14px" }}>
-          No Nigerian warehouse needed. No local agent required.
+          No logistics headache. No middlemen. Just open your store and sell.
         </p>
       </div>
     </div>
@@ -259,6 +258,140 @@ const DiasporaSection = () => (
     <style>{`
       @media (max-width: 768px) {
         .diaspora-grid { grid-template-columns: 1fr !important; }
+      }
+    `}</style>
+  </section>
+);
+
+/* ─────────────────────────────────────────
+   PREMIUM PERKS SECTION
+───────────────────────────────────────── */
+const PERKS = [
+  {
+    label: "Importation",
+    desc: <>Source products from anywhere in the world through our partner <a href="https://rafiki.com.ng" target="_blank" rel="noopener noreferrer" style={{ color: "#f97316", fontWeight: 700, textDecoration: "none" }}>Rafiki</a> and have them shipped straight to our warehouse.</>,
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>
+      </svg>
+    ),
+    color: "#f97316",
+    bg: "#fff7ed",
+  },
+  {
+    label: "Warehousing",
+    desc: "Your inventory is stored securely in our facility — organised, insured, and ready to ship the moment an order lands.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+    color: "#0ea5e9",
+    bg: "#f0f9ff",
+  },
+  {
+    label: "Logistics",
+    desc: "We handle last-mile delivery to your customers anywhere in Nigeria — fast, tracked, and reliable.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    ),
+    color: "#10b981",
+    bg: "#f0fdf4",
+  },
+  {
+    label: "Search Optimisation",
+    desc: "Your store and products are indexed and surfaced to buyers actively searching for what you offer — no ads needed.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    ),
+    color: "#8b5cf6",
+    bg: "#f5f3ff",
+  },
+];
+
+const PremiumPerks = () => (
+  <section style={{ background: "#fff", padding: "80px 0 40px" }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+
+      {/* Heading */}
+      <div style={{ textAlign: "center", marginBottom: "56px" }}>
+        <span style={{
+          display: "inline-block",
+          background: "#fff7ed", color: "#f97316",
+          fontSize: "12px", fontWeight: 700,
+          letterSpacing: "1.2px", textTransform: "uppercase",
+          padding: "5px 16px", borderRadius: "999px",
+          marginBottom: "16px",
+        }}>
+          Premium stores
+        </span>
+        <h2 style={{
+          fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 400,
+          color: "#0f172a", lineHeight: 1.15, margin: "0 0 14px",
+          letterSpacing: "-0.4px",
+        }}>
+          Our premium stores enjoy all of this.
+        </h2>
+        <p style={{ fontSize: "16px", color: "#64748b", maxWidth: "500px", margin: "0 auto", lineHeight: 1.7 }}>
+          Upgrade your store on Abatrades and unlock a full suite of services — no plugins, no hidden fees.
+        </p>
+      </div>
+
+      {/* Perks grid */}
+      <div className="perks-grid" style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "20px",
+      }}>
+        {PERKS.map((p, i) => (
+          <div key={i} style={{
+            border: "1.5px solid #f1f5f9",
+            borderRadius: "20px",
+            padding: "32px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            transition: "box-shadow 0.2s, transform 0.2s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            {/* Icon */}
+            <div style={{
+              width: "56px", height: "56px",
+              borderRadius: "14px",
+              background: p.bg,
+              color: p.color,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              {p.icon}
+            </div>
+            {/* Text */}
+            <div>
+              <h4 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px" }}>
+                {p.label}
+              </h4>
+              <p style={{ fontSize: "13.5px", color: "#64748b", lineHeight: 1.65, margin: 0 }}>
+                {p.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+    <style>{`
+      @media (max-width: 900px) {
+        .perks-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+      @media (max-width: 520px) {
+        .perks-grid { grid-template-columns: 1fr !important; }
       }
     `}</style>
   </section>
@@ -309,7 +442,7 @@ const LogoMarquee = () => {
 const RafikiSection = () => (
   <section style={{
     background: "#fff",
-    padding: "72px 20px",
+    padding: "40px 20px 72px",
     overflow: "hidden",
   }}>
     <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -568,7 +701,7 @@ const BuyerVisual = () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <span style={{ fontSize: "13px", color: "#94a3b8" }}>Search sellers, products...</span>
+        <span style={{ fontSize: "13px", color: "#94a3b8" }}>Search stores, products...</span>
       </div>
 
       {/* Category pills */}
@@ -677,68 +810,160 @@ const FeatureSection = ({ eyebrow, headline, body, cta, ctaHref, visual, flip })
 /* ─────────────────────────────────────────
    HOW IT WORKS
 ───────────────────────────────────────── */
-const STEPS = [
-  { n: "1", title: "Create your store", body: "Sign up free and set up your storefront in minutes. Add your logo, banner, and description." },
-  { n: "2", title: "List your products", body: "Upload products with photos, pricing, and sizes. Your catalogue goes live immediately." },
-  { n: "3", title: "Buyers discover you", body: "Buyers browse seller storefronts, explore your products, and add to cart." },
-  { n: "4", title: "Get paid, grow", body: "Receive secure Paystack payments. Track orders, manage inventory, earn loyal customers." },
+const STANDARD_STEPS = [
+  {
+    n: "01",
+    title: "Open your store",
+    body: "Sign up free and set up your storefront in minutes. Add your logo, banner, and products.",
+  },
+  {
+    n: "02",
+    title: "List your products",
+    body: "Upload products with photos, pricing, and descriptions. Your catalogue goes live immediately.",
+  },
+  {
+    n: "03",
+    title: "Buyers discover you",
+    body: "Buyers search and browse storefronts on Abatrades, explore your products, and place orders.",
+  },
+  {
+    n: "04",
+    title: "Get paid",
+    body: "Receive secure Paystack payments. Track every order from your account dashboard.",
+  },
 ];
 
-const HowItWorks = () => (
-  <section style={{ background: "#f97316", padding: "96px 0" }}>
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-      <div style={{ textAlign: "center", marginBottom: "64px" }}>
-        <p style={{ color: "rgba(255,255,255,0.75)", fontWeight: 700, fontSize: "12px", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: "12px" }}>
-          Simple process
-        </p>
-        <h2 style={{
-          fontSize: "clamp(28px, 4vw, 46px)", fontWeight: 900,
-          color: "white", letterSpacing: "-0.5px", lineHeight: 1.1,
-        }}>
-          Up and running<br />
-          <span style={{ color: "rgba(255,255,255,0.85)" }}>in under 10 minutes</span>
-        </h2>
-      </div>
+const PREMIUM_STEPS = [
+  {
+    n: "01",
+    title: "Open your store",
+    body: "Sign up and upgrade to a premium store. Set up your storefront with your logo, banner, and details.",
+  },
+  {
+    n: "02",
+    title: "Send us your products",
+    body: <>Ship your products to our warehouse — or use our partner <a href="https://rafiki.com.ng" target="_blank" rel="noopener noreferrer" style={{ color: "#f97316", fontWeight: 700, textDecoration: "none" }}>Rafiki</a> to source and import them directly to us.</>,
+  },
+  {
+    n: "03",
+    title: "We handle everything",
+    body: "We store your products, list them on your storefront, and handle delivery to your customers when orders come in.",
+  },
+  {
+    n: "04",
+    title: "Sit back and get paid",
+    body: "Track all orders and activities from your account. We deliver, you collect your payment.",
+  },
+];
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "2px",
-        position: "relative",
-      }}
-        className="steps-grid"
-      >
-        {STEPS.map((s, i) => (
-          <div key={i} style={{
-            background: i % 2 === 0 ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.12)",
-            padding: "36px 28px",
-            borderRadius: i === 0 ? "16px 0 0 16px" : i === 3 ? "0 16px 16px 0" : "0",
-            position: "relative",
+const HowItWorks = () => {
+  const [tab, setTab] = useState("standard");
+  const steps = tab === "standard" ? STANDARD_STEPS : PREMIUM_STEPS;
+
+  return (
+    <section style={{ background: "#0f172a", padding: "96px 0" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+
+        {/* Heading */}
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, fontSize: "12px", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: "12px" }}>
+            Simple process
+          </p>
+          <h2 style={{
+            fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 900,
+            color: "white", letterSpacing: "-0.5px", lineHeight: 1.15,
+            marginBottom: "32px",
           }}>
-            <div style={{
-              fontSize: "48px", fontWeight: 900,
-              color: "rgba(255,255,255,0.2)",
-              lineHeight: 1, marginBottom: "16px",
-              fontFamily: "monospace",
-            }}>{s.n}</div>
-            <h4 style={{ color: "white", fontWeight: 800, fontSize: "16px", marginBottom: "10px" }}>
-              {s.title}
-            </h4>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "13.5px", lineHeight: 1.65, margin: 0 }}>
-              {s.body}
-            </p>
+            How it works
+          </h2>
+
+          {/* Tab toggle */}
+          <div style={{
+            display: "inline-flex",
+            background: "rgba(255,255,255,0.08)",
+            borderRadius: "12px",
+            padding: "4px",
+            gap: "4px",
+          }}>
+            {["standard", "premium"].map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: "9px 24px",
+                borderRadius: "8px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: 700,
+                transition: "all 0.18s",
+                background: tab === t ? (t === "premium" ? "#f97316" : "#fff") : "transparent",
+                color: tab === t ? (t === "premium" ? "#fff" : "#0f172a") : "rgba(255,255,255,0.55)",
+              }}>
+                {t === "standard" ? "Standard Store" : "Premium Store"}
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Steps */}
+        <div className="steps-grid" style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "2px",
+        }}>
+          {steps.map((s, i) => (
+            <div key={i} style={{
+              background: i % 2 === 0 ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+              padding: "36px 28px",
+              borderRadius: i === 0 ? "16px 0 0 16px" : i === 3 ? "0 16px 16px 0" : "0",
+              borderTop: tab === "premium" ? "2px solid #f97316" : "2px solid rgba(255,255,255,0.1)",
+            }}>
+              <div style={{
+                fontSize: "42px", fontWeight: 900,
+                color: tab === "premium" ? "rgba(249,115,22,0.25)" : "rgba(255,255,255,0.12)",
+                lineHeight: 1, marginBottom: "20px",
+                fontFamily: "monospace",
+              }}>{s.n}</div>
+              <h4 style={{ color: "white", fontWeight: 800, fontSize: "15px", marginBottom: "10px" }}>
+                {s.title}
+              </h4>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "13.5px", lineHeight: 1.65, margin: 0 }}>
+                {s.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div style={{ textAlign: "center", marginTop: "48px" }}>
+          <Link to="/join" style={{
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: tab === "premium" ? "#f97316" : "white",
+            color: tab === "premium" ? "white" : "#0f172a",
+            padding: "13px 32px", borderRadius: "10px",
+            fontWeight: 800, fontSize: "14px", textDecoration: "none",
+            boxShadow: tab === "premium" ? "0 8px 24px rgba(249,115,22,0.35)" : "0 8px 24px rgba(0,0,0,0.2)",
+            transition: "transform 0.15s",
+          }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            {tab === "premium" ? "Open a premium store" : "Open your store free"}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </Link>
+        </div>
+
       </div>
-    </div>
-    <style>{`
-      @media (max-width: 768px) {
-        .steps-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
-        .steps-grid > div { border-radius: 12px !important; }
-      }
-    `}</style>
-  </section>
-);
+      <style>{`
+        @media (max-width: 768px) {
+          .steps-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+          .steps-grid > div { border-radius: 12px !important; }
+        }
+        @media (max-width: 480px) {
+          .steps-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  );
+};
 
 /* ─────────────────────────────────────────
    LIVE SELLER DIRECTORY
@@ -765,14 +990,14 @@ const LiveSellers = () => {
               Live on Abatrades
             </p>
             <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 500, color: "#374151", letterSpacing: "-0.3px", margin: 0 }}>
-              Meet our sellers
+              Meet our stores
             </h2>
           </div>
           <Link to="/browse" style={{
             color: "#3b7bf8", fontWeight: 700, fontSize: "14px",
             textDecoration: "none", display: "flex", alignItems: "center", gap: "6px",
           }}>
-            View all sellers
+            View all stores
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </Link>
         </div>
@@ -808,7 +1033,7 @@ const PLANS = [
     name: "Growth",
     price: "₦5,000",
     period: "/ month",
-    desc: "For sellers ready to scale.",
+    desc: "For stores ready to scale.",
     features: ["50 product listings", "Priority search placement", "Advanced analytics", "Bulk upload tools", "Everything in Free"],
     cta: "Start Growth",
     highlight: true,
@@ -955,7 +1180,7 @@ const FinalCTA = () => (
         fontSize: "17px", color: "rgba(255,255,255,0.75)",
         lineHeight: 1.7, marginBottom: "40px",
       }}>
-        Join hundreds of Nigerian sellers already building their businesses on Abatrades.
+        Join hundreds of Nigerian stores already building their businesses on Abatrades.
         Free to start, powerful to scale.
       </p>
       <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -978,7 +1203,7 @@ const FinalCTA = () => (
           border: "1.5px solid rgba(255,255,255,0.3)",
           backdropFilter: "blur(8px)",
         }}>
-          Browse sellers
+          Browse stores
         </Link>
       </div>
     </div>
@@ -1004,10 +1229,11 @@ const Home = () => {
             <Marquee />
             <StatsStrip />
             <DiasporaSection />
+            <PremiumPerks />
             <RafikiSection />
             <LogoMarquee />
             <FeatureSection
-              eyebrow="For sellers"
+              eyebrow="For stores"
               headline={"Your brand.\nYour storefront.\nYour rules."}
               body="Get a professional storefront you own. Showcase your products, connect with buyers, and manage everything from one dashboard — without paying anyone a commission."
               cta="Create your store"
@@ -1017,8 +1243,8 @@ const Home = () => {
             />
             <FeatureSection
               eyebrow="For buyers"
-              headline={"Discover sellers\nyou can trust."}
-              body="Browse storefronts from verified Nigerian sellers. See their full catalogue, check reviews, message them directly, and shop with confidence via secure Paystack checkout."
+              headline={"Discover stores\nyou can trust."}
+              body="Browse storefronts from verified Nigerian stores. See their full catalogue, check reviews, message them directly, and shop with confidence via secure Paystack checkout."
               cta="Start browsing"
               ctaHref="/browse"
               visual={<BuyerVisual />}
