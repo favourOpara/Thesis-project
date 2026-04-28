@@ -23,15 +23,15 @@ const NAV_ITEMS = [
 
 // 8 categories — desktop: 4 columns × 2 rows, mobile: 3 columns
 const CATEGORY_TILES = [
-  { label: "Construction",      query: "construction",  gradient: "linear-gradient(135deg,#78716c,#44403c)" },
-  { label: "Kitchen",           query: "kitchen",       gradient: "linear-gradient(135deg,#f97316,#c2410c)" },
-  { label: "Car Accessories",   query: "car",           gradient: "linear-gradient(135deg,#374151,#111827)" },
-  { label: "Beauty & Wellness", query: "beauty",        gradient: "linear-gradient(135deg,#ec4899,#9333ea)" },
-  { label: "Fashion",           query: "fashion",       gradient: "linear-gradient(135deg,#f59e0b,#d97706)" },
-  { label: "Electronics",       query: "electronics",   gradient: "linear-gradient(135deg,#0ea5e9,#0284c7)" },
-  { label: "Food & Groceries",  query: "food",          gradient: "linear-gradient(135deg,#34d399,#059669)" },
-  { label: "Books",             query: "books",         gradient: "linear-gradient(135deg,#3b7bf8,#1d4ed8)" },
-  { label: "Sports & Fitness", query: "sports",        gradient: "linear-gradient(135deg,#22c55e,#15803d)" },
+  { label: "Construction",      query: "construction",  gradient: "linear-gradient(135deg,#78716c,#44403c)", image: "/categories/construction.jpg" },
+  { label: "Kitchen",           query: "kitchen",       gradient: "linear-gradient(135deg,#f97316,#c2410c)", image: "/categories/kitchen.jpg" },
+  { label: "Car Accessories",   query: "car",           gradient: "linear-gradient(135deg,#374151,#111827)", image: "/categories/car.jpg" },
+  { label: "Beauty & Wellness", query: "beauty",        gradient: "linear-gradient(135deg,#ec4899,#9333ea)", image: "/categories/beauty.jpg" },
+  { label: "Fashion",           query: "fashion",       gradient: "linear-gradient(135deg,#f59e0b,#d97706)", image: "/categories/fashion.jpg" },
+  { label: "Electronics",       query: "electronics",   gradient: "linear-gradient(135deg,#0ea5e9,#0284c7)", image: "/categories/electronics.jpg" },
+  { label: "Food & Groceries",  query: "food",          gradient: "linear-gradient(135deg,#34d399,#059669)", image: "/categories/food.jpg" },
+  { label: "Books",             query: "books",         gradient: "linear-gradient(135deg,#3b7bf8,#1d4ed8)", image: "/categories/books.jpg" },
+  { label: "Sports & Fitness",  query: "sports",        gradient: "linear-gradient(135deg,#22c55e,#15803d)", image: "/categories/sports.jpg" },
 ];
 
 /* ── Category grid tile ── */
@@ -332,7 +332,7 @@ const BrowsePage = () => {
             <div key={tile.label} className={i === 8 ? "cat-hide-desktop" : ""}>
               <CategoryTile
                 tile={tile}
-                image={categoryImages[tile.label]}
+                image={tile.image}
                 onClick={() => handleCategoryClick(tile)}
               />
             </div>
