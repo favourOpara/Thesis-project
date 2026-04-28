@@ -32,8 +32,8 @@ import SellerOrders    from "./pages/SellerOrders";
 import SellerInquiries from "./pages/SellerInquiries";
 import SellerSettings  from "./pages/SellerSettings";
 import AddProduct      from "./pages/AddProduct";
-import BecomeASeller   from "./pages/BecomeASeller";
 import Join            from "./pages/Join";
+import Services        from "./pages/Services";
 import BrowsePage      from "./pages/BrowsePage";
 import NotFound        from "./pages/NotFound";
 import ComingSoon      from "./pages/ComingSoon";
@@ -68,7 +68,6 @@ const App = () => {
                   <Route path="/signup"                element={<SignUp />} />
                   <Route path="/sellersignup"          element={<SellerSignUp />} />
                   <Route path="/join"                  element={<Join />} />
-                  <Route path="/becomeaseller"         element={<BecomeASeller />} />
                   <Route path="/shop/:slug"            element={<ShopPage />} />
                   <Route path="/product/:id"           element={<ProductDetails />} />
                   <Route path="/category/:categoryName" element={<CategoryPage />} />
@@ -76,6 +75,7 @@ const App = () => {
                   <Route path="/search"                element={<SearchResults />} />
                   <Route path="/coming-soon"           element={<ComingSoon />} />
                   <Route path="/browse"                element={<BrowsePage />} />
+                  <Route path="/services"              element={<Services />} />
 
                   {/* Buyer */}
                   <Route path="/cart"                  element={<Cart />} />

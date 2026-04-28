@@ -116,7 +116,7 @@ const CategoryPage = () => {
                 <button
                   className="btn btn-primary"
                   style={{ backgroundColor: "#3b7bf8", border: "none" }}
-                  onClick={() => navigate("/becomeaseller")}
+                  onClick={() => navigate("/signup")}
                 >
                   Become a Seller
                 </button>

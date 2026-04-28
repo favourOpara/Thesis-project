@@ -162,6 +162,16 @@ const Header = () => {
                 )}
               </div>
 
+              {/* Warehouse & Logistics — stacked label, beside categories */}
+              <Link to="/services" style={{
+                display: "flex", flexDirection: "column", padding: "0 12px",
+                borderLeft: "1px solid #e5e7eb", textDecoration: "none",
+                height: "36px", justifyContent: "center", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500, lineHeight: 1.2 }}>Storage &amp; delivery</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Warehouse &amp; Logistics</span>
+              </Link>
+
               <div style={{ width: "1px", height: "18px", background: "#e5e7eb", flexShrink: 0, margin: "0 6px" }} />
 
               {/* Nav links */}
@@ -191,7 +201,7 @@ const Header = () => {
                   </svg>
                   Support
                 </Link>
-                <Link to="/becomeaseller" className="desktop-menu-link" style={{ fontSize: "12px", padding: "4px 8px", height: "28px" }}>
+                <Link to="/join" className="desktop-menu-link" style={{ fontSize: "12px", padding: "4px 8px", height: "28px" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
@@ -214,6 +224,16 @@ const Header = () => {
                 </Link>
               )}
             </div>
+
+            {/* Warehouse & Logistics — mobile stacked label */}
+            <Link to="/services" className="d-lg-none" style={{
+              display: "flex", flexDirection: "column", padding: "0 7px",
+              borderLeft: "1px solid #e5e7eb", textDecoration: "none",
+              height: "30px", justifyContent: "center", flexShrink: 0,
+            }}>
+              <span style={{ fontSize: "8px", color: "#9ca3af", fontWeight: 500, lineHeight: 1.2 }}>Storage &amp; delivery</span>
+              <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#111827", lineHeight: 1.2, whiteSpace: "nowrap" }}>Warehouse &amp; Logistics</span>
+            </Link>
 
             {/* ── Right icons ── */}
             <div className="d-flex align-items-center ms-auto" style={{ gap: "4px" }}>

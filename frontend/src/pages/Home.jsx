@@ -167,6 +167,16 @@ const DiasporaSection = () => (
         }}>
           Do you stay in Nigeria or in the diaspora and you want to enjoy the Nigerian wholesale and retail market? We got you covered.
         </p>
+        <Link to="/services" style={{
+          display: "inline-flex", alignItems: "center", gap: "5px",
+          marginTop: "14px", color: "#bae6fd", fontSize: "13.5px",
+          fontWeight: 600, textDecoration: "none",
+          borderBottom: "1px solid rgba(186,230,253,0.4)",
+          paddingBottom: "1px",
+        }}>
+          Find out more about our warehouse &amp; logistics
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </Link>
       </div>
 
       {/* Cards row */}
@@ -281,6 +291,7 @@ const PERKS = [
   {
     label: "Warehousing",
     desc: "Your inventory is stored securely in our facility — organised, insured, and ready to ship the moment an order lands.",
+    link: "/services",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -292,6 +303,7 @@ const PERKS = [
   {
     label: "Logistics",
     desc: "We handle last-mile delivery to your customers anywhere in Nigeria — fast, tracked, and reliable.",
+    link: "/services",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/>
@@ -380,6 +392,18 @@ const PremiumPerks = () => (
               <p style={{ fontSize: "13.5px", color: "#64748b", lineHeight: 1.65, margin: 0 }}>
                 {p.desc}
               </p>
+              {p.link && (
+                <Link to={p.link} style={{
+                  display: "inline-flex", alignItems: "center", gap: "4px",
+                  marginTop: "12px", color: p.color, fontSize: "12.5px",
+                  fontWeight: 700, textDecoration: "none",
+                  borderBottom: `1px solid ${p.color}`,
+                  paddingBottom: "1px",
+                }}>
+                  Find out more
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              )}
             </div>
           </div>
         ))}

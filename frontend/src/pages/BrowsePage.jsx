@@ -3,7 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import FeaturedShops from "../components/FeaturedShops";
 import Logo from "../assets/img/abatrades-logo-other.png";
+import LargeLogo from "../assets/img/abatrades-large-logo.png";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -12,13 +14,23 @@ const NAV_ITEMS = [
   "New Releases",
   "Today's Deals",
   "Top Rated",
+  "Flash Sales",
+  "Trending Now",
+  "Just Arrived",
   "Fashion",
   "Electronics",
   "Beauty",
   "Food & Groceries",
   "Home & Living",
   "Sports",
+  "Construction",
+  "Kitchen",
+  "Car Accessories",
+  "Books",
+  "Wholesale",
   "Under ₦5,000",
+  "Under ₦20,000",
+  "Become a Seller",
 ];
 
 // 8 categories — desktop: 4 columns × 2 rows, mobile: 3 columns
@@ -164,6 +176,8 @@ const ProductRow = ({ title, products, onCardClick }) => {
 ══════════════════════════════ */
 const BrowsePage = () => {
   const { user } = useAuth();
+  const { cart } = useCart();
+  const cartCount = cart?.item_count || 0;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const storesSectionRef = useRef(null);
@@ -277,9 +291,31 @@ const BrowsePage = () => {
           display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: "12px",
         }}>
-          <Link to="/" style={{ flexShrink: 0 }}>
-            <img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} />
-          </Link>
+          {/* Left side */}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+            <Link to="/" style={{ flexShrink: 0, marginRight: "4px" }}>
+              <img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} />
+            </Link>
+
+            {/* Sell on Abatrades — desktop only */}
+            <Link to="/join" className="know-more-link" style={{
+              display: "flex", flexDirection: "column", padding: "0 12px",
+              borderLeft: "1px solid #e2e8f0", textDecoration: "none", height: "36px", justifyContent: "center",
+            }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Make money</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Sell on Abatrades</span>
+            </Link>
+
+            {/* Warehouse & Logistics — desktop only */}
+            <Link to="/services" className="know-more-link" style={{
+              display: "flex", flexDirection: "column", padding: "0 12px",
+              borderLeft: "1px solid #e2e8f0", textDecoration: "none", height: "36px", justifyContent: "center",
+            }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Storage & delivery</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Warehouse & Logistics</span>
+            </Link>
+
+          </div>
 
           {/* Search bar — desktop */}
           <div ref={searchRef} className="search-desktop" style={{ flex: 1, maxWidth: "520px", position: "relative" }}>
@@ -355,29 +391,125 @@ const BrowsePage = () => {
             </svg>
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          {/* Right side — desktop only */}
+          <div className="header-right" style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+
+            {/* Deliver to */}
+            <div className="know-more-link" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 12px", borderRight: "1px solid #e2e8f0", cursor: "default" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Deliver to</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "3px" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Nigeria
+              </span>
+            </div>
+
+            {/* Want to know more */}
+            <Link to="/join" className="know-more-link" style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Want to know more?</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#f97316" }}>Click here</span>
+            </Link>
+
+            {/* Sign in nudge (logged out) or Account (logged in) */}
             {user ? (
               <Link to={user.user_type === "seller" ? "/seller/overview" : "/user-profile"}
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "34px", height: "34px", borderRadius: "50%", background: "#eff6ff" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
+                style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+                <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Hello, {user.first_name || "there"}</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "3px" }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  My Account
+                </span>
               </Link>
             ) : (
               <Link to="/signin"
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "34px", height: "34px", borderRadius: "50%", background: "#f1f5f9" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
+                style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+                <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Sign in for deals</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "3px" }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Sign In
+                </span>
               </Link>
             )}
-            <Link to="/"
-              style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, textDecoration: "none", padding: "5px 12px", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Home
+
+            {/* Notifications (logged in only) */}
+            {user && (
+              <button style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 10px", background: "none", border: "none", cursor: "pointer", borderRight: "1px solid #e2e8f0", position: "relative" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500, marginTop: "2px" }}>Alerts</span>
+              </button>
+            )}
+
+            {/* Cart */}
+            <Link to="/cart" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "0 12px", textDecoration: "none", position: "relative", borderRight: "1px solid #e2e8f0" }}>
+              <div style={{ position: "relative" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                {cartCount > 0 && (
+                  <span style={{ position: "absolute", top: "-6px", right: "-6px", background: "#f97316", color: "#fff", borderRadius: "999px", fontSize: "9px", fontWeight: 800, minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Your</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Cart</span>
+              </div>
             </Link>
+
+            {/* Home */}
+            <Link to="/" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0 12px", textDecoration: "none" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500, marginTop: "2px" }}>Home</span>
+            </Link>
+
+          </div>
+
+          {/* Mobile: stacked label items */}
+          <div className="header-mobile" style={{ display: "none", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+
+            {/* Deliver to */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 8px", borderRight: "1px solid #e2e8f0" }}>
+              <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500 }}>Deliver to</span>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "2px" }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Nigeria
+              </span>
+            </div>
+
+            {/* Account */}
+            {user ? (
+              <Link to={user.user_type === "seller" ? "/seller/overview" : "/user-profile"}
+                style={{ display: "flex", flexDirection: "column", padding: "0 8px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+                <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500 }}>Hello, {user.first_name || "there"}</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#111827" }}>My Account</span>
+              </Link>
+            ) : (
+              <Link to="/signin"
+                style={{ display: "flex", flexDirection: "column", padding: "0 8px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+                <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500 }}>Sign in for deals</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#111827" }}>Sign In</span>
+              </Link>
+            )}
+
+            {/* Cart */}
+            <Link to="/cart" style={{ display: "flex", alignItems: "center", gap: "5px", padding: "0 8px", textDecoration: "none", position: "relative" }}>
+              <div style={{ position: "relative" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                {cartCount > 0 && (
+                  <span style={{ position: "absolute", top: "-5px", right: "-5px", background: "#f97316", color: "#fff", borderRadius: "999px", fontSize: "8px", fontWeight: 800, minWidth: "14px", height: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</span>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "9px", color: "#9ca3af", fontWeight: 500 }}>Your</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#111827" }}>Cart</span>
+              </div>
+            </Link>
+
           </div>
         </div>
 
@@ -492,11 +624,46 @@ const BrowsePage = () => {
             objectPosition: "center top",
           }}
         />
-        {/* Fade to white at bottom */}
+        {/* Dark overlay at top for text readability */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, rgba(255,255,255,0) 30%, rgba(255,255,255,0.7) 70%, #fff 100%)",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.7) 75%, #fff 100%)",
         }} />
+
+        {/* Top text + logo */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          padding: "20px 40px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <img src={LargeLogo} alt="Abatrades" className="banner-logo" style={{ height: "48px", opacity: 0.95, filter: "brightness(10)" }} />
+          <div style={{ textAlign: "right" }}>
+            <p style={{
+              margin: 0,
+              fontSize: "clamp(13px, 2vw, 18px)",
+              fontWeight: 800,
+              color: "#fff",
+              letterSpacing: "0.5px",
+              lineHeight: 1.3,
+              textShadow: "0 1px 6px rgba(0,0,0,0.4)",
+            }}>
+              Join us.&nbsp; Own a store.&nbsp; Get paid.
+            </p>
+            <Link to="/join" style={{
+              display: "inline-block",
+              marginTop: "8px",
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#fff",
+              background: "#f97316",
+              padding: "5px 16px",
+              textDecoration: "none",
+              letterSpacing: "0.3px",
+            }}>
+              Open a store
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* ════════════════════════════
@@ -564,12 +731,16 @@ const BrowsePage = () => {
           .cat-grid-wrapper { padding: 20px 100px !important; }
           .search-mobile-btn { display: none !important; }
           .search-mobile-expanded { display: none !important; }
+          .banner-logo { height: 72px !important; }
         }
 
-        /* Mobile: hide desktop search bar, show icon */
+        /* Mobile: hide desktop elements, show mobile ones */
         @media (max-width: 640px) {
           .search-desktop { display: none !important; }
           .search-mobile-btn { display: flex !important; align-items: center; justify-content: center; }
+          .know-more-link { display: none !important; }
+          .header-right { display: none !important; }
+          .header-mobile { display: flex !important; }
         }
 
         /* Mobile: 3-column grid (3×3 = 9 tiles) + consistent padding */
