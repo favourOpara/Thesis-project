@@ -27,23 +27,29 @@ export function getRecentHistory(type) {
   return JSON.parse(localStorage.getItem(key) || "[]");
 }
 
-// Product view history (detailed)
+// Product view history (detailed, with frequency tracking)
 export function addProductToHistory(product) {
   if (!hasCookieConsent() || !product || !product.id) return;
   let history = JSON.parse(localStorage.getItem(VIEWED_PRODUCTS_KEY) || "[]");
 
-  // Remove if already in history to avoid duplicates
-  history = history.filter((item) => item.id !== product.id);
-
-  // Add current product at the start
-  history.unshift({
-    id: product.id,
-    name: product.name,
-    category: product.category,
-    sub_category: product.sub_category,
-    main_image_url: product.main_image_url,
-    visited_at: new Date().toISOString(),
-  });
+  const existing = history.find((item) => item.id === product.id);
+  if (existing) {
+    // Increment visit count and update timestamp
+    existing.visit_count = (existing.visit_count || 1) + 1;
+    existing.visited_at = new Date().toISOString();
+    // Move to front
+    history = [existing, ...history.filter((item) => item.id !== product.id)];
+  } else {
+    history.unshift({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      sub_category: product.sub_category,
+      main_image_url: product.main_image_url,
+      visited_at: new Date().toISOString(),
+      visit_count: 1,
+    });
+  }
 
   // Limit to last 20 viewed
   if (history.length > HISTORY_LIMIT) history = history.slice(0, HISTORY_LIMIT);
@@ -54,4 +60,24 @@ export function addProductToHistory(product) {
 export function getProductHistory() {
   if (!hasCookieConsent()) return [];
   return JSON.parse(localStorage.getItem(VIEWED_PRODUCTS_KEY) || "[]");
+}
+
+// Returns categories sorted by total visit frequency
+export function getTopVisitedCategories(limit = 5) {
+  const history = getProductHistory();
+  const freq = {};
+  history.forEach(({ category, sub_category, visit_count = 1 }) => {
+    if (category) freq[category] = (freq[category] || 0) + visit_count;
+    if (sub_category) freq[sub_category] = (freq[sub_category] || 0) + visit_count;
+  });
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([cat]) => cat.toLowerCase());
+}
+
+// Returns IDs of products already seen (to exclude from recommendations)
+export function getViewedProductIds() {
+  const history = getProductHistory();
+  return new Set(history.map(p => p.id));
 }

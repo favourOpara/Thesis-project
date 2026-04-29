@@ -6,6 +6,8 @@ import Logo from "../assets/img/abatrades-logo-other.png";
 import LargeLogo from "../assets/img/abatrades-large-logo.png";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { getTopVisitedCategories } from "../utils/localHistory";
+import { hasConsentedToCookies } from "../utils/cookieConsent";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -171,6 +173,89 @@ const ProductRow = ({ title, products, onCardClick }) => {
   );
 };
 
+/* ── Amazon-style 2×2 recommendation boxes ── */
+const chunk = (arr, size) => {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+};
+
+const RecommendedRow = ({ products, onCardClick }) => {
+  if (products.length === 0) return null;
+  const groups = chunk(products, 4);
+  return (
+    <div style={{ paddingBottom: "4px" }}>
+
+      {/* Section label */}
+      <p className="browse-pad" style={{
+        fontWeight: 700, fontSize: "15px", color: "#111827",
+        margin: "0 0 10px", padding: "0 40px",
+      }}>
+        Recommended for You
+      </p>
+
+      {/* Boxes — grid on desktop, scroll on mobile */}
+      <div className="browse-pad rec-boxes-container" style={{ padding: "0 40px 4px" }}>
+        {groups.map((group, gi) => (
+          <div key={gi} className="rec-box" style={{
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "4px",
+            overflow: "hidden",
+          }}>
+            {/* 2×2 image grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gridTemplateRows: "1fr 1fr",
+              gap: "2px",
+              height: "190px",
+              background: "#e5e7eb",
+            }}>
+              {group.map((p) => {
+                const img = p.main_image_url ||
+                  (p.images?.length > 0 ? p.images[0].image_url : null);
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => onCardClick(p)}
+                    style={{ background: "#f3f4f6", overflow: "hidden", cursor: "pointer" }}
+                  >
+                    {img ? (
+                      <img
+                        src={img} alt={p.name}
+                        onError={e => { e.target.style.display = "none"; }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", background: "#e5e7eb" }} />
+                    )}
+                  </div>
+                );
+              })}
+              {group.length < 4 && Array.from({ length: 4 - group.length }).map((_, ei) => (
+                <div key={`empty-${ei}`} style={{ background: "#f9fafb" }} />
+              ))}
+            </div>
+            {/* Box label */}
+            <div style={{ padding: "8px 10px 10px" }}>
+              <p style={{
+                margin: 0, fontSize: "12px", fontWeight: 600, color: "#111827",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {group[0].sub_category || group[0].category || "Picks for you"}
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#6b7280" }}>
+                Based on your browsing
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /* ══════════════════════════════
     MAIN BROWSE PAGE
 ══════════════════════════════ */
@@ -190,6 +275,7 @@ const BrowsePage = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [allProducts, setAllProducts]     = useState([]);
   const [allShops, setAllShops]           = useState([]);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [searchQuery, setSearchQuery]     = useState("");
   const [searchResults, setSearchResults] = useState({ products: [], shops: [] });
   const [showDropdown, setShowDropdown]   = useState(false);
@@ -220,6 +306,30 @@ const BrowsePage = () => {
         setAllProducts(all);
         setNewProducts([...all].sort((a, b) => b.id - a.id).slice(0, 16));
         setFeaturedProducts(all.filter(p => p.is_featured).slice(0, 16));
+
+        // Recommended for You — cookie-based frequency matching
+        if (hasConsentedToCookies()) {
+          const topCats = getTopVisitedCategories(5);
+          if (topCats.length > 0) {
+            const recs = all
+              .filter(p => {
+                const cat = (p.category || "").toLowerCase();
+                const sub = (p.sub_category || "").toLowerCase();
+                return topCats.some(c => cat.includes(c) || sub.includes(c) || c.includes(cat));
+              })
+              .sort((a, b) => {
+                const score = (p) => {
+                  const cat = (p.category || "").toLowerCase();
+                  const sub = (p.sub_category || "").toLowerCase();
+                  const idx = topCats.findIndex(c => cat.includes(c) || sub.includes(c) || c.includes(cat));
+                  return idx === -1 ? 999 : idx;
+                };
+                return score(a) - score(b);
+              })
+              .slice(0, 16);
+            setRecommendedProducts(recs);
+          }
+        }
       })
       .catch(() => {})
       .finally(() => setLoadingProducts(false));
@@ -670,6 +780,11 @@ const BrowsePage = () => {
           CATEGORY GRID  (4×4 / 3×3)
       ════════════════════════════ */}
       <div className="cat-grid-wrapper" style={{ background: "#fff", padding: "20px 40px" }}>
+        {/* Decorative text above category tiles */}
+        <p style={{ margin: "0 0 6px", lineHeight: 1.15 }}>
+          <span style={{ fontSize: "11px", fontWeight: 300, color: "#b0b8c6", fontStyle: "italic", letterSpacing: "0.8px", textTransform: "lowercase" }}>find your </span>
+          <span style={{ fontSize: "13px", fontWeight: 800, color: "#3b7bf8", fontStyle: "italic", letterSpacing: "-0.2px" }}>guilty pleasure.</span>
+        </p>
         <div className="cat-grid" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
@@ -693,6 +808,16 @@ const BrowsePage = () => {
       ════════════════════════════ */}
       {!loadingProducts && (
         <div className="product-rows-wrap" style={{ background: "#fff", marginTop: "2px", paddingTop: "20px", paddingBottom: "12px" }}>
+
+          {recommendedProducts.length > 0 && (
+            <>
+              <RecommendedRow
+                products={recommendedProducts}
+                onCardClick={handleCardClick}
+              />
+              <div style={{ height: "1px", background: "#f3f4f6", margin: "16px 0" }} />
+            </>
+          )}
 
           <ProductRow
             title="New Arrivals"
@@ -732,6 +857,14 @@ const BrowsePage = () => {
           .search-mobile-btn { display: none !important; }
           .search-mobile-expanded { display: none !important; }
           .banner-logo { height: 72px !important; }
+          .browse-pad { padding-left: 100px !important; padding-right: 100px !important; }
+          .browse-pad-scroll { padding-left: 100px !important; padding-right: 100px !important; }
+          .rec-boxes-container {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+            gap: 10px !important;
+            overflow: visible !important;
+          }
         }
 
         /* Mobile: hide desktop elements, show mobile ones */
@@ -765,6 +898,18 @@ const BrowsePage = () => {
           .browse-pad-scroll {
             padding-left: 16px !important;
             padding-right: 16px !important;
+          }
+          .rec-boxes-container {
+            display: flex !important;
+            gap: 10px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            flex-wrap: nowrap !important;
+            scrollbar-width: none !important;
+          }
+          .rec-box {
+            flex-shrink: 0 !important;
+            width: 180px !important;
           }
         }
       `}</style>
