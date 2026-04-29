@@ -10,6 +10,7 @@ import { addProductToHistory } from "../utils/localHistory";
 import { hasConsentedToCookies } from "../utils/cookieConsent";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import ProductCard from "../components/ProductCard";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -516,51 +517,9 @@ const ProductDetails = () => {
               gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
               gap: "16px",
             }} className="pd-similar-grid">
-              {(showMoreSimilar ? similarProducts : similarProducts.slice(0, INITIAL)).map(p => {
-                const img = p.main_image_url ||
-                  (p.images?.length > 0 ? p.images[0].image_url : "/OIP.png");
-                return (
-                  <Link key={p.id} to={`/product/${p.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    <div style={{
-                      background: "#fff", borderRadius: "14px",
-                      border: "1px solid #f1f5f9", overflow: "hidden",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                      transition: "all 0.2s", cursor: "pointer",
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
-                    >
-                      {/* Image — white bg, contain */}
-                      <div style={{
-                        aspectRatio: "1 / 1", background: "#fff",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        overflow: "hidden", borderBottom: "1px solid #f1f5f9",
-                        padding: "12px",
-                      }}>
-                        <img
-                          src={img}
-                          alt={p.name}
-                          onError={e => { e.target.src = "/OIP.png"; }}
-                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                        />
-                      </div>
-                      {/* Info */}
-                      <div style={{ padding: "12px" }}>
-                        <div style={{
-                          fontWeight: 600, fontSize: "13px", color: "#0f172a",
-                          marginBottom: "4px", overflow: "hidden",
-                          textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {p.name}
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: "14px", color: "#2563eb" }}>
-                          {fmtPrice(p.price)}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+              {(showMoreSimilar ? similarProducts : similarProducts.slice(0, INITIAL)).map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
 
             {similarProducts.length > INITIAL && (

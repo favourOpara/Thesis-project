@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useSellerCtx, ac, BASE, IconExternal } from "../components/SellerLayout";
 
 /* ── Custom styled dropdown ── */
@@ -112,7 +114,6 @@ const SellerSettings = () => {
   const [logo,   setLogo]   = useState(null);
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState(null);
   const logoRef   = useRef();
   const bannerRef = useRef();
   const isNew = !shop;
@@ -164,7 +165,6 @@ const SellerSettings = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     setSaving(true);
-    setStatus(null);
 
     const fd = new FormData();
     const userFields = ["phone_number", "address"];
@@ -189,11 +189,11 @@ const SellerSettings = () => {
         address:      form.address,
       }, ac());
 
-      setStatus({ ok: true, msg: isNew ? "Store created successfully." : "Changes saved." });
+      toast.success(isNew ? "Store created successfully." : "Changes saved.");
       refreshShop();
     } catch (err) {
       const d = err.response?.data;
-      setStatus({ ok: false, msg: typeof d === "object" ? JSON.stringify(d) : "Something went wrong." });
+      toast.error(typeof d === "object" ? JSON.stringify(d) : "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -211,12 +211,7 @@ const SellerSettings = () => {
         {isNew ? "Create Your Store" : "Store Settings"}
       </h2>
 
-      {status && (
-        <div className={`sd-alert ${status.ok ? "success" : "error"}`} style={{ marginBottom: "16px" }}>
-          <span style={{ fontSize: "13.5px", fontWeight: 500 }}>{status.msg}</span>
-        </div>
-      )}
-
+      <ToastContainer position="bottom-center" />
       <form onSubmit={handleSubmit}>
         <div className="sd-form-grid">
           <div className="sd-form-full">

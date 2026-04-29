@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/img/abatrades-logo-other.png";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -1268,7 +1270,6 @@ const TabShopSettings = ({ shop, onSaved }) => {
   const [logo,   setLogo]   = useState(null);
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState(null); // { ok: bool, msg: string }
   const logoRef   = useRef();
   const bannerRef = useRef();
   const isNew = !shop;
@@ -1278,7 +1279,6 @@ const TabShopSettings = ({ shop, onSaved }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     setSaving(true);
-    setStatus(null);
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
     if (logo)   fd.append("logo", logo);
@@ -1287,15 +1287,15 @@ const TabShopSettings = ({ shop, onSaved }) => {
     try {
       if (isNew) {
         await axios.post(`${BASE}/api/shops/`, fd, ac());
-        setStatus({ ok: true, msg: "Store created successfully." });
+        toast.success("Store created successfully.");
       } else {
         await axios.patch(`${BASE}/api/shops/${shop.slug}/`, fd, ac());
-        setStatus({ ok: true, msg: "Changes saved." });
+        toast.success("Changes saved.");
       }
       onSaved();
     } catch (err) {
       const d = err.response?.data;
-      setStatus({ ok: false, msg: typeof d === "object" ? JSON.stringify(d) : "Something went wrong." });
+      toast.error(typeof d === "object" ? JSON.stringify(d) : "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -1313,12 +1313,7 @@ const TabShopSettings = ({ shop, onSaved }) => {
         {isNew ? "Create Your Store" : "Store Settings"}
       </h2>
 
-      {status && (
-        <div className={`sd-alert ${status.ok ? "success" : "error"}`} style={{ marginBottom: "16px" }}>
-          <span style={{ fontSize: "13.5px", fontWeight: 500 }}>{status.msg}</span>
-        </div>
-      )}
-
+      <ToastContainer position="bottom-center" />
       <form onSubmit={handleSubmit}>
         {/* Name + Description */}
         <div className="sd-form-grid">

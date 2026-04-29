@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigate, useParams } from "react-router-dom";
@@ -26,11 +28,9 @@ const EditProduct = () => {
   const [imageFiles, setImageFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
-  const [errorMessage, setErrorMessage] = useState("");
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Complete Categories and Subcategories Configuration
   const CATEGORIES = [
@@ -709,7 +709,7 @@ const EditProduct = () => {
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        setErrorMessage("Failed to load product details");
+        toast.error("Failed to load product details");
       } finally {
         setFetchLoading(false);
       }
@@ -717,12 +717,6 @@ const EditProduct = () => {
     fetchProduct();
   }, [id]);
 
-  useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(""), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
 
   // Only revoke blob URLs for new files, not existing images
   useEffect(() => {
@@ -736,12 +730,11 @@ const EditProduct = () => {
   }, [previewUrls]);
 
   const handleImageChange = (e) => {
-    setErrorMessage("");
     const files = Array.from(e.target.files);
     
     const totalImages = existingImages.length + imageFiles.length + files.length;
     if (totalImages > 8) {
-      setErrorMessage("Maximum 8 images allowed");
+      toast.error("Maximum 8 images allowed");
       e.target.value = null;
       return;
     }
@@ -758,7 +751,7 @@ const EditProduct = () => {
     });
 
     if (invalidFiles.length > 0) {
-      setErrorMessage(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
+      toast.error(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
     }
 
     const newFiles = [...imageFiles, ...validFiles];
@@ -835,7 +828,6 @@ const EditProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage("");
     setInvalidFields({});
 
     const requiredFields = [
@@ -852,7 +844,7 @@ const EditProduct = () => {
     const totalImages = existingImages.length + imageFiles.length;
     if (Object.keys(newInvalidFields).length > 0 || totalImages === 0) {
       setInvalidFields({ ...newInvalidFields, images: totalImages === 0 });
-      setErrorMessage("Please fill all required fields and ensure at least one image");
+      toast.error("Please fill all required fields and ensure at least one image");
       setLoading(false);
       return;
     }
@@ -891,11 +883,11 @@ const EditProduct = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
-      setSuccessMessage("Product updated successfully!");
+      toast.success("Product updated successfully!");
       setTimeout(() => navigate(-1), 500);
     } catch (error) {
       console.error("Error updating product:", error);
-      setErrorMessage(error.response?.data?.message || "Failed to update product");
+      toast.error(error.response?.data?.message || "Failed to update product");
     } finally {
       setLoading(false);
     }
@@ -1191,19 +1183,7 @@ const EditProduct = () => {
                     </div>
                   )}
 
-                  {/* Error Message */}
-                  {errorMessage && (
-                    <div className="alert alert-danger mb-3" role="alert">
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {/* Success Message */}
-                  {successMessage && (
-                    <div className="alert alert-success mb-3" role="alert">
-                      {successMessage}
-                    </div>
-                  )}
+                  <ToastContainer position="bottom-center" />
 
                   {/* Submit Buttons */}
                   <div className="d-flex gap-2 justify-content-end mt-2">

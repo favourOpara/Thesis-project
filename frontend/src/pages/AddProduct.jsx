@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
@@ -23,10 +25,8 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const [imageFiles, setImageFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
-  const [errorMessage, setErrorMessage] = useState("");
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Complete Categories and Subcategories Configuration
   const CATEGORIES = [
@@ -665,24 +665,16 @@ const AddProduct = () => {
   };
 
   useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(""), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
-
-  useEffect(() => {
     return () => {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
 
   const handleImageChange = (e) => {
-    setErrorMessage("");
     const files = Array.from(e.target.files);
     
     if (files.length + imageFiles.length > 8) {
-      setErrorMessage("Maximum 8 images allowed");
+      toast.error("Maximum 8 images allowed");
       e.target.value = null;
       return;
     }
@@ -699,7 +691,7 @@ const AddProduct = () => {
     });
 
     if (invalidFiles.length > 0) {
-      setErrorMessage(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
+      toast.error(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
     }
 
     const newFiles = [...imageFiles, ...validFiles].slice(0, 8);
@@ -752,7 +744,6 @@ const AddProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage("");
     setInvalidFields({});
 
     const requiredFields = [
@@ -767,7 +758,7 @@ const AddProduct = () => {
 
     if (Object.keys(newInvalidFields).length > 0 || imageFiles.length === 0) {
       setInvalidFields({ ...newInvalidFields, images: imageFiles.length === 0 });
-      setErrorMessage("Please fill all required fields");
+      toast.error("Please fill all required fields");
       setLoading(false);
       return;
     }
@@ -803,7 +794,7 @@ const AddProduct = () => {
         },
       });
 
-      setSuccessMessage("Product added successfully!");
+      toast.success("Product added successfully!");
       setFormData({
         name: "",
         category: "",
@@ -821,7 +812,7 @@ const AddProduct = () => {
       setTimeout(() => navigate(-1), 500);
     } catch (error) {
       console.error("Error adding product:", error);
-      setErrorMessage(error.response?.data?.message || "Failed to add product");
+      toast.error(error.response?.data?.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
@@ -1093,19 +1084,7 @@ const AddProduct = () => {
                     </div>
                   )}
 
-                  {/* Error Message */}
-                  {errorMessage && (
-                    <div className="alert alert-danger mb-3" role="alert">
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {/* Success Message */}
-                  {successMessage && (
-                    <div className="alert alert-success mb-3" role="alert">
-                      {successMessage}
-                    </div>
-                  )}
+                  <ToastContainer position="bottom-center" />
 
                   {/* Submit Button */}
                   <div className="d-flex gap-2 justify-content-end mt-2">

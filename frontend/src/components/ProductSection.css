@@ -70,7 +70,6 @@
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 10px;
 }
 .product-grid > * {
@@ -78,93 +77,14 @@
   overflow: hidden;
 }
 
-/* Product Card */
-.product-card {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-  padding: 0;
-  transition: transform 0.2s, box-shadow 0.2s;
-  overflow: hidden;
-  min-width: 0;
-  width: 100%;
-  max-width: none;
-  height: 180px;
-  max-height: 180px;
-}
-
-/* Hover effect */
-.product-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Product image inside the card */
-.product-card-image {
-  width: 100%;
-  overflow: hidden;
-  flex-shrink: 0;
-  height: 100px;
-  max-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f9f9f9;
-}
-.product-card-image img {
-  width: 100%;
-  height: 100px;
-  max-height: 100px;
-  object-fit: cover;
-  display: block;
-  background-color: #f9f9f9;
-  flex-shrink: 0;
-}
-
-/* Card text body */
-.product-card-body-inner {
-  padding: 6px 8px;
-  overflow: hidden;
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* Pricing, titles, etc. can be styled if you want */
-.product-card-title {
-  font-size: 0.9rem;
-  margin: 5px 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  min-width: 0;
-  max-width: 100%;
-  display: block;
-}
-
-.product-card-pricing {
-  font-size: 0.8rem;
-  margin-bottom: 5px;
-}
-.line-through {
-  margin-left: 5px;
-  font-size: 0.75rem;
-}
-
-/* Mobile: keep the same layout, no forced max-width on product-card */
+/* Mobile */
 @media (max-width: 1024px) {
   .homepage-section {
     flex-wrap: wrap;
     justify-content: center;
   }
   .product-section {
-    max-width: 48%; /* If you want 2 sections per row on ~tablet size */
+    max-width: 48%;
   }
 }
 
@@ -174,29 +94,12 @@
     justify-content: center;
   }
   .product-section {
-    max-width: 100%; /* Each section takes full width on smaller screens */
+    max-width: 100%;
   }
   .section-title {
     font-size: 0.9rem;
   }
   .product-grid {
-    /* Still 2 columns, scale to screen width */
     grid-template-columns: repeat(2, minmax(80px, 1fr));
-  }
-  .product-card {
-    width: 100%;
-    max-width: 140px;
-    height: 160px;
-    max-height: 160px;
-    overflow: hidden;
-    min-width: 0;
-  }
-  .product-card-image,
-  .product-card-image img {
-    height: 90px;
-    max-height: 90px;
-  }
-  .product-card-title {
-    font-size: 0.8rem;
   }
 }

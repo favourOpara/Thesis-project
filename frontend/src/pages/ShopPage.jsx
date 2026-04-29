@@ -5,11 +5,9 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Spinner from "../components/Spinner";
 import InquiryModal from "../components/InquiryModal";
+import ProductCard from "../components/ProductCard";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-const fmtPrice = (p) =>
-  parseFloat(p).toLocaleString("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 });
 
 /* ── Icons ── */
 const WaIcon = () => (
@@ -44,118 +42,6 @@ const EyeIcon = () => (
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
   </svg>
 );
-const ArrowIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-
-/* ── Product Card ── */
-const ProductCard = ({ product }) => {
-  const [hovered, setHovered] = useState(false);
-  const image = product.main_image_url ||
-    (product.images?.length > 0 ? product.images[0].image_url : "/OIP.png");
-
-  return (
-    <Link to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block", minWidth: 0, overflow: "hidden" }}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          background: "#fff",
-          borderRadius: "14px",
-          overflow: "hidden",
-          minWidth: 0,
-          border: "1px solid #f1f5f9",
-          boxShadow: hovered ? "0 16px 40px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.05)",
-          transform: hovered ? "translateY(-5px)" : "translateY(0)",
-          transition: "all 0.22s cubic-bezier(0.4,0,0.2,1)",
-          cursor: "pointer",
-        }}
-      >
-        {/* Image */}
-        <div style={{ position: "relative", height: "160px", flexShrink: 0, overflow: "hidden", background: "#f8fafc" }}>
-          <img
-            src={image}
-            alt={product.name}
-            style={{
-              width: "100%", height: "100%", objectFit: "cover",
-              transform: hovered ? "scale(1.06)" : "scale(1)",
-              transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
-            }}
-            onError={e => { e.target.src = "/OIP.png"; }}
-          />
-          {/* Hover overlay CTA */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "rgba(15,23,42,0.45)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.22s",
-          }}>
-            <span style={{
-              background: "white", color: "#0f172a",
-              padding: "8px 18px", borderRadius: "999px",
-              fontWeight: 700, fontSize: "12.5px",
-              display: "flex", alignItems: "center", gap: "6px",
-            }}>
-              View Product <ArrowIcon />
-            </span>
-          </div>
-          {/* Category tag */}
-          {(product.sub_category || product.category) && (
-            <div style={{
-              position: "absolute", top: "10px", left: "10px",
-              background: "rgba(255,255,255,0.92)",
-              backdropFilter: "blur(6px)",
-              borderRadius: "999px", padding: "3px 10px",
-              fontSize: "11px", fontWeight: 600, color: "#374151",
-            }}>
-              {product.sub_category || product.category}
-            </div>
-          )}
-          {/* Featured badge */}
-          {product.is_featured && (
-            <div style={{
-              position: "absolute", top: "10px", right: "10px",
-              background: "#f59e0b",
-              borderRadius: "999px", padding: "3px 9px",
-              fontSize: "10.5px", fontWeight: 700, color: "#fff",
-              display: "flex", alignItems: "center", gap: "4px",
-            }}>
-              ★ Featured
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div style={{ padding: "14px 16px" }}>
-          <p style={{
-            fontWeight: 700, fontSize: "14px", color: "#0f172a",
-            margin: "0 0 6px", lineHeight: 1.3,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
-            {product.name}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "15px" }}>
-              {fmtPrice(product.price)}
-            </span>
-            {product.quantity > 0 ? (
-              <span style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600, background: "#dcfce7", padding: "2px 8px", borderRadius: "999px" }}>
-                In stock
-              </span>
-            ) : (
-              <span style={{ fontSize: "11px", color: "#b91c1c", fontWeight: 600, background: "#fee2e2", padding: "2px 8px", borderRadius: "999px" }}>
-                Sold out
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-};
 
 /* ── Store card for "Other Stores" section ── */
 const StoreCard = ({ store }) => {
