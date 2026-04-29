@@ -307,11 +307,12 @@ const BrowsePage = () => {
         setNewProducts([...all].sort((a, b) => b.id - a.id).slice(0, 16));
         setFeaturedProducts(all.filter(p => p.is_featured).slice(0, 16));
 
-        // Recommended for You — cookie-based frequency matching
+        // Recommended for You — personalised results topped up with randoms to always fill 16
+        let recs = [];
         if (hasConsentedToCookies()) {
           const topCats = getTopVisitedCategories(5);
           if (topCats.length > 0) {
-            const recs = all
+            recs = all
               .filter(p => {
                 const cat = (p.category || "").toLowerCase();
                 const sub = (p.sub_category || "").toLowerCase();
@@ -327,9 +328,18 @@ const BrowsePage = () => {
                 return score(a) - score(b);
               })
               .slice(0, 16);
-            setRecommendedProducts(recs);
           }
         }
+        // Top up with randoms if fewer than 16 personalised results (or no history yet)
+        if (recs.length < 16 && all.length > 0) {
+          const recIds = new Set(recs.map(p => p.id));
+          const extras = [...all]
+            .filter(p => !recIds.has(p.id))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 16 - recs.length);
+          recs = [...recs, ...extras];
+        }
+        setRecommendedProducts(recs);
       })
       .catch(() => {})
       .finally(() => setLoadingProducts(false));
