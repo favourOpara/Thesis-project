@@ -85,8 +85,8 @@
   color: inherit;
   padding: 10px;
   transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 
-  /* Removed any forced max-width so it can scale to the grid cell */
   width: 100%;
   max-width: none;
 }
@@ -109,6 +109,13 @@
 .product-card-title {
   font-size: 0.9rem;
   margin: 5px 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  line-height: 1.3;
+  max-height: 2.6em;
 }
 
 .product-card-pricing {
@@ -148,6 +155,12 @@
   }
   .product-card {
     width: 100%;
-    max-width: 140px; /* Ensure no forced width on mobile */
+    max-width: 140px;
+    overflow: hidden;
+  }
+  .product-card-title {
+    font-size: 0.8rem;
+    max-height: 2.4em;
+    -webkit-line-clamp: 2;
   }
 }

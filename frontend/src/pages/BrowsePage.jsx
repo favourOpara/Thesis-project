@@ -117,7 +117,7 @@ const DiscoveryCard = ({ product, onClick }) => {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ flexShrink: 0, width: "140px", cursor: "pointer" }}
+      style={{ flexShrink: 0, width: "140px", minWidth: "140px", maxWidth: "140px", overflow: "hidden", cursor: "pointer" }}
     >
       <div style={{
         width: "140px", height: "140px",
@@ -139,8 +139,8 @@ const DiscoveryCard = ({ product, onClick }) => {
       </div>
       <p style={{
         margin: "7px 0 0", fontSize: "12px", fontWeight: 500,
-        color: "#111827", overflow: "hidden",
-        textOverflow: "ellipsis", whiteSpace: "nowrap",
+        color: "#111827", display: "block", width: "100%",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
         {label}
       </p>
@@ -209,7 +209,7 @@ const RecommendedRow = ({ products, onCardClick }) => {
               gridTemplateColumns: "1fr 1fr",
               gridTemplateRows: "1fr 1fr",
               gap: "2px",
-              height: "190px",
+              height: "240px",
               background: "#e5e7eb",
             }}>
               {group.map((p) => {
@@ -871,7 +871,7 @@ const BrowsePage = () => {
           .browse-pad-scroll { padding-left: 100px !important; padding-right: 100px !important; }
           .rec-boxes-container {
             display: grid !important;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
             gap: 10px !important;
             overflow: visible !important;
           }
@@ -919,7 +919,7 @@ const BrowsePage = () => {
           }
           .rec-box {
             flex-shrink: 0 !important;
-            width: 180px !important;
+            width: 220px !important;
           }
         }
       `}</style>
