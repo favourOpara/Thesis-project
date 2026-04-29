@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
     (product.images?.length > 0 ? product.images[0].image_url : "/OIP.png");
 
   return (
-    <Link to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+    <Link to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block", minWidth: 0, overflow: "hidden" }}>
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -65,6 +65,7 @@ const ProductCard = ({ product }) => {
           background: "#fff",
           borderRadius: "14px",
           overflow: "hidden",
+          minWidth: 0,
           border: "1px solid #f1f5f9",
           boxShadow: hovered ? "0 16px 40px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.05)",
           transform: hovered ? "translateY(-5px)" : "translateY(0)",
@@ -73,7 +74,7 @@ const ProductCard = ({ product }) => {
         }}
       >
         {/* Image */}
-        <div style={{ position: "relative", aspectRatio: "4/3", overflow: "hidden", background: "#f8fafc" }}>
+        <div style={{ position: "relative", height: "160px", flexShrink: 0, overflow: "hidden", background: "#f8fafc" }}>
           <img
             src={image}
             alt={product.name}
