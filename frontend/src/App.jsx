@@ -34,6 +34,7 @@ import SellerSettings  from "./pages/SellerSettings";
 import AddProduct      from "./pages/AddProduct";
 import Join            from "./pages/Join";
 import Services        from "./pages/Services";
+import KnowledgeBase   from "./pages/KnowledgeBase";
 import BrowsePage      from "./pages/BrowsePage";
 import NotFound        from "./pages/NotFound";
 import ComingSoon      from "./pages/ComingSoon";
@@ -76,6 +77,7 @@ const App = () => {
                   <Route path="/coming-soon"           element={<ComingSoon />} />
                   <Route path="/browse"                element={<BrowsePage />} />
                   <Route path="/services"              element={<Services />} />
+                  <Route path="/knowledge-base"        element={<KnowledgeBase />} />
 
                   {/* Buyer */}
                   <Route path="/cart"                  element={<Cart />} />

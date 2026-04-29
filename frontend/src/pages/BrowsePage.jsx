@@ -524,7 +524,7 @@ const BrowsePage = () => {
             </div>
 
             {/* Want to know more */}
-            <Link to="/join" className="know-more-link" style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
+            <Link to="/knowledge-base" className="know-more-link" style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
               <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Want to know more?</span>
               <span style={{ fontSize: "12px", fontWeight: 700, color: "#f97316" }}>Click here</span>
             </Link>

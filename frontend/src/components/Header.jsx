@@ -201,7 +201,7 @@ const Header = () => {
                   </svg>
                   Support
                 </Link>
-                <Link to="/join" className="desktop-menu-link" style={{ fontSize: "12px", padding: "4px 8px", height: "28px" }}>
+                <Link to="/knowledge-base" className="desktop-menu-link" style={{ fontSize: "12px", padding: "4px 8px", height: "28px" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>

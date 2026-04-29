@@ -885,7 +885,7 @@ const HowItWorks = () => {
   const steps = tab === "standard" ? STANDARD_STEPS : PREMIUM_STEPS;
 
   return (
-    <section style={{ background: "#0f172a", padding: "96px 0" }}>
+    <section id="how-it-works" style={{ background: "#0f172a", padding: "96px 0" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
 
         {/* Heading */}
