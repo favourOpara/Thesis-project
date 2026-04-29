@@ -20,7 +20,7 @@ const ShopCard = ({ shop }) => {
   return (
     <Link
       to={`/shop/${shop.slug}`}
-      style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}
+      style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%", minWidth: 0, overflow: "hidden" }}
     >
       <div
         style={{
@@ -28,6 +28,7 @@ const ShopCard = ({ shop }) => {
           borderRadius: "18px",
           overflow: "hidden",
           height: "100%",
+          minWidth: 0,
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.07)",
@@ -109,7 +110,7 @@ const ShopCard = ({ shop }) => {
         </div>
 
         {/* Body */}
-        <div style={{ padding: "10px 16px 0", flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "10px 16px 0", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <h6
             style={{
               fontWeight: 700,

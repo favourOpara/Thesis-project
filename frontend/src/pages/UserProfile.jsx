@@ -128,7 +128,7 @@ const Profile = () => {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      <ToastContainer position="top-center" />
+      <ToastContainer position="bottom-center" />
 
       {/* ── Topbar ── */}
       <div style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #f1f5f9", padding: "0 20px", height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

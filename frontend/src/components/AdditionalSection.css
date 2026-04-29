@@ -38,11 +38,15 @@
    ----------------------------------------------------- */
    .additional-grid {
     display: grid;
-    gap: 10px; /* Adjust gap if needed */
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Dynamic columns */
-    grid-auto-rows: minmax(220px, auto); /* Allows rows to expand as needed */
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-auto-rows: auto;
     margin-top: 0px;
-    grid-auto-flow: row dense; /* Fills gaps efficiently */
+    grid-auto-flow: row dense;
+  }
+  .additional-grid > * {
+    min-width: 0;
+    overflow: hidden;
   }
   
 
@@ -60,8 +64,11 @@
     flex: 1 1 100%;
     max-width: 100%;
   }
-  /* Force a 3-column grid even on mobile */
   .additional-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .additional-grid > * {
+    min-width: 0;
+    overflow: hidden;
   }
 }

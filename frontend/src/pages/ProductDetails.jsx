@@ -55,6 +55,7 @@ const ProductDetails = () => {
   const [qty, setQty]                     = useState(1);
   const [adding, setAdding]               = useState(false);
   const [activeImg, setActiveImg]         = useState(0);
+  const [touchStartX, setTouchStartX]     = useState(null);
   const [descOpen, setDescOpen]           = useState(true);
   const [otherStores, setOtherStores]     = useState([]);
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -149,7 +150,7 @@ const ProductDetails = () => {
   return (
     <>
       <Header />
-      <ToastContainer position="top-center" />
+      <ToastContainer position="bottom-center" />
 
       <div style={{
         background: "#fff", minHeight: "100vh",
@@ -206,18 +207,29 @@ const ProductDetails = () => {
           {/* ── LEFT: Image gallery ── */}
           <div>
             {/* Main image box — fixed aspect ratio, white background */}
-            <div style={{
-              position: "relative",
-              width: "100%",
-              aspectRatio: "1 / 1",
-              background: "#ffffff",
-              borderRadius: "16px",
-              border: "1px solid #e2e8f0",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
+            <div
+              onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+              onTouchEnd={e => {
+                if (touchStartX === null || images.length <= 1) return;
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 40) {
+                  if (diff > 0) setActiveImg(i => (i + 1) % images.length);
+                  else setActiveImg(i => (i - 1 + images.length) % images.length);
+                }
+                setTouchStartX(null);
+              }}
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "1 / 1",
+                background: "#ffffff",
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
               <img
                 src={images[activeImg]}
                 alt={product.name}

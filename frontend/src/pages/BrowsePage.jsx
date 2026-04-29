@@ -789,7 +789,7 @@ const BrowsePage = () => {
       {/* ════════════════════════════
           CATEGORY GRID  (4×4 / 3×3)
       ════════════════════════════ */}
-      <div className="cat-grid-wrapper" style={{ background: "#fff", padding: "20px 40px" }}>
+      <div className="cat-grid-wrapper" style={{ background: "linear-gradient(to bottom, transparent 0%, transparent 28px, #fff 52px)", padding: "8px 40px 20px", marginTop: "-48px", position: "relative", zIndex: 1 }}>
         {/* Decorative text above category tiles */}
         <p style={{ margin: "0 0 6px", lineHeight: 1.15 }}>
           <span style={{ fontSize: "11px", fontWeight: 300, color: "#b0b8c6", fontStyle: "italic", letterSpacing: "0.8px", textTransform: "lowercase" }}>find your </span>
@@ -863,7 +863,7 @@ const BrowsePage = () => {
         @media (min-width: 641px) {
           .cat-hide-desktop { display: none !important; }
           .cat-tile-label { font-size: 11px !important; }
-          .cat-grid-wrapper { padding: 20px 100px !important; }
+          .cat-grid-wrapper { padding: 8px 100px 20px !important; margin-top: -48px !important; }
           .search-mobile-btn { display: none !important; }
           .search-mobile-expanded { display: none !important; }
           .banner-logo { height: 72px !important; }
@@ -895,7 +895,8 @@ const BrowsePage = () => {
             grid-template-columns: repeat(3, 1fr) !important;
           }
           .cat-grid-wrapper {
-            padding: 16px !important;
+            padding: 6px 16px 16px !important;
+            margin-top: -40px !important;
           }
           .product-rows-wrap {
             padding-top: 12px !important;

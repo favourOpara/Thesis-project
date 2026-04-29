@@ -365,7 +365,7 @@ const Join = () => {
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: "40px 20px 60px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     }}>
-      <ToastContainer position="top-right" />
+      <ToastContainer position="bottom-center" />
 
       {/* Logo */}
       <a href="/">

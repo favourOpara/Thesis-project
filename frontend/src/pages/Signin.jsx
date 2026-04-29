@@ -119,7 +119,7 @@ const SignIn = () => {
 
   return (
     <div style={containerStyle}>
-      <ToastContainer />
+      <ToastContainer position="bottom-center" />
       <div style={contentStyle}>
         <div className="container mx-auto align-self-center">
           <div className="col-md-12 mb-4 text-center">

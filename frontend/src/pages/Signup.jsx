@@ -89,7 +89,7 @@ const SignUp = () => {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", marginTop: "2rem" }}>
-      <ToastContainer />
+      <ToastContainer position="bottom-center" />
       <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
         <div className="container mx-auto align-self-center">
           <div className="col-md-12 mb-4 text-center">
