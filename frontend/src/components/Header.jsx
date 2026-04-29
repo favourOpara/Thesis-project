@@ -292,6 +292,35 @@ const Header = () => {
                 )}
               </div>
 
+              {/* Cart icon */}
+              {user && !isSeller && (
+                <Link to="/cart" style={{ display: "inline-flex", position: "relative", flexShrink: 0 }}>
+                  <span style={{
+                    backgroundColor: "#f1f5f9",
+                    width: "34px", height: "34px", borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                  </span>
+                  {cart.item_count > 0 && (
+                    <span style={{
+                      position: "absolute", top: "-4px", right: "-4px",
+                      background: "#2563eb", color: "#fff",
+                      borderRadius: "999px", minWidth: "16px", height: "16px",
+                      fontSize: "10px", fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      padding: "0 3px", lineHeight: 1,
+                      border: "1.5px solid #fff",
+                    }}>
+                      {cart.item_count > 99 ? "99+" : cart.item_count}
+                    </span>
+                  )}
+                </Link>
+              )}
+
               {/* Profile */}
               {!shouldHideSearchAndProfile && (
                 <Link to={user ? (isSeller ? "/seller/overview" : "/user-profile") : "/signin"} style={{ display: "inline-flex" }}>

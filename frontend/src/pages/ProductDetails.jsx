@@ -407,36 +407,71 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Add to Cart */}
+            {/* Add to Cart + Buy Now */}
             {!isSeller && (
-              <button
-                onClick={async () => {
-                  if (!user) { navigate("/signin"); return; }
-                  setAdding(true);
-                  try {
-                    await addToCart(product.id, qty);
-                    toast.success("Added to cart!");
-                  } catch {
-                    toast.error("Could not add to cart.");
-                  } finally {
-                    setAdding(false);
-                  }
-                }}
-                disabled={adding || product.quantity === 0}
-                style={{
-                  width: "100%", padding: "13px",
-                  background: product.quantity > 0 ? "#2563eb" : "#94a3b8",
-                  color: "#fff", border: "none", borderRadius: "10px",
-                  fontWeight: 700, fontSize: "15px", cursor: product.quantity > 0 ? "pointer" : "not-allowed",
-                  marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={e => { if (product.quantity > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
-                onMouseLeave={e => { if (product.quantity > 0) e.currentTarget.style.background = "#2563eb"; }}
-              >
-                <CartIcon />
-                {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
-              </button>
+              <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                {/* Add to Cart */}
+                <button
+                  onClick={async () => {
+                    if (!user) { navigate("/signin"); return; }
+                    setAdding(true);
+                    try {
+                      await addToCart(product.id, qty);
+                      toast.success("Added to cart!");
+                    } catch {
+                      toast.error("Could not add to cart.");
+                    } finally {
+                      setAdding(false);
+                    }
+                  }}
+                  disabled={adding || product.quantity === 0}
+                  style={{
+                    flex: 1, padding: "13px",
+                    background: product.quantity > 0 ? "#2563eb" : "#94a3b8",
+                    color: "#fff", border: "none", borderRadius: "10px",
+                    fontWeight: 700, fontSize: "15px",
+                    cursor: product.quantity > 0 ? "pointer" : "not-allowed",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => { if (product.quantity > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
+                  onMouseLeave={e => { if (product.quantity > 0) e.currentTarget.style.background = "#2563eb"; }}
+                >
+                  <CartIcon />
+                  {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
+                </button>
+
+                {/* Buy Now */}
+                {product.quantity > 0 && (
+                  <button
+                    onClick={async () => {
+                      if (!user) { navigate("/signin"); return; }
+                      setAdding(true);
+                      try {
+                        await addToCart(product.id, qty);
+                        navigate("/cart");
+                      } catch {
+                        toast.error("Could not add to cart.");
+                      } finally {
+                        setAdding(false);
+                      }
+                    }}
+                    disabled={adding}
+                    style={{
+                      flex: 1, padding: "13px",
+                      background: "#0f172a",
+                      color: "#fff", border: "none", borderRadius: "10px",
+                      fontWeight: 700, fontSize: "15px",
+                      cursor: "pointer",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={e => { if (!adding) e.currentTarget.style.background = "#1e293b"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
+                  >
+                    Buy Now
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Ask seller */}

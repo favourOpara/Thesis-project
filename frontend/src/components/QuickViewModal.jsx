@@ -1,19 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const fmtPrice = (p) =>
   parseFloat(p).toLocaleString("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 });
 
+const fmtDate = (d) => {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+};
+
 const ChevronIcon = ({ dir }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     {dir === "left"
       ? <polyline points="15 18 9 12 15 6" />
       : <polyline points="9 18 15 12 9 6" />}
   </svg>
 );
 
+/* Prevent wheel events on modal from reaching the body */
+const stopWheelProp = (e) => e.stopPropagation();
+
+const CartIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+  </svg>
+);
+
 const QuickViewModal = ({ product, onClose }) => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const [adding, setAdding] = useState(false);
+
   const allImages = [
     ...(product.main_image_url ? [product.main_image_url] : []),
     ...(product.images?.map(i => i.image_url) || []),
@@ -25,6 +49,13 @@ const QuickViewModal = ({ product, onClose }) => {
   const hasStock = product.quantity !== undefined && product.quantity !== null;
   const inStock = product.quantity > 0;
   const categoryLabel = product.sub_category || product.category;
+
+  /* Sizes — may be a comma-string or array */
+  const sizes = product.size
+    ? (Array.isArray(product.size)
+        ? product.size
+        : String(product.size).split(",").map(s => s.trim()).filter(Boolean))
+    : [];
 
   /* Close on Escape */
   useEffect(() => {
@@ -50,211 +81,450 @@ const QuickViewModal = ({ product, onClose }) => {
   };
 
   return createPortal(
-    /* Backdrop */
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        zIndex: 10000,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "16px",
-        backdropFilter: "blur(2px)",
-      }}
-    >
-      {/* Modal card */}
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: "#fff",
-          borderRadius: "18px",
-          width: "100%",
-          maxWidth: "700px",
-          maxHeight: "90vh",
-          overflow: "auto",
-          position: "relative",
-          display: "flex",
-          flexWrap: "wrap",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
-        }}
-      >
-        {/* X close button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute", top: "14px", right: "14px",
-            width: "32px", height: "32px",
-            background: "#f1f5f9", border: "none", borderRadius: "50%",
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "20px", color: "#64748b", zIndex: 2,
-            fontWeight: 300, lineHeight: 1,
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "#f1f5f9"; }}
-          aria-label="Close quick view"
-        >
-          ×
-        </button>
+    <>
+      {/* Inject responsive CSS once */}
+      <style>{`
+        .qv-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.58);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          backdrop-filter: blur(3px);
+        }
+        .qv-modal {
+          background: #fff;
+          border-radius: 18px;
+          width: 100%;
+          max-width: 780px;
+          height: 86vh;
+          max-height: 700px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: row;
+          box-shadow: 0 28px 90px rgba(0,0,0,0.28);
+          position: relative;
+        }
+        .qv-img-panel {
+          flex: 0 0 42%;
+          display: flex;
+          flex-direction: column;
+          background: #f1f5f9;
+          overflow: hidden;
+        }
+        .qv-main-img {
+          flex: 1;
+          position: relative;
+          overflow: hidden;
+        }
+        .qv-main-img img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .qv-thumb-strip {
+          display: flex;
+          gap: 6px;
+          padding: 8px 10px;
+          background: #f1f5f9;
+          flex-wrap: wrap;
+        }
+        .qv-info-panel {
+          flex: 1;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          padding: 28px 28px 28px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+        .qv-info-panel::-webkit-scrollbar {
+          width: 4px;
+        }
+        .qv-info-panel::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .qv-info-panel::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .qv-close-btn {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 32px;
+          height: 32px;
+          background: rgba(241,245,249,0.95);
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          color: #64748b;
+          z-index: 3;
+          font-weight: 300;
+          line-height: 1;
+          transition: background 0.15s;
+        }
+        .qv-close-btn:hover {
+          background: #e2e8f0;
+        }
+        .qv-char-row {
+          display: flex;
+          padding: 8px 0;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 13px;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .qv-char-label {
+          flex: 0 0 110px;
+          color: #94a3b8;
+          font-weight: 600;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          padding-top: 1px;
+        }
+        .qv-char-value {
+          flex: 1;
+          color: #1e293b;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+        @media (max-width: 600px) {
+          .qv-modal {
+            flex-direction: column;
+            height: 92vh;
+            max-height: 92vh;
+            border-radius: 14px;
+          }
+          .qv-img-panel {
+            flex: 0 0 220px;
+            width: 100%;
+          }
+          .qv-info-panel {
+            padding: 18px 18px 20px;
+          }
+          .qv-char-label {
+            flex: 0 0 90px;
+          }
+        }
+      `}</style>
 
-        {/* ── Left: Image panel ── */}
-        <div style={{
-          flex: "0 0 280px",
-          minWidth: "240px",
-          background: "#f8fafc",
-          borderRadius: "18px 0 0 18px",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}>
-          {/* Main image with prev/next arrows */}
-          <div style={{ position: "relative", height: "280px", overflow: "hidden", flexShrink: 0 }}>
-            <img
-              src={images[activeImg]}
-              alt={product.name}
-              onError={e => { e.target.src = "/OIP.png"; }}
-              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "opacity 0.2s" }}
-            />
+      {/* Backdrop */}
+      <div className="qv-overlay" onClick={onClose}>
+        {/* Modal */}
+        <div className="qv-modal" onClick={e => e.stopPropagation()} onWheel={stopWheelProp}>
+
+          {/* X button */}
+          <button className="qv-close-btn" onClick={onClose} aria-label="Close">×</button>
+
+          {/* ── Image panel ── */}
+          <div className="qv-img-panel">
+            {/* Main image — fills all remaining height */}
+            <div className="qv-main-img">
+              <img
+                src={images[activeImg]}
+                alt={product.name}
+                onError={e => { e.target.src = "/OIP.png"; }}
+              />
+              {/* Prev / Next arrows */}
+              {images.length > 1 && (
+                <>
+                  <button onClick={prevImg} style={{
+                    position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)",
+                    width: "28px", height: "28px", borderRadius: "50%",
+                    background: "rgba(255,255,255,0.9)", border: "none",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)", zIndex: 1,
+                  }}>
+                    <ChevronIcon dir="left" />
+                  </button>
+                  <button onClick={nextImg} style={{
+                    position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)",
+                    width: "28px", height: "28px", borderRadius: "50%",
+                    background: "rgba(255,255,255,0.9)", border: "none",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)", zIndex: 1,
+                  }}>
+                    <ChevronIcon dir="right" />
+                  </button>
+                  {/* Dot indicators */}
+                  <div style={{
+                    position: "absolute", bottom: "8px", left: 0, right: 0,
+                    display: "flex", justifyContent: "center", gap: "5px",
+                  }}>
+                    {images.map((_, i) => (
+                      <div key={i} onClick={(e) => { e.stopPropagation(); setActiveImg(i); }} style={{
+                        width: i === activeImg ? "18px" : "6px",
+                        height: "6px", borderRadius: "3px",
+                        background: i === activeImg ? "#fff" : "rgba(255,255,255,0.5)",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnails */}
             {images.length > 1 && (
-              <>
-                <button onClick={prevImg} style={{
-                  position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)",
-                  width: "28px", height: "28px", borderRadius: "50%",
-                  background: "rgba(255,255,255,0.9)", border: "none",
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                }}>
-                  <ChevronIcon dir="left" />
-                </button>
-                <button onClick={nextImg} style={{
-                  position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)",
-                  width: "28px", height: "28px", borderRadius: "50%",
-                  background: "rgba(255,255,255,0.9)", border: "none",
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                }}>
-                  <ChevronIcon dir="right" />
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Thumbnail strip */}
-          {images.length > 1 && (
-            <div style={{ display: "flex", gap: "6px", padding: "10px 10px 12px", flexWrap: "wrap" }}>
-              {images.map((img, i) => (
-                <div
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  style={{
+              <div className="qv-thumb-strip">
+                {images.map((img, i) => (
+                  <div key={i} onClick={() => setActiveImg(i)} style={{
                     width: "44px", height: "44px", borderRadius: "8px",
                     overflow: "hidden", cursor: "pointer", flexShrink: 0,
                     border: i === activeImg ? "2px solid #2563eb" : "2px solid transparent",
                     transition: "border-color 0.15s",
-                  }}
-                >
-                  <img
-                    src={img} alt=""
-                    onError={e => { e.target.src = "/OIP.png"; }}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── Right: Info panel ── */}
-        <div style={{
-          flex: 1,
-          minWidth: "200px",
-          padding: "28px 36px 28px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}>
-          {/* Category pill */}
-          {categoryLabel && (
-            <div style={{
-              display: "inline-block", alignSelf: "flex-start",
-              background: "#f1f5f9", color: "#64748b",
-              borderRadius: "999px", padding: "3px 12px",
-              fontSize: "11px", fontWeight: 600,
-            }}>
-              {categoryLabel}
-            </div>
-          )}
-
-          {/* Name */}
-          <h3 style={{
-            fontWeight: 800, fontSize: "17px", color: "#0f172a",
-            margin: 0, lineHeight: 1.35,
-          }}>
-            {product.name}
-          </h3>
-
-          {/* Price */}
-          <div style={{ fontWeight: 800, fontSize: "22px", color: "#2563eb" }}>
-            {product.price ? fmtPrice(product.price) : "N/A"}
+                  }}>
+                    <img src={img} alt="" onError={e => { e.target.src = "/OIP.png"; }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Stock badge */}
-          {hasStock && (
-            <div>
-              {inStock ? (
-                <span style={{
-                  fontSize: "12px", color: "#16a34a", fontWeight: 600,
-                  background: "#dcfce7", padding: "4px 12px", borderRadius: "999px",
+          {/* ── Info panel (scrollable) ── */}
+          <div className="qv-info-panel">
+
+            {/* Category pill */}
+            {categoryLabel && (
+              <div style={{
+                display: "inline-block", alignSelf: "flex-start",
+                background: "#f1f5f9", color: "#64748b",
+                borderRadius: "999px", padding: "3px 12px",
+                fontSize: "11px", fontWeight: 600,
+                marginBottom: "10px",
+              }}>
+                {categoryLabel}
+              </div>
+            )}
+
+            {/* Name */}
+            <h3 style={{
+              fontWeight: 800, fontSize: "18px", color: "#0f172a",
+              margin: "0 0 10px", lineHeight: 1.35,
+              paddingRight: "32px", /* avoid overlap with X button */
+            }}>
+              {product.name}
+            </h3>
+
+            {/* Price */}
+            <div style={{ fontWeight: 800, fontSize: "24px", color: "#2563eb", marginBottom: "10px" }}>
+              {product.price ? fmtPrice(product.price) : "N/A"}
+            </div>
+
+            {/* Stock */}
+            {hasStock && (
+              <div style={{ marginBottom: "18px" }}>
+                {inStock ? (
+                  <span style={{
+                    fontSize: "12px", color: "#16a34a", fontWeight: 600,
+                    background: "#dcfce7", padding: "4px 12px", borderRadius: "999px",
+                  }}>
+                    ✓ In stock ({product.quantity} available)
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: "12px", color: "#b91c1c", fontWeight: 600,
+                    background: "#fee2e2", padding: "4px 12px", borderRadius: "999px",
+                  }}>
+                    Out of stock
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Description */}
+            {product.description && (
+              <div style={{ marginBottom: "20px" }}>
+                <p style={{
+                  fontSize: "12px", fontWeight: 700, color: "#94a3b8",
+                  textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 6px",
                 }}>
-                  ✓ In stock
-                </span>
-              ) : (
-                <span style={{
-                  fontSize: "12px", color: "#b91c1c", fontWeight: 600,
-                  background: "#fee2e2", padding: "4px 12px", borderRadius: "999px",
+                  Description
+                </p>
+                <p style={{
+                  fontSize: "13.5px", color: "#334155", lineHeight: 1.7, margin: 0,
                 }}>
-                  Out of stock
-                </span>
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {/* Characteristics */}
+            <div style={{ marginBottom: "20px" }}>
+              <p style={{
+                fontSize: "12px", fontWeight: 700, color: "#94a3b8",
+                textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 4px",
+              }}>
+                Product Details
+              </p>
+
+              {product.category && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Category</span>
+                  <span className="qv-char-value">{product.category}</span>
+                </div>
+              )}
+
+              {product.sub_category && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Sub-category</span>
+                  <span className="qv-char-value">{product.sub_category}</span>
+                </div>
+              )}
+
+              {product.brand && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Brand</span>
+                  <span className="qv-char-value">{product.brand}</span>
+                </div>
+              )}
+
+              {product.material_type && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Material</span>
+                  <span className="qv-char-value">{product.material_type}</span>
+                </div>
+              )}
+
+              {sizes.length > 0 && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Sizes</span>
+                  <span className="qv-char-value">
+                    <span style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {sizes.map(s => (
+                        <span key={s} style={{
+                          background: "#f1f5f9", color: "#374151",
+                          padding: "2px 9px", borderRadius: "6px",
+                          fontSize: "12px", fontWeight: 600,
+                        }}>
+                          {s}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </div>
+              )}
+
+              {product.is_featured && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Status</span>
+                  <span className="qv-char-value" style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <span style={{
+                      background: "#fef3c7", color: "#92400e",
+                      padding: "2px 9px", borderRadius: "999px",
+                      fontSize: "12px", fontWeight: 600,
+                    }}>
+                      ★ Featured
+                    </span>
+                  </span>
+                </div>
+              )}
+
+              {product.created_at && (
+                <div className="qv-char-row">
+                  <span className="qv-char-label">Date listed</span>
+                  <span className="qv-char-value">{fmtDate(product.created_at)}</span>
+                </div>
               )}
             </div>
-          )}
 
-          {/* Description */}
-          {product.description && (
-            <p style={{
-              fontSize: "13px", color: "#64748b",
-              lineHeight: 1.65, margin: 0,
-            }}>
-              {product.description.length > 220
-                ? product.description.slice(0, 220) + "…"
-                : product.description}
-            </p>
-          )}
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
+              {/* Add to Cart */}
+              <button
+                disabled={adding || product.quantity === 0}
+                onClick={async () => {
+                  if (!user) { onClose(); navigate("/signin"); return; }
+                  setAdding(true);
+                  try {
+                    await addToCart(product.id, 1);
+                    toast.success("Added to cart!");
+                  } catch {
+                    toast.error("Could not add to cart.");
+                  } finally {
+                    setAdding(false);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+                  padding: "12px 10px", borderRadius: "10px",
+                  background: product.quantity === 0 ? "#94a3b8" : "#2563eb",
+                  color: "#fff", border: "none",
+                  fontWeight: 700, fontSize: "13px",
+                  cursor: product.quantity === 0 ? "not-allowed" : "pointer",
+                  transition: "background 0.15s",
+                  opacity: adding ? 0.7 : 1,
+                }}
+                onMouseEnter={e => { if (product.quantity > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
+                onMouseLeave={e => { if (product.quantity > 0) e.currentTarget.style.background = "#2563eb"; }}
+              >
+                <CartIcon />
+                {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
+              </button>
 
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
+              {/* Buy Now */}
+              {product.quantity > 0 && (
+                <button
+                  disabled={adding}
+                  onClick={async () => {
+                    if (!user) { onClose(); navigate("/signin"); return; }
+                    setAdding(true);
+                    try {
+                      await addToCart(product.id, 1);
+                      onClose();
+                      navigate("/cart");
+                    } catch {
+                      toast.error("Could not add to cart.");
+                    } finally {
+                      setAdding(false);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "12px 10px", borderRadius: "10px",
+                    background: "#0f172a", color: "#fff", border: "none",
+                    fontWeight: 700, fontSize: "13px",
+                    cursor: "pointer", transition: "background 0.15s",
+                    opacity: adding ? 0.7 : 1,
+                  }}
+                  onMouseEnter={e => { if (!adding) e.currentTarget.style.background = "#1e293b"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
+                >
+                  Buy Now
+                </button>
+              )}
+            </div>
 
-          {/* CTA */}
-          <Link
-            to={`/product/${product.id}`}
-            onClick={onClose}
-            style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              gap: "6px",
-              background: "#0f172a", color: "#fff",
-              padding: "12px 22px", borderRadius: "10px",
-              fontWeight: 700, fontSize: "13.5px",
-              textDecoration: "none",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#1e293b"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
-          >
-            View Full Details →
-          </Link>
+            {/* View full page link */}
+            <Link
+              to={`/product/${product.id}`}
+              onClick={onClose}
+              style={{
+                display: "block", textAlign: "center",
+                color: "#64748b", fontSize: "12.5px", fontWeight: 600,
+                textDecoration: "none", marginTop: "10px",
+                paddingTop: "10px", borderTop: "1px solid #f1f5f9",
+              }}
+            >
+              View Full Product Page →
+            </Link>
+          </div>
         </div>
       </div>
-    </div>,
+    </>,
     document.body
   );
 };

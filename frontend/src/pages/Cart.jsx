@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../assets/img/abatrades-logo-other.png";
+import "./Cart.css";
 
 const BuyerTopbar = ({ backTo = "/browse", backLabel = "Browse" }) => (
   <div style={{
@@ -94,11 +95,11 @@ const CartPage = () => {
               <Link to="/browse" style={styles.ctaBtn}>Start Shopping</Link>
             </div>
           ) : (
-            <div style={styles.layout}>
+            <div className="cart-layout">
               {/* Items */}
               <div style={styles.itemsCol}>
                 {items.map((item) => (
-                  <div key={item.id} style={styles.itemCard}>
+                  <div key={item.id} className="cart-item-card">
                     <Link to={`/product/${item.product}`}>
                       <img
                         src={item.main_image_url || "/OIP.png"}
@@ -151,7 +152,7 @@ const CartPage = () => {
               </div>
 
               {/* Order summary */}
-              <div style={styles.summaryCol}>
+              <div style={styles.summaryCol} className="cart-summary-col">
                 <div style={styles.summaryCard}>
                   <h3 style={styles.summaryTitle}>Order Summary</h3>
 
@@ -202,9 +203,7 @@ const styles = {
   pageTitle:   { fontSize: "24px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "10px" },
   countBadge:  { background: "#2563eb", color: "#fff", borderRadius: "999px", padding: "2px 10px", fontSize: "13px", fontWeight: 700 },
   continueLink:{ fontSize: "13.5px", color: "#2563eb", textDecoration: "none", fontWeight: 600 },
-  layout:      { display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px", alignItems: "start" },
   itemsCol:    { display: "flex", flexDirection: "column", gap: "12px" },
-  itemCard:    { background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "16px", display: "flex", gap: "16px", alignItems: "flex-start" },
   thumb:       { width: "90px", height: "90px", borderRadius: "8px", objectFit: "cover", flexShrink: 0 },
   itemInfo:    { flex: 1, minWidth: 0 },
   itemName:    { fontWeight: 700, fontSize: "14px", color: "#0f172a", margin: "0 0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
