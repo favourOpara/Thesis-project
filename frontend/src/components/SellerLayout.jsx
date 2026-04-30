@@ -143,6 +143,9 @@ const SD_CSS = `
 
   .sd-nav-link:hover { background: #f8fafc; color: #1e293b; }
   .sd-nav-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+  .sd-nav-link.premium-nav-link { color: #92400e; }
+  .sd-nav-link.premium-nav-link:hover { background: #fefce8; color: #78350f; }
+  .sd-nav-link.premium-nav-link.active { background: #fefce8; color: #92400e; }
 
   .sd-badge {
     margin-left: auto;
@@ -750,27 +753,23 @@ const SellerLayout = () => {
               <NavLink
                 key={path}
                 to={path}
-                className={({ isActive }) => `sd-nav-link${isActive ? " active" : ""}`}
+                className={({ isActive }) => `sd-nav-link${isActive ? " active" : ""}${gold ? " premium-nav-link" : ""}`}
                 onClick={() => setMobileOpen(false)}
-                style={gold ? { color: "#b45309", fontWeight: 600 } : undefined}
               >
-                <span style={gold ? { color: "#f59e0b" } : undefined}><Icon /></span>
+                <Icon />
                 {label}
                 {path === "/seller/inquiries" && unreadCount > 0 && (
                   <span className="sd-badge">{unreadCount}</span>
                 )}
-                {gold && shop && !shop.is_premium && (
+                {gold && shop && (
                   <span style={{
-                    marginLeft: "auto", fontSize: "10px", fontWeight: 700,
-                    background: "linear-gradient(135deg,#f59e0b,#ef4444)",
-                    color: "#fff", borderRadius: "999px", padding: "1px 7px",
-                  }}>UPGRADE</span>
-                )}
-                {gold && shop && shop.is_premium && (
-                  <span style={{
-                    marginLeft: "auto", fontSize: "10px", fontWeight: 700,
-                    background: "#15803d", color: "#fff", borderRadius: "999px", padding: "1px 7px",
-                  }}>ACTIVE</span>
+                    marginLeft: "auto", fontSize: "10px", fontWeight: 700, letterSpacing: "0.03em",
+                    background: shop.is_premium ? "#dcfce7" : "#fef9c3",
+                    color: shop.is_premium ? "#15803d" : "#854d0e",
+                    borderRadius: "999px", padding: "2px 8px",
+                  }}>
+                    {shop.is_premium ? "Active" : "Upgrade"}
+                  </span>
                 )}
               </NavLink>
             ))}

@@ -440,31 +440,20 @@ const ShopPage = () => {
             return (
               <div style={{ marginTop: "24px" }}>
                 <div style={{
-                  background: "#fff", borderRadius: "16px",
-                  border: "1px solid #f1f5f9", overflow: "hidden",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                  background: "#fff", borderRadius: "14px",
+                  border: "1px solid #e2e8f0", overflow: "hidden",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
                 }}>
-                  <div style={{
-                    padding: "14px 20px 0",
-                    display: "flex", alignItems: "center", gap: "8px",
-                  }}>
-                    <span style={{
-                      background: "linear-gradient(135deg, #f59e0b, #ef4444)",
-                      borderRadius: "6px", padding: "3px 9px",
-                      fontSize: "11px", fontWeight: 700, color: "#fff",
-                      letterSpacing: "0.04em",
-                    }}>STORE VIDEO</span>
-                  </div>
-                  <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, margin: "12px 0 0" }}>
+                  {/* 16:9 responsive embed */}
+                  <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
                     <iframe
                       src={embedUrl}
-                      title="Store promo video"
+                      title={`${shop.name} — store video`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       style={{
                         position: "absolute", top: 0, left: 0,
-                        width: "100%", height: "100%",
-                        border: "none",
+                        width: "100%", height: "100%", border: "none",
                       }}
                     />
                   </div>
@@ -619,26 +608,26 @@ const ShopPage = () => {
                     return (
                       <div key={`block-${block.id}`} style={{
                         gridColumn: "1 / -1",
-                        background: "linear-gradient(135deg, #fefce8 0%, #fff7ed 100%)",
-                        border: "1px solid #fde68a",
-                        borderLeft: "4px solid #f59e0b",
-                        borderRadius: "12px",
-                        padding: "18px 22px",
+                        background: "#fff",
+                        border: "1px solid #e2e8f0",
+                        borderLeft: "3px solid #0f172a",
+                        borderRadius: "10px",
+                        padding: "16px 20px",
                       }}>
                         {block.title && (
-                          <h3 style={{
-                            fontWeight: 700, fontSize: "15px", color: "#92400e",
-                            margin: "0 0 8px", letterSpacing: "0.01em",
+                          <div style={{
+                            fontWeight: 700, fontSize: "14px", color: "#0f172a",
+                            marginBottom: "5px", letterSpacing: "-0.01em",
                           }}>
                             {block.title}
-                          </h3>
+                          </div>
                         )}
-                        <p style={{
-                          fontSize: "14px", color: "#78350f",
-                          margin: 0, lineHeight: 1.7, whiteSpace: "pre-wrap",
+                        <div style={{
+                          fontSize: "13.5px", color: "#475569",
+                          lineHeight: 1.7, whiteSpace: "pre-wrap",
                         }}>
                           {block.content}
-                        </p>
+                        </div>
                       </div>
                     );
                   })}
