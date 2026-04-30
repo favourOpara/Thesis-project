@@ -27,6 +27,14 @@ class Shop(models.Model):
     store_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     store_status_message = models.CharField(max_length=200, blank=True, null=True)
 
+    # Premium
+    is_premium = models.BooleanField(default=False)
+    premium_since = models.DateTimeField(null=True, blank=True)
+    store_video_url = models.URLField(
+        blank=True, null=True,
+        help_text="Paste a YouTube or Vimeo URL for your store promo video"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,6 +51,23 @@ class Shop(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class StoreTextBlock(models.Model):
+    """Premium-only editorial text blocks a seller can place between product rows."""
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='text_blocks')
+    title = models.CharField(max_length=200, blank=True, null=True)
+    content = models.TextField()
+    insert_after = models.PositiveIntegerField(
+        default=0,
+        help_text="Show this block after the nth product (0 = before all products)"
+    )
+
+    class Meta:
+        ordering = ['insert_after', 'id']
+
+    def __str__(self):
+        return f"Block for {self.shop.name} (after #{self.insert_after})"
 
 
 class Category(models.Model):

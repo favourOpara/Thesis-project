@@ -13,9 +13,13 @@ urlpatterns = [
     # Shop URLs (public — lookup by slug)
     path('shops/', ShopViewSet.as_view({'get': 'list', 'post': 'create'}), name='shop-list'),
     path('shops/mine/', ShopViewSet.as_view({'get': 'mine'}), name='shop-mine'),
+    path('shops/upgrade-premium/', ShopViewSet.as_view({'post': 'upgrade_premium'}), name='shop-upgrade-premium'),
     path('shops/<slug:slug>/', ShopViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='shop-detail'),
     path('shops/<slug:slug>/visit/', ShopViewSet.as_view({'post': 'record_visit'}), name='shop-visit'),
     path('shops/<slug:slug>/products/', ShopViewSet.as_view({'get': 'products'}), name='shop-products'),
+    path('shops/<slug:slug>/update-video/', ShopViewSet.as_view({'patch': 'update_video'}), name='shop-update-video'),
+    path('shops/<slug:slug>/text-blocks/', ShopViewSet.as_view({'get': 'text_blocks', 'post': 'text_blocks'}), name='shop-text-blocks'),
+    path('shops/<slug:slug>/text-blocks/<int:block_id>/', ShopViewSet.as_view({'patch': 'text_block_detail', 'delete': 'text_block_detail'}), name='shop-text-block-detail'),
 
     # Category URLs
     path('categories/', CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),

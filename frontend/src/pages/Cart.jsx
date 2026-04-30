@@ -1,29 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../assets/img/abatrades-logo-other.png";
 import "./Cart.css";
-
-const BuyerTopbar = ({ backTo = "/browse", backLabel = "Browse" }) => (
-  <div style={{
-    position: "sticky", top: 0, zIndex: 100, background: "#fff",
-    borderBottom: "1px solid #f1f5f9", padding: "0 20px", height: "52px",
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-  }}>
-    <Link to="/browse"><img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} /></Link>
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <Link to="/user-profile" style={{ fontSize: "13px", color: "#374151", textDecoration: "none", padding: "5px 10px", borderRadius: "7px", background: "#f1f5f9", fontWeight: 500 }}>
-        Account
-      </Link>
-      <Link to={backTo} style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, textDecoration: "none", padding: "5px 12px", borderRadius: "7px", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        {backLabel}
-      </Link>
-    </div>
-  </div>
-);
 
 const fmtNGN = (n) =>
   parseFloat(n || 0).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
@@ -31,23 +12,8 @@ const fmtNGN = (n) =>
 const CartPage = () => {
   const { cart, updateItem, removeItem, loading } = useCart();
   const { user } = useAuth();
-  const navigate  = useNavigate();
-  const [busy, setBusy]   = useState(null); // item id being updated
-
-  if (!user) {
-    return (
-      <>
-        <BuyerTopbar />
-        <div style={styles.empty}>
-          <div style={styles.emptyIcon}>🛒</div>
-          <h3 style={styles.emptyTitle}>Sign in to view your cart</h3>
-          <p style={styles.emptyText}>Your cart is saved to your account.</p>
-          <Link to="/signin" style={styles.ctaBtn}>Sign In</Link>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(null);
 
   const handleQty = async (itemId, newQty, maxQty) => {
     if (newQty < 1 || newQty > maxQty) return;
@@ -60,11 +26,35 @@ const CartPage = () => {
     try { await removeItem(itemId); } finally { setBusy(null); }
   };
 
+  /* ── Not signed in ── */
+  if (!user) return (
+    <>
+      <Header />
+      <div className="cart-page" style={{ paddingTop: "80px" }}>
+        <div className="cart-container">
+          <div className="cart-empty">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d5d9d9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "16px" }}>
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <h3 style={{ fontWeight: 700, fontSize: "20px", color: "#0f172a", margin: "0 0 8px" }}>Sign in to see your cart</h3>
+            <p style={{ color: "#565959", fontSize: "14px", margin: "0 0 20px" }}>Your shopping cart is saved to your account.</p>
+            <Link to="/signin" style={{ background: "#f97316", color: "#fff", borderRadius: "20px", padding: "9px 28px", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid #e07b0d" }}>
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+
+  /* ── Loading ── */
   if (loading) return (
     <>
-      <BuyerTopbar />
-      <div style={{ ...styles.empty, gap: 0 }}>
-        <div className="spinner-border" style={{ color: "#2563eb" }} />
+      <Header />
+      <div className="cart-page" style={{ paddingTop: "80px", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+        <div className="spinner-border" style={{ color: "#f97316" }} />
       </div>
       <Footer />
     </>
@@ -74,119 +64,152 @@ const CartPage = () => {
 
   return (
     <>
-      <BuyerTopbar />
-      <div style={styles.page}>
-        <div style={styles.container}>
-
-          {/* Header row */}
-          <div style={styles.pageHeader}>
-            <h1 style={styles.pageTitle}>
-              Shopping Cart
-              {item_count > 0 && <span style={styles.countBadge}>{item_count}</span>}
-            </h1>
-            <Link to="/browse" style={styles.continueLink}>← Continue Shopping</Link>
-          </div>
+      <Header />
+      <div className="cart-page" style={{ paddingTop: "80px" }}>
+        <div className="cart-container">
 
           {items.length === 0 ? (
-            <div style={styles.empty}>
-              <div style={styles.emptyIcon}>🛒</div>
-              <h3 style={styles.emptyTitle}>Your cart is empty</h3>
-              <p style={styles.emptyText}>Browse our marketplace and add items you love.</p>
-              <Link to="/browse" style={styles.ctaBtn}>Start Shopping</Link>
+            <div className="cart-empty">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d5d9d9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "16px" }}>
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <h3 style={{ fontWeight: 700, fontSize: "20px", color: "#0f172a", margin: "0 0 8px" }}>Your cart is empty</h3>
+              <p style={{ color: "#565959", fontSize: "14px", margin: "0 0 20px" }}>Browse our marketplace and add items you love.</p>
+              <Link to="/browse" style={{ background: "#f97316", color: "#fff", borderRadius: "20px", padding: "9px 28px", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid #e07b0d" }}>
+                Continue Shopping
+              </Link>
             </div>
           ) : (
-            <div className="cart-layout">
-              {/* Items */}
-              <div style={styles.itemsCol}>
+            <div className="cart-columns">
+
+              {/* ── Left: items ── */}
+              <div className="cart-items-panel">
+                <div className="cart-panel-header">
+                  <h1 className="cart-panel-title">Shopping Cart</h1>
+                  <span className="cart-price-col-label">Price</span>
+                </div>
+
                 {items.map((item) => (
-                  <div key={item.id} className="cart-item-card">
-                    <Link to={`/product/${item.product}`}>
+                  <div key={item.id} className={`cart-item-row${!item.in_stock ? " oos" : ""}`}>
+
+                    {/* Image */}
+                    <Link to={`/product/${item.product}`} className="cart-item-img-wrap">
                       <img
                         src={item.main_image_url || "/OIP.png"}
                         alt={item.product_name}
-                        style={styles.thumb}
-                        onError={(e) => { e.target.src = "/OIP.png"; }}
+                        className="cart-item-img"
+                        onError={e => { e.target.src = "/OIP.png"; }}
                       />
                     </Link>
-                    <div style={styles.itemInfo}>
-                      <Link to={`/product/${item.product}`} style={{ textDecoration: "none" }}>
-                        <p style={styles.itemName}>{item.product_name}</p>
+
+                    {/* Body */}
+                    <div className="cart-item-body">
+                      <Link to={`/product/${item.product}`} className="cart-item-name">
+                        {item.product_name}
                       </Link>
+
                       {item.shop_name && (
-                        <Link to={`/shop/${item.shop_slug}`} style={styles.shopLink}>
-                          {item.shop_name}
+                        <Link to={`/shop/${item.shop_slug}`} className="cart-item-store">
+                          Sold by <span>{item.shop_name}</span>
                         </Link>
                       )}
-                      <p style={styles.unitPrice}>{fmtNGN(item.product_price)} each</p>
-                      {!item.in_stock && (
-                        <span style={styles.oosTag}>Out of Stock</span>
-                      )}
+
+                      {item.in_stock
+                        ? <span className="cart-in-stock">In Stock</span>
+                        : <span className="cart-out-stock">Currently unavailable</span>
+                      }
+
+                      {/* Controls */}
+                      <div className="cart-controls">
+                        <div className="cart-qty-box">
+                          <button
+                            className="cart-qty-btn"
+                            onClick={() => handleQty(item.id, item.quantity - 1, item.max_qty)}
+                            disabled={busy === item.id || item.quantity <= 1}
+                          >−</button>
+                          <span className="cart-qty-num">{item.quantity}</span>
+                          <button
+                            className="cart-qty-btn"
+                            onClick={() => handleQty(item.id, item.quantity + 1, item.max_qty)}
+                            disabled={busy === item.id || item.quantity >= item.max_qty}
+                          >+</button>
+                        </div>
+
+                        <span className="cart-ctrl-sep">|</span>
+                        <button
+                          className="cart-txt-btn red"
+                          onClick={() => handleRemove(item.id)}
+                          disabled={busy === item.id}
+                        >
+                          Delete
+                        </button>
+                        <span className="cart-ctrl-sep">|</span>
+                        <Link to={`/product/${item.product}`} className="cart-txt-btn" style={{ textDecoration: "none" }}>
+                          View item
+                        </Link>
+                      </div>
                     </div>
 
-                    {/* Qty + subtotal */}
-                    <div style={styles.itemRight}>
-                      <div style={styles.qtyRow}>
-                        <button
-                          style={styles.qtyBtn}
-                          onClick={() => handleQty(item.id, item.quantity - 1, item.max_qty)}
-                          disabled={busy === item.id || item.quantity <= 1}
-                        >−</button>
-                        <span style={styles.qtyVal}>{item.quantity}</span>
-                        <button
-                          style={styles.qtyBtn}
-                          onClick={() => handleQty(item.id, item.quantity + 1, item.max_qty)}
-                          disabled={busy === item.id || item.quantity >= item.max_qty}
-                        >+</button>
-                      </div>
-                      <p style={styles.subtotal}>{fmtNGN(item.subtotal)}</p>
-                      <button
-                        style={styles.removeBtn}
-                        onClick={() => handleRemove(item.id)}
-                        disabled={busy === item.id}
-                      >
-                        Remove
-                      </button>
+                    {/* Price */}
+                    <div className="cart-item-price-col">
+                      <span className="cart-item-price">{fmtNGN(item.subtotal)}</span>
                     </div>
                   </div>
                 ))}
-              </div>
 
-              {/* Order summary */}
-              <div style={styles.summaryCol} className="cart-summary-col">
-                <div style={styles.summaryCard}>
-                  <h3 style={styles.summaryTitle}>Order Summary</h3>
-
-                  <div style={styles.summaryRow}>
-                    <span>Subtotal ({item_count} items)</span>
-                    <span>{fmtNGN(total)}</span>
-                  </div>
-                  <div style={styles.summaryRow}>
-                    <span>Shipping</span>
-                    <span style={{ color: "#16a34a", fontWeight: 600 }}>Calculated at checkout</span>
-                  </div>
-
-                  <div style={styles.summaryDivider} />
-
-                  <div style={{ ...styles.summaryRow, fontWeight: 700, fontSize: "16px" }}>
-                    <span>Total</span>
-                    <span style={{ color: "#2563eb" }}>{fmtNGN(total)}</span>
-                  </div>
-
-                  {user?.loyalty_points > 0 && (
-                    <div style={styles.loyaltyBadge}>
-                      You have {user.loyalty_points.toLocaleString()} loyalty points
-                    </div>
-                  )}
-
-                  <button
-                    style={styles.checkoutBtn}
-                    onClick={() => navigate("/checkout")}
-                  >
-                    Proceed to Checkout →
-                  </button>
-                  <p style={styles.secureNote}>🔒 Secure checkout powered by Paystack</p>
+                {/* Bottom subtotal bar */}
+                <div style={{ padding: "14px 22px", textAlign: "right", borderTop: "1px solid #e8ecee", background: "#fafafa", borderRadius: "0 0 6px 6px" }}>
+                  <span style={{ fontSize: "17px", fontWeight: 400, color: "#0f172a" }}>
+                    Subtotal ({item_count} {item_count === 1 ? "item" : "items"}):&nbsp;
+                    <strong style={{ fontWeight: 700 }}>{fmtNGN(total)}</strong>
+                  </span>
                 </div>
               </div>
+
+              {/* ── Right: summary ── */}
+              <div className="cart-summary-box">
+                <p className="cart-subtotal">
+                  Subtotal ({item_count} {item_count === 1 ? "item" : "items"}):<br />
+                  <strong>{fmtNGN(total)}</strong>
+                </p>
+
+                {user?.loyalty_points > 0 && (
+                  <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "6px", padding: "8px 12px", fontSize: "12px", color: "#92400e", fontWeight: 600, marginBottom: "12px" }}>
+                    🎁 {user.loyalty_points.toLocaleString()} loyalty points available
+                  </div>
+                )}
+
+                <button
+                  className="cart-checkout-btn"
+                  onClick={() => navigate("/checkout")}
+                  disabled={items.every(i => !i.in_stock)}
+                >
+                  Proceed to Checkout
+                </button>
+
+                <p className="cart-secure">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  Secure checkout · Powered by Paystack
+                </p>
+
+                <hr className="cart-summary-divider" />
+
+                <div className="cart-summary-row">
+                  <span>Shipping</span>
+                  <span style={{ color: "#007600", fontWeight: 600 }}>Calculated at checkout</span>
+                </div>
+                <div className="cart-summary-row" style={{ fontWeight: 700, fontSize: "14px" }}>
+                  <span>Order Total</span>
+                  <span>{fmtNGN(total)}</span>
+                </div>
+
+                <Link to="/browse" className="cart-continue">← Continue shopping</Link>
+              </div>
+
             </div>
           )}
         </div>
@@ -194,41 +217,6 @@ const CartPage = () => {
       <Footer />
     </>
   );
-};
-
-const styles = {
-  page:        { background: "#f1f5f9", minHeight: "100vh", padding: "32px 0 64px" },
-  container:   { maxWidth: "1100px", margin: "0 auto", padding: "0 20px" },
-  pageHeader:  { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" },
-  pageTitle:   { fontSize: "24px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "10px" },
-  countBadge:  { background: "#2563eb", color: "#fff", borderRadius: "999px", padding: "2px 10px", fontSize: "13px", fontWeight: 700 },
-  continueLink:{ fontSize: "13.5px", color: "#2563eb", textDecoration: "none", fontWeight: 600 },
-  itemsCol:    { display: "flex", flexDirection: "column", gap: "12px" },
-  thumb:       { width: "90px", height: "90px", borderRadius: "8px", objectFit: "cover", flexShrink: 0 },
-  itemInfo:    { flex: 1, minWidth: 0 },
-  itemName:    { fontWeight: 700, fontSize: "14px", color: "#0f172a", margin: "0 0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  shopLink:    { fontSize: "12px", color: "#2563eb", textDecoration: "none", display: "block", marginBottom: "4px" },
-  unitPrice:   { fontSize: "13px", color: "#64748b", margin: "0 0 4px" },
-  oosTag:      { display: "inline-block", background: "#fee2e2", color: "#b91c1c", borderRadius: "999px", padding: "1px 8px", fontSize: "11px", fontWeight: 600 },
-  itemRight:   { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 },
-  qtyRow:      { display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "4px 8px" },
-  qtyBtn:      { border: "none", background: "none", cursor: "pointer", fontWeight: 700, fontSize: "16px", color: "#374151", padding: "0 4px", lineHeight: 1 },
-  qtyVal:      { fontWeight: 700, fontSize: "15px", color: "#0f172a", minWidth: "24px", textAlign: "center" },
-  subtotal:    { fontWeight: 700, fontSize: "15px", color: "#0f172a", margin: 0 },
-  removeBtn:   { border: "none", background: "none", color: "#ef4444", fontSize: "12.5px", fontWeight: 600, cursor: "pointer", padding: 0 },
-  summaryCol:  { position: "sticky", top: "80px" },
-  summaryCard: { background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px 22px" },
-  summaryTitle:{ fontWeight: 800, fontSize: "17px", color: "#0f172a", margin: "0 0 16px" },
-  summaryRow:  { display: "flex", justifyContent: "space-between", fontSize: "13.5px", color: "#374151", marginBottom: "10px" },
-  summaryDivider: { borderTop: "1px solid #f1f5f9", margin: "14px 0" },
-  loyaltyBadge:{ background: "#eff6ff", borderRadius: "8px", padding: "10px 12px", fontSize: "12.5px", color: "#1d4ed8", fontWeight: 600, marginBottom: "14px", textAlign: "center" },
-  checkoutBtn: { width: "100%", background: "#2563eb", color: "#fff", border: "none", borderRadius: "10px", padding: "13px", fontWeight: 700, fontSize: "15px", cursor: "pointer", marginTop: "6px" },
-  secureNote:  { textAlign: "center", fontSize: "11.5px", color: "#94a3b8", margin: "10px 0 0" },
-  empty:       { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "12px", textAlign: "center" },
-  emptyIcon:   { fontSize: "56px" },
-  emptyTitle:  { fontWeight: 700, fontSize: "22px", color: "#0f172a", margin: 0 },
-  emptyText:   { color: "#64748b", fontSize: "14px", margin: 0 },
-  ctaBtn:      { background: "#2563eb", color: "#fff", borderRadius: "9px", padding: "11px 28px", fontWeight: 700, fontSize: "14px", textDecoration: "none", display: "inline-block", marginTop: "8px" },
 };
 
 export default CartPage;

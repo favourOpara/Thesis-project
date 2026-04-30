@@ -450,10 +450,10 @@ const QuickViewModal = ({ product, onClose }) => {
                   setAdding(true);
                   try {
                     await addToCart(product.id, 1);
-                    toast.success("Added to cart!");
+                    onClose();
+                    navigate("/cart/added", { state: { product } });
                   } catch {
                     toast.error("Could not add to cart.");
-                  } finally {
                     setAdding(false);
                   }
                 }}

@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import Shop, Category, Product, ProductImage
+from .models import Shop, Category, Product, ProductImage, StoreTextBlock
+
+
+class StoreTextBlockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreTextBlock
+        fields = ['id', 'title', 'content', 'insert_after']
 
 
 class ShopSerializer(serializers.ModelSerializer):
@@ -10,6 +16,7 @@ class ShopSerializer(serializers.ModelSerializer):
     banner_url = serializers.SerializerMethodField()
     preview_images = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
+    text_blocks = StoreTextBlockSerializer(many=True, read_only=True)
 
     class Meta:
         model = Shop
@@ -19,9 +26,10 @@ class ShopSerializer(serializers.ModelSerializer):
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
             'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
+            'is_premium', 'premium_since', 'store_video_url', 'text_blocks',
             'created_at', 'updated_at',
         ]
-        read_only_fields = ['slug', 'visit_count', 'created_at', 'updated_at']
+        read_only_fields = ['slug', 'visit_count', 'is_premium', 'premium_since', 'created_at', 'updated_at']
 
     def get_owner_name(self, obj):
         u = obj.owner

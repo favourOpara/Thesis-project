@@ -22,6 +22,7 @@ import ShopPage        from "./pages/ShopPage";
 import ProductDetails  from "./pages/ProductDetails";
 import CategoryPage    from "./pages/CategoryPage";
 import Cart            from "./pages/Cart";
+import AddedToCart     from "./pages/AddedToCart";
 import Checkout        from "./pages/Checkout";
 import Orders          from "./pages/Orders";
 import SellerDashboard from "./pages/SellerDashboard";
@@ -31,6 +32,7 @@ import SellerProducts  from "./pages/SellerProducts";
 import SellerOrders    from "./pages/SellerOrders";
 import SellerInquiries from "./pages/SellerInquiries";
 import SellerSettings  from "./pages/SellerSettings";
+import SellerPremium   from "./pages/SellerPremium";
 import AddProduct      from "./pages/AddProduct";
 import Join            from "./pages/Join";
 import Services        from "./pages/Services";
@@ -81,6 +83,7 @@ const App = () => {
 
                   {/* Buyer */}
                   <Route path="/cart"                  element={<Cart />} />
+                  <Route path="/cart/added"            element={<AddedToCart />} />
                   <Route path="/checkout"              element={<Checkout />} />
                   <Route path="/orders"                element={<Orders />} />
                   <Route path="/user-profile"          element={<UserProfile />} />
@@ -94,6 +97,7 @@ const App = () => {
                     <Route path="orders"     element={<SellerOrders />} />
                     <Route path="inquiries"  element={<SellerInquiries />} />
                     <Route path="settings"   element={<SellerSettings />} />
+                    <Route path="premium"    element={<SellerPremium />} />
                   </Route>
                   {/* Legacy redirect */}
                   <Route path="/seller-dashboard" element={<Navigate to="/seller/overview" replace />} />

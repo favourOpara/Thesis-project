@@ -2,16 +2,21 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q
+from django.utils import timezone
+import requests as http_requests
 
-from .models import Shop, Category, Product, ProductImage
+from .models import Shop, Category, Product, ProductImage, StoreTextBlock
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
     ProductSerializer,
     ProductImageSerializer,
+    StoreTextBlockSerializer,
 )
+
+PAYSTACK_SECRET = "sk_test_3207e50dafa844fb486185ea7aceed100089ff21"
 
 
 class ShopViewSet(viewsets.ModelViewSet):
@@ -94,6 +99,81 @@ class ShopViewSet(viewsets.ModelViewSet):
         queryset = Product.objects.filter(owner=shop.owner, is_active=True)
         serializer = ProductSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='upgrade-premium',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def upgrade_premium(self, request):
+        reference = request.data.get('reference')
+        if not reference:
+            return Response({'error': 'Payment reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+        if shop.is_premium:
+            return Response({'detail': 'Already premium.'})
+        # Verify payment with Paystack
+        verify_url = f"https://api.paystack.co/transaction/verify/{reference}"
+        headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+        try:
+            res = http_requests.get(verify_url, headers=headers, timeout=10)
+            data = res.json()
+        except Exception:
+            return Response({'error': 'Could not reach Paystack. Try again.'}, status=status.HTTP_502_BAD_GATEWAY)
+        if not data.get('status') or data['data'].get('status') != 'success':
+            return Response({'error': 'Payment verification failed. Please complete payment first.'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        shop.is_premium = True
+        shop.premium_since = timezone.now()
+        shop.save(update_fields=['is_premium', 'premium_since'])
+        serializer = self.get_serializer(shop, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], url_path='update-video',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def update_video(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        if not shop.is_premium:
+            return Response({'error': 'Premium required.'}, status=status.HTTP_403_FORBIDDEN)
+        shop.store_video_url = request.data.get('store_video_url', '')
+        shop.save(update_fields=['store_video_url'])
+        return Response({'store_video_url': shop.store_video_url})
+
+    @action(detail=True, methods=['get', 'post'], url_path='text-blocks',
+            permission_classes=[permissions.IsAuthenticated])
+    def text_blocks(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        if not shop.is_premium:
+            return Response({'error': 'Premium required.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'GET':
+            blocks = shop.text_blocks.all()
+            return Response(StoreTextBlockSerializer(blocks, many=True).data)
+        serializer = StoreTextBlockSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(shop=shop)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['patch', 'delete'], url_path=r'text-blocks/(?P<block_id>\d+)',
+            permission_classes=[permissions.IsAuthenticated])
+    def text_block_detail(self, request, slug=None, block_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        block = get_object_or_404(StoreTextBlock, pk=block_id, shop=shop)
+        if request.method == 'DELETE':
+            block.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = StoreTextBlockSerializer(block, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

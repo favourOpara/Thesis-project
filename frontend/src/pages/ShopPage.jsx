@@ -43,6 +43,18 @@ const EyeIcon = () => (
   </svg>
 );
 
+/* ── Convert YouTube/Vimeo URL to embed URL ── */
+const getEmbedUrl = (url) => {
+  if (!url) return null;
+  const ytWatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
+  if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
+  const ytShort = url.match(/youtu\.be\/([^?]+)/);
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return null;
+};
+
 /* ── Store card for "Other Stores" section ── */
 const StoreCard = ({ store }) => {
   const [hovered, setHovered] = useState(false);
@@ -420,6 +432,48 @@ const ShopPage = () => {
           </div>
 
           {/* ══════════════════════════════
+              PROMO VIDEO (premium only)
+          ══════════════════════════════ */}
+          {shop.is_premium && shop.store_video_url && (() => {
+            const embedUrl = getEmbedUrl(shop.store_video_url);
+            if (!embedUrl) return null;
+            return (
+              <div style={{ marginTop: "24px" }}>
+                <div style={{
+                  background: "#fff", borderRadius: "16px",
+                  border: "1px solid #f1f5f9", overflow: "hidden",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                }}>
+                  <div style={{
+                    padding: "14px 20px 0",
+                    display: "flex", alignItems: "center", gap: "8px",
+                  }}>
+                    <span style={{
+                      background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                      borderRadius: "6px", padding: "3px 9px",
+                      fontSize: "11px", fontWeight: 700, color: "#fff",
+                      letterSpacing: "0.04em",
+                    }}>STORE VIDEO</span>
+                  </div>
+                  <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, margin: "12px 0 0" }}>
+                    <iframe
+                      src={embedUrl}
+                      title="Store promo video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{
+                        position: "absolute", top: 0, left: 0,
+                        width: "100%", height: "100%",
+                        border: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ══════════════════════════════
               PRODUCTS SECTION
           ══════════════════════════════ */}
           <div style={{ marginTop: "32px", paddingBottom: "60px" }}>
@@ -508,42 +562,89 @@ const ShopPage = () => {
               </div>
             </div>
 
-            {/* Grid */}
-            {visibleProducts.length === 0 ? (
-              <div style={{
-                textAlign: "center", padding: "80px 20px",
-                background: "#fff", borderRadius: "16px",
-                border: "1px solid #f1f5f9",
-              }}>
+            {/* Build mixed content: text blocks interleaved with products */}
+            {(() => {
+              if (visibleProducts.length === 0) return (
                 <div style={{
-                  width: "64px", height: "64px", borderRadius: "16px",
-                  background: "#f1f5f9", display: "flex", alignItems: "center",
-                  justifyContent: "center", margin: "0 auto 16px", color: "#94a3b8",
+                  textAlign: "center", padding: "80px 20px",
+                  background: "#fff", borderRadius: "16px",
+                  border: "1px solid #f1f5f9",
                 }}>
-                  <PkgIcon />
+                  <div style={{
+                    width: "64px", height: "64px", borderRadius: "16px",
+                    background: "#f1f5f9", display: "flex", alignItems: "center",
+                    justifyContent: "center", margin: "0 auto 16px", color: "#94a3b8",
+                  }}>
+                    <PkgIcon />
+                  </div>
+                  <h4 style={{ fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>
+                    {search ? "No products match your search" : "No products yet"}
+                  </h4>
+                  <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
+                    {search
+                      ? `No results for "${search}". Try a different term.`
+                      : "This store hasn't listed any products yet. Check back soon."}
+                  </p>
                 </div>
-                <h4 style={{ fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>
-                  {search ? "No products match your search" : "No products yet"}
-                </h4>
-                <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
-                  {search
-                    ? `No results for "${search}". Try a different term.`
-                    : "This store hasn't listed any products yet. Check back soon."}
-                </p>
-              </div>
-            ) : (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                gap: "20px",
-              }}
-                className="shop-product-grid"
-              >
-                {visibleProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
+              );
+
+              // Index text blocks by insert_after position
+              const blocksByPos = {};
+              (shop.text_blocks || []).forEach(block => {
+                const pos = block.insert_after;
+                if (!blocksByPos[pos]) blocksByPos[pos] = [];
+                blocksByPos[pos].push(block);
+              });
+
+              // Build mixed array
+              const mixed = [];
+              (blocksByPos[0] || []).forEach(b => mixed.push({ type: "block", data: b }));
+              visibleProducts.forEach((product, i) => {
+                mixed.push({ type: "product", data: product });
+                (blocksByPos[i + 1] || []).forEach(b => mixed.push({ type: "block", data: b }));
+              });
+
+              return (
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                  gap: "20px",
+                }} className="shop-product-grid">
+                  {mixed.map((item, idx) => {
+                    if (item.type === "product") {
+                      return <ProductCard key={item.data.id} product={item.data} />;
+                    }
+                    // Full-width text block
+                    const block = item.data;
+                    return (
+                      <div key={`block-${block.id}`} style={{
+                        gridColumn: "1 / -1",
+                        background: "linear-gradient(135deg, #fefce8 0%, #fff7ed 100%)",
+                        border: "1px solid #fde68a",
+                        borderLeft: "4px solid #f59e0b",
+                        borderRadius: "12px",
+                        padding: "18px 22px",
+                      }}>
+                        {block.title && (
+                          <h3 style={{
+                            fontWeight: 700, fontSize: "15px", color: "#92400e",
+                            margin: "0 0 8px", letterSpacing: "0.01em",
+                          }}>
+                            {block.title}
+                          </h3>
+                        )}
+                        <p style={{
+                          fontSize: "14px", color: "#78350f",
+                          margin: 0, lineHeight: 1.7, whiteSpace: "pre-wrap",
+                        }}>
+                          {block.content}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* ══════════════════════════════

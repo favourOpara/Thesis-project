@@ -417,10 +417,9 @@ const ProductDetails = () => {
                     setAdding(true);
                     try {
                       await addToCart(product.id, qty);
-                      toast.success("Added to cart!");
+                      navigate("/cart/added", { state: { product } });
                     } catch {
                       toast.error("Could not add to cart.");
-                    } finally {
                       setAdding(false);
                     }
                   }}
