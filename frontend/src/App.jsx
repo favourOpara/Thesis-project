@@ -33,6 +33,8 @@ import SellerOrders    from "./pages/SellerOrders";
 import SellerInquiries from "./pages/SellerInquiries";
 import SellerSettings  from "./pages/SellerSettings";
 import SellerPremium   from "./pages/SellerPremium";
+import SellerWarehouse from "./pages/SellerWarehouse";
+import SellerLogistics from "./pages/SellerLogistics";
 import AddProduct      from "./pages/AddProduct";
 import Join            from "./pages/Join";
 import Services        from "./pages/Services";
@@ -98,6 +100,8 @@ const App = () => {
                     <Route path="inquiries"  element={<SellerInquiries />} />
                     <Route path="settings"   element={<SellerSettings />} />
                     <Route path="premium"    element={<SellerPremium />} />
+                    <Route path="warehouse"  element={<SellerWarehouse />} />
+                    <Route path="logistics"  element={<SellerLogistics />} />
                   </Route>
                   {/* Legacy redirect */}
                   <Route path="/seller-dashboard" element={<Navigate to="/seller/overview" replace />} />

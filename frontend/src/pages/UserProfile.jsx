@@ -133,10 +133,10 @@ const Profile = () => {
       {/* ── Topbar ── */}
       <div style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff", borderBottom: "1px solid #f1f5f9", padding: "0 20px", height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Link to="/browse"><img src={Logo} alt="Abatrades" style={{ height: "26px", display: "block" }} /></Link>
-        <Link to="/browse" style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, textDecoration: "none", padding: "5px 12px", borderRadius: "7px", border: "1px solid #e2e8f0", background: "#f8fafc" }}>
+        <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", fontSize: "13px", fontWeight: 500, background: "#f8fafc", padding: "5px 12px", borderRadius: "7px", border: "1px solid #e2e8f0", cursor: "pointer" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          Browse
-        </Link>
+          Back
+        </button>
       </div>
 
       {/* ── Page ── */}

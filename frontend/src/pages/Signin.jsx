@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios"; // Import axios for making API calls
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useNavigate, useLocation } from "react-router-dom"; // Import useNavigate for navigation
 import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
@@ -15,7 +15,9 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
+  const location = useLocation();
+  const nextPath = location.state?.next || null;
 
   const handleGoogleSuccess = ({ user, access_token }) => {
     handleLoginSuccess(user, access_token);
@@ -41,7 +43,8 @@ const SignIn = () => {
     setUser(userData);
 
     const isSeller = userData.user_type === "seller";
-    navigate(isSeller ? "/seller/overview" : "/browse", { replace: true });
+    const destination = isSeller ? "/seller/overview" : (nextPath || "/browse");
+    navigate(destination, { replace: true });
 
     // Refresh full profile in background
     login();

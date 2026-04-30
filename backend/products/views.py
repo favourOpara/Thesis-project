@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
 import requests as http_requests
 
 from .models import Shop, Category, Product, ProductImage, StoreTextBlock
@@ -16,13 +17,13 @@ from .serializers import (
     StoreTextBlockSerializer,
 )
 
-PAYSTACK_SECRET = "sk_test_3207e50dafa844fb486185ea7aceed100089ff21"
+PAYSTACK_SECRET = getattr(settings, 'PAYSTACK_SECRET_KEY', '') or "sk_test_3207e50dafa844fb486185ea7aceed100089ff21"
 
 
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     lookup_field = 'slug'
 
     def get_permissions(self):
@@ -100,6 +101,72 @@ class ShopViewSet(viewsets.ModelViewSet):
         serializer = ProductSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
+    def _get_or_create_paystack_plan(self):
+        """Return the Paystack plan code for premium, creating it if needed."""
+        plan_code = getattr(settings, 'PAYSTACK_PREMIUM_PLAN_CODE', '')
+        if plan_code:
+            return plan_code
+        # Create plan dynamically
+        try:
+            res = http_requests.post(
+                "https://api.paystack.co/plan",
+                json={'name': 'Abatrades Premium Store', 'interval': 'monthly', 'amount': 1000000, 'currency': 'NGN'},
+                headers={'Authorization': f'Bearer {PAYSTACK_SECRET}'},
+                timeout=10,
+            )
+            data = res.json()
+            if data.get('status'):
+                return data['data']['plan_code']
+        except Exception:
+            pass
+        return None
+
+    @action(detail=False, methods=['post'], url_path='init-premium-payment',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def init_premium_payment(self, request):
+        """Initialize a Paystack payment (with a recurring plan) and return the authorization URL."""
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+        if shop.is_premium:
+            serializer = self.get_serializer(shop, context={'request': request})
+            return Response({'already_premium': True, 'shop': serializer.data})
+
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        callback_url = f"{frontend_url}/seller/premium"
+        plan_code = self._get_or_create_paystack_plan()
+
+        payload = {
+            'email': request.user.email,
+            'amount': 1000000,
+            'currency': 'NGN',
+            'callback_url': callback_url,
+            'metadata': {'type': 'premium_upgrade', 'user_id': request.user.id},
+        }
+        if plan_code:
+            payload['plan'] = plan_code
+
+        try:
+            res = http_requests.post(
+                "https://api.paystack.co/transaction/initialize",
+                json=payload,
+                headers={'Authorization': f'Bearer {PAYSTACK_SECRET}'},
+                timeout=10,
+            )
+            data = res.json()
+        except Exception as e:
+            return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not data.get('status'):
+            return Response({'error': data.get('message', 'Payment initialisation failed.')}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({
+            'authorization_url': data['data']['authorization_url'],
+            'reference': data['data']['reference'],
+        })
+
     @action(detail=False, methods=['post'], url_path='upgrade-premium',
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[JSONParser, MultiPartParser, FormParser])
@@ -112,20 +179,54 @@ class ShopViewSet(viewsets.ModelViewSet):
         except Shop.DoesNotExist:
             return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
         if shop.is_premium:
-            return Response({'detail': 'Already premium.'})
-        # Verify payment with Paystack
+            serializer = self.get_serializer(shop, context={'request': request})
+            return Response(serializer.data)
+
         verify_url = f"https://api.paystack.co/transaction/verify/{reference}"
-        headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
         try:
-            res = http_requests.get(verify_url, headers=headers, timeout=10)
+            res = http_requests.get(verify_url, headers=ps_headers, timeout=10)
             data = res.json()
-        except Exception:
-            return Response({'error': 'Could not reach Paystack. Try again.'}, status=status.HTTP_502_BAD_GATEWAY)
-        if not data.get('status') or data['data'].get('status') != 'success':
-            return Response({'error': 'Payment verification failed. Please complete payment first.'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        except Exception as e:
+            return Response({'error': f'Could not reach Paystack. Try again. ({str(e)})'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        paystack_ok = data.get('status') is True
+        txn_data = data.get('data') or {}
+        txn_status = txn_data.get('status', '')
+        if not paystack_ok or txn_status != 'success':
+            return Response(
+                {'error': f'Payment not confirmed by Paystack (status: {txn_status or "unknown"}). Ref: {reference}'},
+                status=status.HTTP_402_PAYMENT_REQUIRED
+            )
+
+        # Save subscription / customer codes for recurring billing
+        update_fields = ['is_premium', 'premium_since']
         shop.is_premium = True
         shop.premium_since = timezone.now()
-        shop.save(update_fields=['is_premium', 'premium_since'])
+
+        customer = txn_data.get('customer') or {}
+        if customer.get('customer_code'):
+            shop.paystack_customer_code = customer['customer_code']
+            update_fields.append('paystack_customer_code')
+
+        # Fetch subscription code if a plan was used
+        sub_data = txn_data.get('plan_object') or {}
+        if not shop.paystack_subscription_code:
+            try:
+                sub_res = http_requests.get(
+                    f"https://api.paystack.co/subscription?customer={customer.get('customer_code', '')}",
+                    headers=ps_headers, timeout=10,
+                )
+                sub_json = sub_res.json()
+                subs = (sub_json.get('data') or [])
+                if subs:
+                    shop.paystack_subscription_code = subs[0].get('subscription_code', '')
+                    shop.paystack_email_token = subs[0].get('email_token', '')
+                    update_fields += ['paystack_subscription_code', 'paystack_email_token']
+            except Exception:
+                pass
+
+        shop.save(update_fields=update_fields)
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)
 
@@ -133,14 +234,34 @@ class ShopViewSet(viewsets.ModelViewSet):
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[JSONParser, MultiPartParser, FormParser])
     def update_video(self, request, slug=None):
+        """Update store promo video — accepts either a URL or an uploaded file."""
         shop = self.get_object()
         if shop.owner != request.user:
             return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
         if not shop.is_premium:
             return Response({'error': 'Premium required.'}, status=status.HTTP_403_FORBIDDEN)
-        shop.store_video_url = request.data.get('store_video_url', '')
-        shop.save(update_fields=['store_video_url'])
-        return Response({'store_video_url': shop.store_video_url})
+
+        update_fields = []
+
+        # File upload takes priority over URL
+        video_file = request.FILES.get('store_video_file')
+        if video_file:
+            shop.store_video_file = video_file
+            shop.store_video_url = ''   # clear URL when a file is uploaded
+            update_fields += ['store_video_file', 'store_video_url']
+        elif 'store_video_url' in request.data:
+            shop.store_video_url = request.data.get('store_video_url', '')
+            shop.store_video_file = None  # clear file when URL is set
+            update_fields += ['store_video_url', 'store_video_file']
+
+        if update_fields:
+            shop.save(update_fields=update_fields)
+
+        file_url = request.build_absolute_uri(shop.store_video_file.url) if shop.store_video_file else None
+        return Response({
+            'store_video_url': shop.store_video_url or '',
+            'store_video_file_url': file_url,
+        })
 
     @action(detail=True, methods=['get', 'post'], url_path='text-blocks',
             permission_classes=[permissions.IsAuthenticated])

@@ -292,9 +292,9 @@ const Header = () => {
                 )}
               </div>
 
-              {/* Cart icon */}
-              {user && !isSeller && (
-                <Link to="/cart" style={{ display: "inline-flex", position: "relative", flexShrink: 0 }}>
+              {/* Cart icon — desktop only; on mobile it lives inside the sidebar */}
+              {!isSeller && (
+                <Link to="/cart" className="d-none d-lg-inline-flex" style={{ position: "relative", flexShrink: 0 }}>
                   <span style={{
                     backgroundColor: "#f1f5f9",
                     width: "34px", height: "34px", borderRadius: "50%",
@@ -323,7 +323,8 @@ const Header = () => {
 
               {/* Profile */}
               {!shouldHideSearchAndProfile && (
-                <Link to={user ? (isSeller ? "/seller/overview" : "/user-profile") : "/signin"} style={{ display: "inline-flex" }}>
+                <Link to={user ? (isSeller ? "/seller/overview" : "/user-profile") : "/signin"}
+                  style={{ display: "inline-flex" }}>
                   <span className="avatar-icon rounded-circle" style={{
                     backgroundColor: user ? "#eff6ff" : "#f1f5f9",
                     width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center"
@@ -338,12 +339,20 @@ const Header = () => {
 
               {/* Hamburger — mobile only, far right */}
               <button type="button" onClick={toggleSidebar} className="mobile-menu-button d-lg-none"
-                style={{ borderRadius: "8px", border: "none", background: "none", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                style={{ borderRadius: "8px", border: "none", background: "none", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="3" y1="12" x2="21" y2="12"></line>
                   <line x1="3" y1="6" x2="21" y2="6"></line>
                   <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
+                {!isSeller && cart.item_count > 0 && (
+                  <span style={{
+                    position: "absolute", top: "2px", right: "2px",
+                    width: "8px", height: "8px", borderRadius: "50%",
+                    background: "#2563eb", border: "1.5px solid #fff",
+                    display: "block",
+                  }} />
+                )}
               </button>
             </div>
 

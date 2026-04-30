@@ -52,6 +52,30 @@ const SellerOverview = () => {
         </p>
       </div>
 
+      {/* Premium status banner */}
+      {shop?.is_premium && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "12px",
+          background: "linear-gradient(135deg, #0f172a, #1e293b)",
+          border: "1px solid #334155", borderRadius: "12px",
+          padding: "14px 18px", marginBottom: "18px",
+        }}>
+          <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: "rgba(217,119,6,0.2)", border: "1px solid rgba(217,119,6,0.4)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20h20M4 16l2-10 6 5 6-5 2 10"/></svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: "13.5px", color: "#fff" }}>Premium Store — Active</div>
+            <div style={{ fontSize: "12px", color: "#64748b" }}>
+              Member since {new Date(shop.premium_since).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+              {" · "}Video customisation, text blocks, warehousing &amp; logistics are enabled.
+            </div>
+          </div>
+          <Link to="/seller/premium" style={{ fontSize: "12.5px", color: "#fbbf24", fontWeight: 600, textDecoration: "none", background: "rgba(217,119,6,0.15)", border: "1px solid rgba(217,119,6,0.3)", borderRadius: "7px", padding: "6px 14px", whiteSpace: "nowrap" }}>
+            Manage →
+          </Link>
+        </div>
+      )}
+
       {!shop && (
         <div className="sd-alert warning" style={{ marginBottom: "18px" }}>
           <div>

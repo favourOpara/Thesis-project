@@ -413,10 +413,9 @@ const ProductDetails = () => {
                 {/* Add to Cart */}
                 <button
                   onClick={async () => {
-                    if (!user) { navigate("/signin"); return; }
                     setAdding(true);
                     try {
-                      await addToCart(product.id, qty);
+                      await addToCart(product.id, qty, product);
                       navigate("/cart/added", { state: { product } });
                     } catch {
                       toast.error("Could not add to cart.");
@@ -444,10 +443,9 @@ const ProductDetails = () => {
                 {product.quantity > 0 && (
                   <button
                     onClick={async () => {
-                      if (!user) { navigate("/signin"); return; }
                       setAdding(true);
                       try {
-                        await addToCart(product.id, qty);
+                        await addToCart(product.id, qty, product);
                         navigate("/cart");
                       } catch {
                         toast.error("Could not add to cart.");

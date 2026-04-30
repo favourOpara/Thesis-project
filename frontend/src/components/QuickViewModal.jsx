@@ -446,10 +446,9 @@ const QuickViewModal = ({ product, onClose }) => {
               <button
                 disabled={adding || product.quantity === 0}
                 onClick={async () => {
-                  if (!user) { onClose(); navigate("/signin"); return; }
                   setAdding(true);
                   try {
-                    await addToCart(product.id, 1);
+                    await addToCart(product.id, 1, product);
                     onClose();
                     navigate("/cart/added", { state: { product } });
                   } catch {
@@ -480,10 +479,9 @@ const QuickViewModal = ({ product, onClose }) => {
                 <button
                   disabled={adding}
                   onClick={async () => {
-                    if (!user) { onClose(); navigate("/signin"); return; }
                     setAdding(true);
                     try {
-                      await addToCart(product.id, 1);
+                      await addToCart(product.id, 1, product);
                       onClose();
                       navigate("/cart");
                     } catch {

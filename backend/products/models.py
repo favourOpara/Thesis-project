@@ -32,8 +32,16 @@ class Shop(models.Model):
     premium_since = models.DateTimeField(null=True, blank=True)
     store_video_url = models.URLField(
         blank=True, null=True,
-        help_text="Paste a YouTube or Vimeo URL for your store promo video"
+        help_text="YouTube or Vimeo URL for the store promo video"
     )
+    store_video_file = models.FileField(
+        upload_to='store_videos/', blank=True, null=True,
+        help_text="Uploaded video file"
+    )
+    # Paystack subscription (for recurring billing)
+    paystack_customer_code    = models.CharField(max_length=100, blank=True, null=True)
+    paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
+    paystack_email_token       = models.CharField(max_length=200, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
@@ -13,6 +13,7 @@ const CartPage = () => {
   const { cart, updateItem, removeItem, loading } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [busy, setBusy] = useState(null);
 
   const handleQty = async (itemId, newQty, maxQty) => {
@@ -25,29 +26,6 @@ const CartPage = () => {
     setBusy(itemId);
     try { await removeItem(itemId); } finally { setBusy(null); }
   };
-
-  /* ── Not signed in ── */
-  if (!user) return (
-    <>
-      <Header />
-      <div className="cart-page" style={{ paddingTop: "80px" }}>
-        <div className="cart-container">
-          <div className="cart-empty">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d5d9d9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "16px" }}>
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-            </svg>
-            <h3 style={{ fontWeight: 700, fontSize: "20px", color: "#0f172a", margin: "0 0 8px" }}>Sign in to see your cart</h3>
-            <p style={{ color: "#565959", fontSize: "14px", margin: "0 0 20px" }}>Your shopping cart is saved to your account.</p>
-            <Link to="/signin" style={{ background: "#f97316", color: "#fff", borderRadius: "20px", padding: "9px 28px", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid #e07b0d" }}>
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
-      <Footer />
-    </>
-  );
 
   /* ── Loading ── */
   if (loading) return (
@@ -76,9 +54,9 @@ const CartPage = () => {
               </svg>
               <h3 style={{ fontWeight: 700, fontSize: "20px", color: "#0f172a", margin: "0 0 8px" }}>Your cart is empty</h3>
               <p style={{ color: "#565959", fontSize: "14px", margin: "0 0 20px" }}>Browse our marketplace and add items you love.</p>
-              <Link to="/browse" style={{ background: "#f97316", color: "#fff", borderRadius: "20px", padding: "9px 28px", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid #e07b0d" }}>
+              <button onClick={() => navigate(-1)} style={{ background: "#f97316", color: "#fff", borderRadius: "20px", padding: "9px 28px", fontWeight: 600, fontSize: "14px", border: "1px solid #e07b0d", cursor: "pointer" }}>
                 Continue Shopping
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="cart-columns">
@@ -159,7 +137,16 @@ const CartPage = () => {
                 ))}
 
                 {/* Bottom subtotal bar */}
-                <div style={{ padding: "14px 22px", textAlign: "right", borderTop: "1px solid #e8ecee", background: "#fafafa", borderRadius: "0 0 6px 6px" }}>
+                <div style={{ padding: "14px 22px", borderTop: "1px solid #e8ecee", background: "#fafafa", borderRadius: "0 0 6px 6px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+                  <button
+                    onClick={() => navigate(-1)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontSize: "13.5px", color: "#2563eb", fontWeight: 500, padding: 0 }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Continue Shopping
+                  </button>
                   <span style={{ fontSize: "17px", fontWeight: 400, color: "#0f172a" }}>
                     Subtotal ({item_count} {item_count === 1 ? "item" : "items"}):&nbsp;
                     <strong style={{ fontWeight: 700 }}>{fmtNGN(total)}</strong>
@@ -182,7 +169,13 @@ const CartPage = () => {
 
                 <button
                   className="cart-checkout-btn"
-                  onClick={() => navigate("/checkout")}
+                  onClick={() => {
+                    if (!user) {
+                      navigate("/signin", { state: { next: "/checkout" } });
+                    } else {
+                      navigate("/checkout");
+                    }
+                  }}
                   disabled={items.every(i => !i.in_stock)}
                 >
                   Proceed to Checkout
@@ -207,7 +200,7 @@ const CartPage = () => {
                   <span>{fmtNGN(total)}</span>
                 </div>
 
-                <Link to="/browse" className="cart-continue">← Continue shopping</Link>
+                <button onClick={() => navigate(-1)} className="cart-continue" style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>← Continue shopping</button>
               </div>
 
             </div>

@@ -13,6 +13,7 @@ urlpatterns = [
     # Shop URLs (public — lookup by slug)
     path('shops/', ShopViewSet.as_view({'get': 'list', 'post': 'create'}), name='shop-list'),
     path('shops/mine/', ShopViewSet.as_view({'get': 'mine'}), name='shop-mine'),
+    path('shops/init-premium-payment/', ShopViewSet.as_view({'post': 'init_premium_payment'}), name='shop-init-premium-payment'),
     path('shops/upgrade-premium/', ShopViewSet.as_view({'post': 'upgrade_premium'}), name='shop-upgrade-premium'),
     path('shops/<slug:slug>/', ShopViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='shop-detail'),
     path('shops/<slug:slug>/visit/', ShopViewSet.as_view({'post': 'record_visit'}), name='shop-visit'),

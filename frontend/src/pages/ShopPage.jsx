@@ -316,13 +316,30 @@ const ShopPage = () => {
             >
               {/* Name + meta */}
               <div style={{ flex: "1 1 160px", minWidth: 0 }}>
-                <h1 style={{
-                  fontWeight: 600, fontSize: "16px", color: "#0f172a",
-                  margin: "0 0 2px", lineHeight: 1.2,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {shop.name}
-                </h1>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "2px" }}>
+                  <h1 style={{
+                    fontWeight: 600, fontSize: "16px", color: "#0f172a",
+                    margin: 0, lineHeight: 1.2,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {shop.name}
+                  </h1>
+                  {shop.is_premium && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: "4px",
+                      background: "linear-gradient(135deg, #d97706, #f59e0b)",
+                      color: "#fff", fontSize: "10.5px", fontWeight: 700,
+                      padding: "2px 8px", borderRadius: "999px",
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                      flexShrink: 0,
+                    }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 20h20M4 16l2-10 6 5 6-5 2 10"/>
+                      </svg>
+                      Premium
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   {shop.owner_name && (
                     <span style={{ fontSize: "12px", color: "#94a3b8" }}>by {shop.owner_name}</span>

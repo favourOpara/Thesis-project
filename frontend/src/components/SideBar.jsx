@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import "./Sidebar.css";
 import categoriesData from "../data/categoriesData";
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
   const { user } = useAuth();
+  const { cart } = useCart();
+  const cartCount = cart?.item_count ?? 0;
   const sidebarRef = useRef(null);
   const [openCategories, setOpenCategories] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -100,8 +103,24 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
   ];
 
   const NAV_LINKS = [
-    { label: "Support", icon: "💬", to: "/coming-soon", bg: "#eff6ff", color: "#3b7bf8" },
-    { label: "How It Works", icon: "❓", to: "/knowledge-base", bg: "#f8fafc", color: "#64748b" },
+    {
+      label: "Support", to: "/coming-soon", bg: "#eff6ff",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b7bf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      ),
+    },
+    {
+      label: "How It Works", to: "/knowledge-base", bg: "#f8fafc",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ),
+    },
   ];
 
   const MobileChevron = () => (
@@ -132,19 +151,28 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
 
           {/* ── User greeting ── */}
           {user ? (
-            <div className="sidebar-user-banner">
-              <div className="sidebar-user-avatar">
-                {(user.first_name || user.email || "U").charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="sidebar-user-name">
-                  {user.first_name ? `Hi, ${user.first_name}` : "Welcome back"}
+            <Link
+              to={user.user_type === "seller" ? "/seller/overview" : "/user-profile"}
+              onClick={closeAllAndSidebar}
+              style={{ textDecoration: "none", display: "block" }}
+            >
+              <div className="sidebar-user-banner" style={{ cursor: "pointer" }}>
+                <div className="sidebar-user-avatar">
+                  {(user.first_name || user.email || "U").charAt(0).toUpperCase()}
                 </div>
-                <div className="sidebar-user-type">
-                  {user.user_type === "seller" ? "Seller account" : "Buyer account"}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="sidebar-user-name">
+                    {user.first_name ? `Hi, ${user.first_name}` : "Welcome back"}
+                  </div>
+                  <div className="sidebar-user-type">
+                    {user.user_type === "seller" ? "Seller account" : "Buyer account"}
+                  </div>
                 </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
               </div>
-            </div>
+            </Link>
           ) : (
             <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9", display: "flex", gap: "8px" }}>
               <Link to="/signin" onClick={closeAllAndSidebar} style={{ flex: 1, padding: "9px", background: "#3b7bf8", color: "white", borderRadius: "8px", textAlign: "center", fontSize: "13px", fontWeight: 700, textDecoration: "none" }}>
@@ -154,6 +182,30 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
                 Register
               </Link>
             </div>
+          )}
+
+          {/* ── Cart (buyer / guest only) ── */}
+          {user?.user_type !== "seller" && (
+            <Link to="/cart" className="sidebar-nav-row" onClick={closeAllAndSidebar} style={{ textDecoration: "none" }}>
+              <div className="nav-icon" style={{ background: "#eff6ff", position: "relative" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+              </div>
+              <span style={{ flex: 1, color: "#111827", fontWeight: 600 }}>My Cart</span>
+              {cartCount > 0 && (
+                <span style={{
+                  background: "#2563eb", color: "#fff",
+                  borderRadius: "999px", minWidth: "18px", height: "18px",
+                  fontSize: "11px", fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  padding: "0 5px",
+                }}>
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
           )}
 
           {/* ── Quick categories grid ── */}
@@ -218,7 +270,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
               style={{ textDecoration: "none" }}
             >
               <div className="nav-icon" style={{ background: item.bg }}>
-                <span style={{ fontSize: "16px" }}>{item.icon}</span>
+                {item.icon}
               </div>
               <span style={{ flex: 1, color: "#111827" }}>{item.label}</span>
               <span className="nav-chevron"><MobileChevron /></span>

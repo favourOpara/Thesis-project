@@ -26,10 +26,15 @@ class ShopSerializer(serializers.ModelSerializer):
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
             'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
-            'is_premium', 'premium_since', 'store_video_url', 'text_blocks',
+            'is_premium', 'premium_since', 'store_video_url', 'store_video_file', 'text_blocks',
+            'paystack_subscription_code',
             'created_at', 'updated_at',
         ]
-        read_only_fields = ['slug', 'visit_count', 'is_premium', 'premium_since', 'created_at', 'updated_at']
+        read_only_fields = [
+            'slug', 'visit_count', 'is_premium', 'premium_since',
+            'paystack_customer_code', 'paystack_subscription_code', 'paystack_email_token',
+            'created_at', 'updated_at',
+        ]
 
     def get_owner_name(self, obj):
         u = obj.owner
