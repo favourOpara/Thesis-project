@@ -234,12 +234,13 @@ const ManagePage = ({ shop, onShopUpdate }) => {
   const fileInputRef = useRef(null);
 
   // subscription management state
-  const [subStatus,       setSubStatus]       = useState(null);   // { has_subscription, status, next_payment_date }
-  const [subLoading,      setSubLoading]       = useState(true);
-  const [cancelling,      setCancelling]       = useState(false);
-  const [reactivating,    setReactivating]     = useState(false);
-  const [subMsg,          setSubMsg]           = useState(null);   // { ok, text }
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [subStatus,         setSubStatus]         = useState(null);   // { has_subscription, status, next_payment_date }
+  const [subLoading,        setSubLoading]         = useState(true);
+  const [cancelling,        setCancelling]         = useState(false);
+  const [reactivating,      setReactivating]       = useState(false);
+  const [settingUpRecurring,setSettingUpRecurring] = useState(false);
+  const [subMsg,            setSubMsg]             = useState(null);   // { ok, text }
+  const [showCancelConfirm, setShowCancelConfirm]  = useState(false);
 
   useEffect(() => {
     axios.get(`${BASE}/api/shops/subscription-status/`, ac())
@@ -283,6 +284,31 @@ const ManagePage = ({ shop, onShopUpdate }) => {
       setSubMsg({ ok: false, text: e.response?.data?.error || "Could not reactivate. Please try again." });
     } finally {
       setReactivating(false);
+    }
+  };
+
+  const handleSetupRecurring = async () => {
+    setSettingUpRecurring(true);
+    setSubMsg(null);
+    try {
+      const res = await axios.post(`${BASE}/api/shops/setup-recurring/`, {}, acJson());
+      if (res.data.already_setup) {
+        setSubMsg({ ok: true, text: "Auto-renewal is already active on your account." });
+        return;
+      }
+      if (res.data.silent) {
+        // Card was on file — subscription created without a new payment
+        onShopUpdate(res.data.shop);
+        setSubStatus({ has_subscription: true, status: "active" });
+        setSubMsg({ ok: true, text: "Done! Monthly auto-renewal is now active. Your saved card will be charged each month." });
+      } else {
+        // No card on file — redirect to Paystack to enter card details
+        window.location.href = res.data.authorization_url;
+      }
+    } catch (e) {
+      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not set up recurring billing. Please try again." });
+    } finally {
+      setSettingUpRecurring(false);
     }
   };
 
@@ -621,7 +647,19 @@ const ManagePage = ({ shop, onShopUpdate }) => {
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") ? (
+                  {/* No subscription at all — offer to set one up */}
+                  {!shop.paystack_subscription_code && (
+                    <button
+                      onClick={handleSetupRecurring}
+                      disabled={settingUpRecurring}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 18px", background: settingUpRecurring ? "#94a3b8" : "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: settingUpRecurring ? "not-allowed" : "pointer" }}
+                    >
+                      {settingUpRecurring ? <><SpinIcon /> Setting up…</> : "Set up auto-renewal"}
+                    </button>
+                  )}
+
+                  {/* Subscription exists but is cancelled — offer reactivation */}
+                  {shop.paystack_subscription_code && subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") && (
                     <button
                       onClick={handleReactivate}
                       disabled={reactivating}
@@ -629,7 +667,10 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                     >
                       {reactivating ? <><SpinIcon /> Reactivating…</> : "Reactivate Subscription"}
                     </button>
-                  ) : shop.is_premium && !showCancelConfirm && (
+                  )}
+
+                  {/* Active subscription — offer cancellation */}
+                  {shop.paystack_subscription_code && subStatus?.status === "active" && !showCancelConfirm && (
                     <button
                       onClick={() => setShowCancelConfirm(true)}
                       style={{ padding: "8px 16px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
@@ -641,9 +682,9 @@ const ManagePage = ({ shop, onShopUpdate }) => {
               </div>
 
               {/* Info note */}
-              {!subStatus?.has_subscription && (
+              {!shop.paystack_subscription_code && (
                 <div style={{ fontSize: "12.5px", color: "#64748b", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", lineHeight: 1.6 }}>
-                  No recurring subscription is linked to this account. If you paid a one-time charge, contact support to set up recurring billing.
+                  No recurring billing is set up yet. Click <strong>Set up auto-renewal</strong> — if your card is already on file you won't be charged again, otherwise you'll be taken to Paystack to enter your card details once.
                 </div>
               )}
 

@@ -110,7 +110,10 @@ const SellerSettings = () => {
     store_status_message: shop?.store_status_message || "",
     phone_number:         "",
     address:              "",
+    first_name:           "",
+    last_name:            "",
   });
+  const [nameMissing, setNameMissing] = useState(false);
   const [logo,   setLogo]   = useState(null);
   const [banner, setBanner] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -149,14 +152,21 @@ const SellerSettings = () => {
     }
   }, [shop]);
 
-  // Load private user fields (phone + address)
+  // Load private user fields (phone, address, name)
   useEffect(() => {
     axios.get(`${BASE}/api/user-info/`, ac())
-      .then(r => setForm(f => ({
-        ...f,
-        phone_number: r.data.phone_number || "",
-        address:      r.data.address      || "",
-      })))
+      .then(r => {
+        const firstName = r.data.first_name || "";
+        const lastName  = r.data.last_name  || "";
+        setNameMissing(!firstName.trim());
+        setForm(f => ({
+          ...f,
+          phone_number: r.data.phone_number || "",
+          address:      r.data.address      || "",
+          first_name:   firstName,
+          last_name:    lastName,
+        }));
+      })
       .catch(() => {});
   }, []);
 
@@ -164,10 +174,16 @@ const SellerSettings = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
+
+    if (!form.first_name.trim()) {
+      toast.error("First name is required.");
+      return;
+    }
+
     setSaving(true);
 
     const fd = new FormData();
-    const userFields = ["phone_number", "address"];
+    const userFields = ["phone_number", "address", "first_name", "last_name"];
     Object.entries(form).forEach(([k, v]) => {
       if (userFields.includes(k)) return; // handled separately
       if (v) fd.append(k, v);
@@ -183,12 +199,15 @@ const SellerSettings = () => {
         await axios.patch(`${BASE}/api/shops/${shop.slug}/`, fd, ac());
       }
 
-      // Save private user fields
+      // Save private user fields including name
       await axios.put(`${BASE}/api/update-profile/`, {
+        first_name:   form.first_name.trim(),
+        last_name:    form.last_name.trim(),
         phone_number: form.phone_number,
         address:      form.address,
       }, ac());
 
+      setNameMissing(false);
       toast.success(isNew ? "Store created successfully." : "Changes saved.");
       refreshShop();
     } catch (err) {
@@ -212,7 +231,59 @@ const SellerSettings = () => {
       </h2>
 
       <ToastContainer position="bottom-center" />
+
+      {/* Missing name banner — shown to Google sign-up users */}
+      {nameMissing && (
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: "12px",
+          background: "#fffbeb", border: "1px solid #fde68a",
+          borderRadius: "12px", padding: "14px 18px", marginBottom: "20px",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "13.5px", color: "#92400e", marginBottom: "2px" }}>
+              Your name is missing
+            </div>
+            <div style={{ fontSize: "12.5px", color: "#78350f", lineHeight: 1.6 }}>
+              Google sign-in doesn't always share your name. Please fill in your first and last name below — it's required for your seller profile.
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
+
+        {/* Account name — mandatory, shown first so Google users can't miss it */}
+        <p className="sd-section-label">Your Name</p>
+        <div className="sd-form-grid" style={{ marginBottom: "0" }}>
+          <div>
+            <label className="sd-label">First Name *</label>
+            <input
+              className="sd-input-line"
+              name="first_name"
+              value={form.first_name}
+              onChange={handleChange}
+              placeholder="e.g. Amaka"
+              required
+              style={!form.first_name.trim() ? { borderColor: "#f97316" } : {}}
+            />
+          </div>
+          <div>
+            <label className="sd-label">Last Name</label>
+            <input
+              className="sd-input-line"
+              name="last_name"
+              value={form.last_name}
+              onChange={handleChange}
+              placeholder="e.g. Okafor"
+            />
+          </div>
+        </div>
+        <hr className="sd-divider" />
+
         <div className="sd-form-grid">
           <div className="sd-form-full">
             <label className="sd-label">Store Name *</label>

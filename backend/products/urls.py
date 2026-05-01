@@ -15,6 +15,7 @@ urlpatterns = [
     path('shops/mine/', ShopViewSet.as_view({'get': 'mine'}), name='shop-mine'),
     path('shops/init-premium-payment/', ShopViewSet.as_view({'post': 'init_premium_payment'}), name='shop-init-premium-payment'),
     path('shops/upgrade-premium/', ShopViewSet.as_view({'post': 'upgrade_premium'}), name='shop-upgrade-premium'),
+    path('shops/setup-recurring/', ShopViewSet.as_view({'post': 'setup_recurring'}), name='shop-setup-recurring'),
     path('shops/subscription-status/', ShopViewSet.as_view({'get': 'subscription_status'}), name='shop-subscription-status'),
     path('shops/cancel-premium/', ShopViewSet.as_view({'post': 'cancel_premium'}), name='shop-cancel-premium'),
     path('shops/reactivate-premium/', ShopViewSet.as_view({'post': 'reactivate_premium'}), name='shop-reactivate-premium'),

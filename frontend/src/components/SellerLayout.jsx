@@ -765,6 +765,12 @@ const SellerLayout = () => {
                 {path === "/seller/inquiries" && unreadCount > 0 && (
                   <span className="sd-badge">{unreadCount}</span>
                 )}
+                {path === "/seller/settings" && !user?.first_name && (
+                  <span style={{
+                    marginLeft: "auto", width: "8px", height: "8px", borderRadius: "50%",
+                    background: "#f97316", flexShrink: 0,
+                  }} title="Name required" />
+                )}
                 {gold && shop && (
                   <span style={{
                     marginLeft: "auto", fontSize: "10px", fontWeight: 700, letterSpacing: "0.03em",

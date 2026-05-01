@@ -187,7 +187,8 @@ class ShopViewSet(viewsets.ModelViewSet):
             shop = Shop.objects.get(owner=request.user)
         except Shop.DoesNotExist:
             return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
-        if shop.is_premium:
+        # If already premium AND already has a subscription, nothing to do
+        if shop.is_premium and shop.paystack_subscription_code:
             serializer = self.get_serializer(shop, context={'request': request})
             return Response(serializer.data)
 
@@ -209,15 +210,24 @@ class ShopViewSet(viewsets.ModelViewSet):
             )
 
         # Save subscription / customer codes for recurring billing
-        update_fields = ['is_premium', 'premium_since', 'premium_expires_at']
-        shop.is_premium = True
-        shop.premium_since = timezone.now()
+        already_premium = shop.is_premium
+        update_fields = ['premium_expires_at']
         shop.premium_expires_at = None  # clear any previous cancellation expiry
+        if not already_premium:
+            shop.is_premium = True
+            shop.premium_since = timezone.now()
+            update_fields += ['is_premium', 'premium_since']
 
         customer = txn_data.get('customer') or {}
         if customer.get('customer_code'):
             shop.paystack_customer_code = customer['customer_code']
             update_fields.append('paystack_customer_code')
+
+        # Save card authorization code so we can create subscriptions without future redirects
+        authorization = txn_data.get('authorization') or {}
+        if authorization.get('authorization_code') and not shop.paystack_authorization_code:
+            shop.paystack_authorization_code = authorization['authorization_code']
+            update_fields.append('paystack_authorization_code')
 
         # Fetch subscription code if a plan was used
         sub_data = txn_data.get('plan_object') or {}
@@ -239,6 +249,92 @@ class ShopViewSet(viewsets.ModelViewSet):
         shop.save(update_fields=update_fields)
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='setup-recurring',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def setup_recurring(self, request):
+        """
+        Attach recurring monthly billing to an existing premium store.
+        If a saved card authorization exists, creates the subscription silently (no new charge).
+        Otherwise initialises a Paystack transaction so the seller can enter card details;
+        the ₦10,000 charge is applied but premium is not reset (already active).
+        """
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if shop.paystack_subscription_code:
+            return Response({'already_setup': True, 'message': 'Recurring billing is already active.'})
+
+        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+        plan_code  = self._get_or_create_paystack_plan()
+
+        # ── Path A: silent subscription using stored card authorization ──────────
+        if shop.paystack_authorization_code and shop.paystack_customer_code and plan_code:
+            import datetime as dt
+            start_date = (timezone.now() + timezone.timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S+00:00')
+            try:
+                res = http_requests.post(
+                    'https://api.paystack.co/subscription',
+                    json={
+                        'customer':      shop.paystack_customer_code,
+                        'plan':          plan_code,
+                        'authorization': shop.paystack_authorization_code,
+                        'start_date':    start_date,
+                    },
+                    headers=ps_headers,
+                    timeout=10,
+                )
+                data = res.json()
+                if data.get('status'):
+                    sub = data.get('data') or {}
+                    update_fields = []
+                    if sub.get('subscription_code'):
+                        shop.paystack_subscription_code = sub['subscription_code']
+                        update_fields.append('paystack_subscription_code')
+                    if sub.get('email_token'):
+                        shop.paystack_email_token = sub['email_token']
+                        update_fields.append('paystack_email_token')
+                    if update_fields:
+                        shop.save(update_fields=update_fields)
+                    serializer = self.get_serializer(shop, context={'request': request})
+                    return Response({'silent': True, 'shop': serializer.data})
+            except Exception:
+                pass  # fall through to payment redirect below
+
+        # ── Path B: no saved card — redirect to Paystack to enter card details ──
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        callback_url = f"{frontend_url}/seller/premium"
+        payload = {
+            'email':        request.user.email,
+            'amount':       1000000,
+            'currency':     'NGN',
+            'callback_url': callback_url,
+            'metadata':     {'type': 'setup_recurring', 'user_id': request.user.id},
+        }
+        if plan_code:
+            payload['plan'] = plan_code
+        try:
+            res = http_requests.post(
+                'https://api.paystack.co/transaction/initialize',
+                json=payload,
+                headers=ps_headers,
+                timeout=10,
+            )
+            data = res.json()
+        except Exception as e:
+            return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not data.get('status'):
+            return Response({'error': data.get('message', 'Could not start payment.')}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({
+            'silent':            False,
+            'authorization_url': data['data']['authorization_url'],
+            'reference':         data['data']['reference'],
+        })
 
     @action(detail=False, methods=['get'], url_path='subscription-status',
             permission_classes=[permissions.IsAuthenticated])

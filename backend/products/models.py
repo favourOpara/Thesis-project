@@ -43,9 +43,13 @@ class Shop(models.Model):
         help_text="Uploaded video file"
     )
     # Paystack subscription (for recurring billing)
-    paystack_customer_code    = models.CharField(max_length=100, blank=True, null=True)
-    paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
-    paystack_email_token       = models.CharField(max_length=200, blank=True, null=True)
+    paystack_customer_code      = models.CharField(max_length=100, blank=True, null=True)
+    paystack_subscription_code  = models.CharField(max_length=100, blank=True, null=True)
+    paystack_email_token        = models.CharField(max_length=200, blank=True, null=True)
+    paystack_authorization_code = models.CharField(
+        max_length=200, blank=True, null=True,
+        help_text="Card authorization code — used to create a subscription without a new payment"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
