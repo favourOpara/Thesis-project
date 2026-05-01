@@ -9,7 +9,7 @@ from django.conf import settings
 import requests as http_requests
 
 from .models import Shop, Category, Product, ProductImage, StoreTextBlock
-from abatrades.email_utils import send_product_listed, send_premium_activated
+from abatrades.email_utils import send_product_listed, send_premium_activated, send_premium_cancelled, send_premium_reactivated
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
@@ -618,6 +618,8 @@ class ShopViewSet(viewsets.ModelViewSet):
         shop.premium_expires_at = expires_at or (timezone.now() + timezone.timedelta(days=30))
         shop.save(update_fields=update_fields)
 
+        send_premium_cancelled(request.user, shop, shop.premium_expires_at)
+
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)
 
@@ -631,13 +633,43 @@ class ShopViewSet(viewsets.ModelViewSet):
         except Shop.DoesNotExist:
             return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if shop.is_premium:
+        # Already fully active (no pending cancellation) — nothing to do
+        if shop.is_premium and not shop.premium_expires_at:
             serializer = self.get_serializer(shop, context={'request': request})
             return Response(serializer.data)
 
+        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+
+        # Lazy lookup: subscription code may not have been saved yet (async Paystack timing)
+        if (not shop.paystack_subscription_code or not shop.paystack_email_token) and shop.paystack_customer_code:
+            try:
+                lookup = http_requests.get(
+                    f"https://api.paystack.co/subscription?customer={shop.paystack_customer_code}",
+                    headers=ps_headers, timeout=10,
+                )
+                subs = (lookup.json().get('data') or [])
+                if subs:
+                    shop.paystack_subscription_code = subs[0].get('subscription_code', '') or shop.paystack_subscription_code
+                    shop.paystack_email_token       = subs[0].get('email_token', '') or shop.paystack_email_token
+                    update_fields = []
+                    if shop.paystack_subscription_code:
+                        update_fields.append('paystack_subscription_code')
+                    if shop.paystack_email_token:
+                        update_fields.append('paystack_email_token')
+                    if update_fields:
+                        shop.save(update_fields=update_fields)
+            except Exception:
+                pass
+
         if not shop.paystack_subscription_code or not shop.paystack_email_token:
+            # No recurring subscription on file — user paid via bank transfer or codes were lost.
+            # Clear the pending expiry so the frontend falls back to the upgrade flow.
+            if shop.premium_expires_at:
+                shop.premium_expires_at = None
+                shop.save(update_fields=['premium_expires_at'])
+            serializer = self.get_serializer(shop, context={'request': request})
             return Response(
-                {'error': 'No saved subscription found. Please subscribe again.'},
+                {'error': 'no_subscription', 'shop': serializer.data},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -663,6 +695,9 @@ class ShopViewSet(viewsets.ModelViewSet):
         shop.is_premium = True
         shop.premium_expires_at = None
         shop.save(update_fields=['is_premium', 'premium_expires_at'])
+
+        send_premium_reactivated(request.user, shop)
+
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)
 

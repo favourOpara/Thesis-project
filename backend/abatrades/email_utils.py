@@ -294,7 +294,47 @@ def send_new_order_to_sellers(order):
 
 # ── 6. Order status update (buyer) ───────────────────────────────────────────
 
-# ── 7. Subscription auto-renewed (monthly charge succeeded) ──────────────────
+# ── 7. Premium cancelled ─────────────────────────────────────────────────────
+
+def send_premium_cancelled(user, shop, expires_at=None):
+    name = user.first_name or user.email.split('@')[0]
+    expiry_str = ""
+    if expires_at:
+        try:
+            expiry_str = f" Your premium features remain active until <strong>{expires_at.strftime('%d %B %Y')}</strong>."
+        except Exception:
+            pass
+    body = (
+        _p(f"Hi {name}, you have cancelled auto-renewal for your Premium subscription on <strong>{shop.name}</strong>.")
+        + _p(f"No further charges will be made.{expiry_str}")
+        + _p("If you change your mind, you can reactivate your subscription anytime before the expiry date from your seller dashboard.")
+        + _btn("Manage Subscription", f"{FRONTEND}/seller/premium", color="#92400e")
+    )
+    _send(
+        subject="Premium subscription cancelled — Abatrades",
+        to=user.email,
+        html=_wrap("Subscription cancelled", body),
+    )
+
+
+# ── 8. Premium reactivated ────────────────────────────────────────────────────
+
+def send_premium_reactivated(user, shop):
+    name = user.first_name or user.email.split('@')[0]
+    body = (
+        _p(f"Hi {name}, your Premium subscription for <strong>{shop.name}</strong> has been reactivated!")
+        + _p("Auto-renewal is back on. Your card will be charged monthly to keep your premium features active.")
+        + _p("All premium features are fully restored with no interruption.")
+        + _btn("Manage Subscription", f"{FRONTEND}/seller/premium", color="#15803d")
+    )
+    _send(
+        subject="Premium subscription reactivated — Abatrades",
+        to=user.email,
+        html=_wrap("Subscription reactivated ✓", body),
+    )
+
+
+# ── 9. Subscription auto-renewed (monthly charge succeeded) ──────────────────
 
 def send_subscription_renewed(user, shop, next_payment_date=None):
     name = user.first_name or user.email.split('@')[0]

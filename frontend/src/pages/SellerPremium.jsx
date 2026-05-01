@@ -281,7 +281,20 @@ const ManagePage = ({ shop, onShopUpdate }) => {
       setSubMsg({ ok: true, text: "Subscription reactivated! Your premium features are active again." });
       setSubStatus(prev => ({ ...prev, status: "active" }));
     } catch (e) {
-      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not reactivate. Please try again." });
+      const errCode = e.response?.data?.error;
+      if (errCode === "no_subscription") {
+        // No recurring subscription on file (bank transfer or codes lost).
+        // Backend already cleared premium_expires_at — update local shop state
+        // so the UI switches to the upgrade page.
+        const shopData = e.response?.data?.shop;
+        if (shopData) onShopUpdate(shopData);
+        setSubMsg({
+          ok: false,
+          text: "Your previous plan wasn't linked to auto-renewal. Please subscribe again to continue.",
+        });
+      } else {
+        setSubMsg({ ok: false, text: errCode || "Could not reactivate. Please try again." });
+      }
     } finally {
       setReactivating(false);
     }
@@ -609,22 +622,29 @@ const ManagePage = ({ shop, onShopUpdate }) => {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 
-              {/* Status row */}
+              {/* Status row
+                  Source of truth for buttons = shop.premium_expires_at (our DB):
+                    - null + is_premium  → Active (cancel button)
+                    - set  + is_premium  → Cancelling/will expire (reactivate button)
+                  Paystack status is only used to display next billing date — never for button logic. */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>Status:</span>
-                    {subStatus?.status === "active" ? (
-                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Active</span>
-                    ) : subStatus?.status === "cancelled" || subStatus?.status === "non-renewing" ? (
-                      <span style={{ background: "#fef3c7", color: "#92400e", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Cancelled</span>
-                    ) : subStatus?.has_subscription ? (
-                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>{subStatus?.status || "Unknown"}</span>
+                    {shop.premium_expires_at ? (
+                      <span style={{ background: "#fef3c7", color: "#92400e", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Cancelling</span>
+                    ) : !subStatus?.has_subscription ? (
+                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>No recurring billing</span>
                     ) : (
-                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>No recurring subscription</span>
+                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Active</span>
                     )}
                   </div>
-                  {subStatus?.next_payment_date && (
+                  {shop.premium_expires_at && (
+                    <div style={{ fontSize: "12.5px", color: "#92400e" }}>
+                      Access until <strong>{new Date(shop.premium_expires_at).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}</strong>
+                    </div>
+                  )}
+                  {!shop.premium_expires_at && subStatus?.next_payment_date && (
                     <div style={{ fontSize: "12.5px", color: "#64748b" }}>
                       Next billing: <strong style={{ color: "#374151" }}>
                         {new Date(subStatus.next_payment_date).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
@@ -638,10 +658,10 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                   )}
                 </div>
 
-                {/* Action buttons */}
+                {/* Action buttons — driven by shop.premium_expires_at, NOT Paystack status */}
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {/* No subscription at all — offer to set one up (bank transfer users) */}
-                  {!subLoading && !subStatus?.has_subscription && (
+                  {/* No card/subscription yet — bank transfer users */}
+                  {!subLoading && !subStatus?.has_subscription && !shop.premium_expires_at && (
                     <button
                       onClick={handleSetupRecurring}
                       disabled={settingUpRecurring}
@@ -651,8 +671,8 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                     </button>
                   )}
 
-                  {/* Subscription exists but is cancelled — offer reactivation */}
-                  {subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") && (
+                  {/* Subscription was cancelled — premium_expires_at is set */}
+                  {shop.premium_expires_at && (
                     <button
                       onClick={handleReactivate}
                       disabled={reactivating}
@@ -662,8 +682,8 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                     </button>
                   )}
 
-                  {/* Active subscription — offer cancellation */}
-                  {subStatus?.has_subscription && subStatus?.status === "active" && !showCancelConfirm && (
+                  {/* Active — no expiry date set, has subscription */}
+                  {!shop.premium_expires_at && subStatus?.has_subscription && !showCancelConfirm && (
                     <button
                       onClick={() => setShowCancelConfirm(true)}
                       style={{ padding: "8px 16px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
