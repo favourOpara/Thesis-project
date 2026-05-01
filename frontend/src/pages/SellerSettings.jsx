@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSellerCtx, ac, BASE, IconExternal } from "../components/SellerLayout";
+import { useAuth } from "../context/AuthContext";
 
 /* ── Custom styled dropdown ── */
 const SortDropdown = ({ value, onChange }) => {
@@ -96,6 +97,24 @@ const LockIcon = () => (
 
 const SellerSettings = () => {
   const { shop, refreshShop, setPageTitle, setTopbarActions } = useSellerCtx();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput,       setDeleteInput]       = useState("");
+  const [deleting,          setDeleting]          = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${BASE}/api/delete-account/`, ac());
+      await logout();
+      navigate("/", { replace: true });
+    } catch {
+      toast.error("Could not delete account. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   const [form, setForm] = useState({
     name:                 shop?.name                 || "",
@@ -462,6 +481,59 @@ const SellerSettings = () => {
           </button>
         </div>
       </form>
+
+      {/* ── Danger zone ── */}
+      <div style={{ marginTop: "40px", borderTop: "1px solid #fee2e2", paddingTop: "28px" }}>
+        <p style={{ fontSize: "11px", fontWeight: 700, color: "#ef4444", textTransform: "uppercase", letterSpacing: "0.8px", margin: "0 0 12px" }}>
+          Danger Zone
+        </p>
+
+        {!showDeleteConfirm ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", background: "#fff5f5", border: "1px solid #fecaca", borderRadius: "12px", padding: "16px 20px" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "13.5px", color: "#0f172a", marginBottom: "2px" }}>Delete Account</div>
+              <div style={{ fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.5 }}>Permanently delete your account, store, and all data. This cannot be undone.</div>
+            </div>
+            <button
+              onClick={() => { setShowDeleteConfirm(true); setDeleteInput(""); }}
+              style={{ padding: "8px 18px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            >
+              Delete Account
+            </button>
+          </div>
+        ) : (
+          <div style={{ background: "#fff5f5", border: "1.5px solid #fecaca", borderRadius: "12px", padding: "20px" }}>
+            <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "8px" }}>Are you sure?</div>
+            <p style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, margin: "0 0 14px" }}>
+              Your store, all products, and your account will be permanently deleted. This cannot be recovered.
+            </p>
+            <p style={{ fontSize: "13px", color: "#374151", fontWeight: 500, margin: "0 0 8px" }}>
+              Type <strong>DELETE</strong> to confirm:
+            </p>
+            <input
+              value={deleteInput}
+              onChange={e => setDeleteInput(e.target.value)}
+              placeholder="DELETE"
+              style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", fontSize: "13.5px", border: "1.5px solid #fecaca", outline: "none", marginBottom: "12px", fontFamily: "monospace", boxSizing: "border-box" }}
+            />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteInput !== "DELETE" || deleting}
+                style={{ padding: "8px 20px", background: deleteInput === "DELETE" && !deleting ? "#b91c1c" : "#94a3b8", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: deleteInput === "DELETE" && !deleting ? "pointer" : "not-allowed" }}
+              >
+                {deleting ? "Deleting…" : "Delete my account"}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
