@@ -15,7 +15,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-3lw7520nzk4a4&6gf$=^i
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Payment & Platform
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
+PAYSTACK_SECRET_KEY        = os.environ.get("PAYSTACK_SECRET_KEY", "")
+PAYSTACK_PREMIUM_PLAN_CODE = os.environ.get("PAYSTACK_PREMIUM_PLAN_CODE", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 # Cloudinary — enabled automatically when credentials are present (production).

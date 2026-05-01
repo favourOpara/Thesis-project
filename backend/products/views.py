@@ -673,6 +673,8 @@ class ShopViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # ── Attempt 1: re-enable the existing disabled subscription ─────────────
+        enable_ok = False
         try:
             res = http_requests.post(
                 "https://api.paystack.co/subscription/enable",
@@ -680,17 +682,57 @@ class ShopViewSet(viewsets.ModelViewSet):
                     'code': shop.paystack_subscription_code,
                     'token': shop.paystack_email_token,
                 },
-                headers={'Authorization': f'Bearer {PAYSTACK_SECRET}'},
+                headers=ps_headers,
                 timeout=10,
             )
-            data = res.json()
-            if not data.get('status'):
+            enable_ok = res.json().get('status', False)
+        except Exception:
+            pass
+
+        # ── Attempt 2: subscription is permanently cancelled on Paystack —
+        #    create a brand-new one using the saved authorization code (no charge) ──
+        if not enable_ok:
+            if not shop.paystack_authorization_code:
+                # No card on file at all — user must go through upgrade flow
+                if shop.premium_expires_at:
+                    shop.premium_expires_at = None
+                    shop.save(update_fields=['premium_expires_at'])
+                serializer = self.get_serializer(shop, context={'request': request})
                 return Response(
-                    {'error': data.get('message', 'Could not reactivate subscription.')},
-                    status=status.HTTP_502_BAD_GATEWAY
+                    {'error': 'no_subscription', 'shop': serializer.data},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-        except Exception as e:
-            return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+            PREMIUM_PLAN_CODE = getattr(settings, 'PAYSTACK_PREMIUM_PLAN_CODE', '')
+            if not PREMIUM_PLAN_CODE:
+                return Response(
+                    {'error': 'Premium plan not configured. Contact support.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            try:
+                sub_res = http_requests.post(
+                    "https://api.paystack.co/subscription",
+                    json={
+                        'customer':          shop.paystack_customer_code,
+                        'plan':              PREMIUM_PLAN_CODE,
+                        'authorization':     shop.paystack_authorization_code,
+                    },
+                    headers=ps_headers,
+                    timeout=10,
+                )
+                sub_data = sub_res.json()
+                if not sub_data.get('status'):
+                    return Response(
+                        {'error': sub_data.get('message', 'Could not create new subscription.')},
+                        status=status.HTTP_502_BAD_GATEWAY
+                    )
+                new_sub = sub_data.get('data') or {}
+                shop.paystack_subscription_code = new_sub.get('subscription_code', shop.paystack_subscription_code)
+                shop.paystack_email_token       = new_sub.get('email_token', shop.paystack_email_token)
+                shop.save(update_fields=['paystack_subscription_code', 'paystack_email_token'])
+            except Exception as e:
+                return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
 
         shop.is_premium = True
         shop.premium_expires_at = None
