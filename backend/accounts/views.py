@@ -10,6 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.middleware import csrf
 from rest_framework.decorators import api_view, permission_classes
+from abatrades.email_utils import send_welcome
 
 # Sign Up View
 class SignUpView(APIView):
@@ -20,6 +21,7 @@ class SignUpView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
+            send_welcome(user)
             return Response(
                 {
                     "message": "User created successfully",
@@ -280,6 +282,7 @@ class GoogleLoginView(APIView):
                 is_active=True,
             )
             created = True
+            send_welcome(user)
 
         if not user.is_active:
             return Response({'error': 'Account is disabled'}, status=status.HTTP_401_UNAUTHORIZED)

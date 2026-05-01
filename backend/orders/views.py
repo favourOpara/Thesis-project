@@ -13,6 +13,10 @@ from cart.models import Cart
 from products.models import Product
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CheckoutSerializer
+from abatrades.email_utils import (
+    send_order_confirmation, send_new_order_to_sellers, send_order_status_update,
+    send_subscription_renewed, send_subscription_failed,
+)
 
 PAYSTACK_SECRET = getattr(settings, "PAYSTACK_SECRET_KEY", "")
 
@@ -152,8 +156,47 @@ def paystack_webhook(request):
                 except Exception:
                     pass
 
+                # Send confirmation emails
+                send_order_confirmation(order)
+                send_new_order_to_sellers(order)
+
         except Order.DoesNotExist:
             pass
+
+    # ── Subscription auto-renewal succeeded ──────────────────────────────────
+    elif event == "invoice.payment_success":
+        sub_code = (data.get("data") or {}).get("subscription", {}).get("subscription_code", "")
+        if sub_code:
+            try:
+                from products.models import Shop
+                shop = Shop.objects.select_related("owner").get(paystack_subscription_code=sub_code)
+                # Make sure premium is still active (handles edge cases)
+                if not shop.is_premium:
+                    shop.is_premium = True
+                    shop.premium_expires_at = None
+                    shop.save(update_fields=["is_premium", "premium_expires_at"])
+                next_date = (data.get("data") or {}).get("subscription", {}).get("next_payment_date")
+                send_subscription_renewed(shop.owner, shop, next_date)
+            except Exception:
+                pass
+
+    # ── Subscription auto-renewal failed ─────────────────────────────────────
+    elif event in ("invoice.payment_failed", "subscription.not_renew"):
+        sub_code = (data.get("data") or {}).get("subscription", {}).get("subscription_code", "")
+        if not sub_code:
+            sub_code = (data.get("data") or {}).get("subscription_code", "")
+        if sub_code:
+            try:
+                from products.models import Shop
+                from django.utils import timezone
+                shop = Shop.objects.select_related("owner").get(paystack_subscription_code=sub_code)
+                if event == "invoice.payment_failed":
+                    # Revoke premium immediately on payment failure
+                    shop.is_premium = False
+                    shop.save(update_fields=["is_premium"])
+                    send_subscription_failed(shop.owner, shop)
+            except Exception:
+                pass
 
     return Response(status=200)
 
@@ -218,6 +261,9 @@ def verify_payment(request, ref):
                     except Exception:
                         pass
 
+                    send_order_confirmation(order)
+                    send_new_order_to_sellers(order)
+
         except Order.DoesNotExist:
             return Response({"error": "Order not found."}, status=404)
 
@@ -259,4 +305,5 @@ def update_order_status(request, order_id):
 
     order.status = new_status
     order.save(update_fields=["status"])
+    send_order_status_update(order)
     return Response(OrderSerializer(order).data)

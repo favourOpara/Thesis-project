@@ -230,6 +230,15 @@ SOCIALACCOUNT_PROVIDERS = {
 # dj-rest-auth settings
 REST_USE_JWT = True
 
+# ── Email (Brevo SMTP) ────────────────────────────────────────────────────────
+EMAIL_BACKEND    = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST       = 'smtp-relay.brevo.com'
+EMAIL_PORT       = 587
+EMAIL_USE_TLS    = True
+EMAIL_HOST_USER  = os.environ.get('BREVO_SMTP_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('BREVO_SMTP_KEY', '')
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'Abatrades <noreply@abatrades.com>')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

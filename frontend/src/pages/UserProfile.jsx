@@ -69,6 +69,9 @@ const Profile = () => {
   const [switching, setSwitching] = useState(false);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem("profileUpdateSuccess") === "true") {
@@ -109,6 +112,23 @@ const Profile = () => {
   const handleLogout = async () => {
     await logout();
     navigate("/", { replace: true });
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`${BASE}/api/delete-account/`, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      await logout();
+      navigate("/", { replace: true });
+    } catch {
+      toast.error("Could not delete account. Please try again.");
+      setDeleting(false);
+    }
   };
 
   const fmtNGN = n => parseFloat(n || 0).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
@@ -198,9 +218,60 @@ const Profile = () => {
                 label="Sign Out"
                 onClick={handleLogout}
                 danger
+              />
+              <ActionRow
+                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>}
+                label="Delete Account"
+                sublabel="Permanently remove your account and all data"
+                onClick={() => { setShowDeleteConfirm(true); setDeleteInput(""); }}
+                danger
                 last
               />
             </Card>
+
+            {/* Delete confirmation dialog */}
+            {showDeleteConfirm && (
+              <div style={{ background: "#fff", border: "1.5px solid #fecaca", borderRadius: "14px", padding: "20px", marginBottom: "16px" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "8px" }}>
+                  Delete your account?
+                </div>
+                <p style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, margin: "0 0 14px" }}>
+                  This is permanent. Your profile, orders history, and any store data will be deleted and cannot be recovered.
+                </p>
+                <p style={{ fontSize: "13px", color: "#374151", margin: "0 0 8px", fontWeight: 500 }}>
+                  Type <strong>DELETE</strong> to confirm:
+                </p>
+                <input
+                  value={deleteInput}
+                  onChange={e => setDeleteInput(e.target.value)}
+                  placeholder="DELETE"
+                  style={{
+                    width: "100%", padding: "9px 12px", borderRadius: "8px", fontSize: "13.5px",
+                    border: "1.5px solid #fecaca", outline: "none", marginBottom: "12px",
+                    fontFamily: "monospace", boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteInput !== "DELETE" || deleting}
+                    style={{
+                      padding: "8px 20px", background: deleteInput === "DELETE" && !deleting ? "#b91c1c" : "#94a3b8",
+                      color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700,
+                      fontSize: "13px", cursor: deleteInput === "DELETE" && !deleting ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    {deleting ? "Deleting…" : "Delete my account"}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN */}

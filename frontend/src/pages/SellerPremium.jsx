@@ -291,22 +291,15 @@ const ManagePage = ({ shop, onShopUpdate }) => {
     setSettingUpRecurring(true);
     setSubMsg(null);
     try {
-      const res = await axios.post(`${BASE}/api/shops/setup-recurring/`, {}, acJson());
+      const res = await axios.post(`${BASE}/api/shops/init-card-setup/`, {}, acJson());
       if (res.data.already_setup) {
         setSubMsg({ ok: true, text: "Auto-renewal is already active on your account." });
         return;
       }
-      if (res.data.silent) {
-        // Card was on file — subscription created without a new payment
-        onShopUpdate(res.data.shop);
-        setSubStatus({ has_subscription: true, status: "active" });
-        setSubMsg({ ok: true, text: "Done! Monthly auto-renewal is now active. Your saved card will be charged each month." });
-      } else {
-        // No card on file — redirect to Paystack to enter card details
-        window.location.href = res.data.authorization_url;
-      }
+      // Redirect to Paystack — seller enters card, we charge ₦100 then immediately refund it
+      window.location.href = res.data.authorization_url;
     } catch (e) {
-      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not set up recurring billing. Please try again." });
+      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not start card setup. Please try again." });
     } finally {
       setSettingUpRecurring(false);
     }
@@ -647,19 +640,19 @@ const ManagePage = ({ shop, onShopUpdate }) => {
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {/* No subscription at all — offer to set one up */}
-                  {!shop.paystack_subscription_code && (
+                  {/* No subscription at all — offer to set one up (bank transfer users) */}
+                  {!subLoading && !subStatus?.has_subscription && (
                     <button
                       onClick={handleSetupRecurring}
                       disabled={settingUpRecurring}
                       style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 18px", background: settingUpRecurring ? "#94a3b8" : "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: settingUpRecurring ? "not-allowed" : "pointer" }}
                     >
-                      {settingUpRecurring ? <><SpinIcon /> Setting up…</> : "Set up auto-renewal"}
+                      {settingUpRecurring ? <><SpinIcon /> Redirecting…</> : "Add card for auto-renewal"}
                     </button>
                   )}
 
                   {/* Subscription exists but is cancelled — offer reactivation */}
-                  {shop.paystack_subscription_code && subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") && (
+                  {subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") && (
                     <button
                       onClick={handleReactivate}
                       disabled={reactivating}
@@ -670,7 +663,7 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                   )}
 
                   {/* Active subscription — offer cancellation */}
-                  {shop.paystack_subscription_code && subStatus?.status === "active" && !showCancelConfirm && (
+                  {subStatus?.has_subscription && subStatus?.status === "active" && !showCancelConfirm && (
                     <button
                       onClick={() => setShowCancelConfirm(true)}
                       style={{ padding: "8px 16px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
@@ -681,10 +674,10 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                 </div>
               </div>
 
-              {/* Info note */}
-              {!shop.paystack_subscription_code && (
+              {/* Info note — only shown when no subscription exists */}
+              {!subLoading && !subStatus?.has_subscription && (
                 <div style={{ fontSize: "12.5px", color: "#64748b", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", lineHeight: 1.6 }}>
-                  No recurring billing is set up yet. Click <strong>Set up auto-renewal</strong> — if your card is already on file you won't be charged again, otherwise you'll be taken to Paystack to enter your card details once.
+                  <strong style={{ color: "#374151" }}>No recurring billing detected.</strong> This usually means you paid via bank transfer. Bank transfers can't be auto-charged, but you can add a card — <strong>you won't be charged today</strong>. We collect a refundable ₦100 to verify your card, then your first monthly charge of ₦10,000 will be next month.
                 </div>
               )}
 
@@ -774,6 +767,7 @@ const SellerPremium = () => {
   const { shop, shopLoading, refreshShop, setPageTitle } = useSellerCtx();
   const [localShop,   setLocalShop]   = useState(null);
   const [verifying,   setVerifying]   = useState(false);
+  const [verifyMsg,   setVerifyMsg]   = useState("");   // label shown during verifying
   const [verifyErr,   setVerifyErr]   = useState("");
   const location  = useLocation();
   const navigate  = useNavigate();
@@ -784,28 +778,47 @@ const SellerPremium = () => {
 
   // When Paystack redirects back, it appends ?reference=xxx&trxref=xxx
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const params    = new URLSearchParams(location.search);
     const reference = params.get("reference") || params.get("trxref");
+    const cardSetup = params.get("card_setup") === "1";
     if (!reference || verified.current) return;
     verified.current = true;
 
-    // Remove query params from URL so refreshing doesn't re-trigger
     navigate("/seller/premium", { replace: true });
-
     setVerifying(true);
-    axios.post(`${BASE}/api/shops/upgrade-premium/`, { reference }, acJson())
-      .then(res => {
-        setLocalShop(res.data);
-        refreshShop();
-      })
-      .catch(e => {
-        console.error("Verification error:", e.response?.status, e.response?.data);
-        setVerifyErr(
-          e.response?.data?.error
-          || `Payment received but activation failed. Contact support with ref: ${reference}`
-        );
-      })
-      .finally(() => setVerifying(false));
+
+    if (cardSetup) {
+      // ── Card tokenisation return — ₦100 charge, refund, create subscription ──
+      setVerifyMsg("Saving your card and setting up auto-renewal…");
+      axios.post(`${BASE}/api/shops/complete-card-setup/`, { reference }, acJson())
+        .then(res => {
+          setLocalShop(res.data.shop);
+          refreshShop();
+        })
+        .catch(e => {
+          setVerifyErr(
+            e.response?.data?.error
+            || `Card setup failed. Contact support with ref: ${reference}`
+          );
+        })
+        .finally(() => setVerifying(false));
+    } else {
+      // ── Normal premium upgrade ──
+      setVerifyMsg("Confirming your payment…");
+      axios.post(`${BASE}/api/shops/upgrade-premium/`, { reference }, acJson())
+        .then(res => {
+          setLocalShop(res.data);
+          refreshShop();
+        })
+        .catch(e => {
+          console.error("Verification error:", e.response?.status, e.response?.data);
+          setVerifyErr(
+            e.response?.data?.error
+            || `Payment received but activation failed. Contact support with ref: ${reference}`
+          );
+        })
+        .finally(() => setVerifying(false));
+    }
   }, [location.search]);
 
   const handleSuccess = (updatedShop) => {
@@ -813,9 +826,44 @@ const SellerPremium = () => {
     refreshShop();
   };
 
-  if (shopLoading || !localShop) return (
+  if (shopLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0" }}>
       <div className="spinner-border" style={{ color: "#3b7bf8", width: "1.75rem", height: "1.75rem" }} />
+    </div>
+  );
+
+  if (!localShop) return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      padding: "60px 24px", textAlign: "center", gap: "16px",
+    }}>
+      <div style={{
+        width: "56px", height: "56px", borderRadius: "16px",
+        background: "linear-gradient(135deg, #fef3c7, #fde68a)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <CrownIcon size={26} />
+      </div>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", marginBottom: "8px" }}>
+          Set up your store first
+        </div>
+        <div style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.7, maxWidth: "380px" }}>
+          You need to create your store before you can access premium features.
+          Head to <strong>Store Settings</strong> to get set up — it only takes a minute.
+        </div>
+      </div>
+      <a
+        href="/seller/settings"
+        style={{
+          marginTop: "4px", padding: "11px 28px",
+          background: "#0f172a", color: "#fff",
+          borderRadius: "10px", fontWeight: 700, fontSize: "14px",
+          textDecoration: "none", display: "inline-block",
+        }}
+      >
+        Go to Store Settings →
+      </a>
     </div>
   );
 
@@ -823,8 +871,8 @@ const SellerPremium = () => {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: "16px" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <SpinIcon />
-      <div style={{ fontWeight: 700, fontSize: "16px", color: "#0f172a" }}>Confirming your payment…</div>
-      <div style={{ fontSize: "13px", color: "#94a3b8" }}>Please wait a moment</div>
+      <div style={{ fontWeight: 700, fontSize: "16px", color: "#0f172a" }}>{verifyMsg || "Please wait…"}</div>
+      <div style={{ fontSize: "13px", color: "#94a3b8" }}>This only takes a moment</div>
     </div>
   );
 

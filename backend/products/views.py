@@ -9,6 +9,7 @@ from django.conf import settings
 import requests as http_requests
 
 from .models import Shop, Category, Product, ProductImage, StoreTextBlock
+from abatrades.email_utils import send_product_listed, send_premium_activated
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
@@ -247,8 +248,165 @@ class ShopViewSet(viewsets.ModelViewSet):
                 pass
 
         shop.save(update_fields=update_fields)
+        if not already_premium:
+            send_premium_activated(request.user, shop)
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='init-card-setup',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def init_card_setup(self, request):
+        """
+        Initialise a ₦100 Paystack charge purely to tokenise the seller's card.
+        We refund it immediately after — no new subscription charge.
+        Used by sellers who paid via bank transfer and want to add a card for auto-renewal.
+        """
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not shop.is_premium:
+            return Response({'error': 'Your shop is not premium.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if shop.paystack_subscription_code:
+            return Response({'already_setup': True})
+
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        callback_url = f"{frontend_url}/seller/premium?card_setup=1"
+
+        try:
+            res = http_requests.post(
+                'https://api.paystack.co/transaction/initialize',
+                json={
+                    'email':        request.user.email,
+                    'amount':       10000,   # ₦100 in kobo — just enough to tokenise the card
+                    'currency':     'NGN',
+                    'callback_url': callback_url,
+                    'metadata':     {'type': 'card_setup', 'user_id': request.user.id},
+                },
+                headers={'Authorization': f'Bearer {PAYSTACK_SECRET}'},
+                timeout=10,
+            )
+            data = res.json()
+        except Exception as e:
+            return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not data.get('status'):
+            return Response({'error': data.get('message', 'Could not start card setup.')}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({
+            'authorization_url': data['data']['authorization_url'],
+            'reference':         data['data']['reference'],
+        })
+
+    @action(detail=False, methods=['post'], url_path='complete-card-setup',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser, MultiPartParser, FormParser])
+    def complete_card_setup(self, request):
+        """
+        After the ₦100 tokenisation charge:
+        1. Verify the transaction and save the card authorization code.
+        2. Immediately refund the ₦100 — seller is not charged.
+        3. Create a Paystack subscription starting 30 days from now.
+        """
+        reference = request.data.get('reference')
+        if not reference:
+            return Response({'error': 'Payment reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if shop.paystack_subscription_code:
+            serializer = self.get_serializer(shop, context={'request': request})
+            return Response({'already_setup': True, 'shop': serializer.data})
+
+        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+
+        # 1. Verify the ₦100 transaction
+        try:
+            verify = http_requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers=ps_headers, timeout=10,
+            )
+            txn = verify.json()
+        except Exception as e:
+            return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not txn.get('status') or (txn.get('data') or {}).get('status') != 'success':
+            return Response({'error': 'Card charge could not be verified.'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
+        txn_data     = txn.get('data') or {}
+        authorization = txn_data.get('authorization') or {}
+        customer      = txn_data.get('customer') or {}
+
+        auth_code     = authorization.get('authorization_code', '')
+        customer_code = customer.get('customer_code', '')
+
+        # Save authorization and customer codes
+        update_fields = []
+        if auth_code and not shop.paystack_authorization_code:
+            shop.paystack_authorization_code = auth_code
+            update_fields.append('paystack_authorization_code')
+        if customer_code and not shop.paystack_customer_code:
+            shop.paystack_customer_code = customer_code
+            update_fields.append('paystack_customer_code')
+        if update_fields:
+            shop.save(update_fields=update_fields)
+
+        # 2. Refund the ₦100 immediately
+        try:
+            http_requests.post(
+                'https://api.paystack.co/refund',
+                json={'transaction': reference},
+                headers=ps_headers, timeout=10,
+            )
+        except Exception:
+            pass  # Refund failure is non-fatal; support can process manually if needed
+
+        # 3. Create subscription starting 30 days from now (no charge today)
+        plan_code = self._get_or_create_paystack_plan()
+        if not plan_code:
+            return Response({'error': 'Could not find premium plan. Contact support.'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        start_date = (timezone.now() + timezone.timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S+00:00')
+        try:
+            sub_res = http_requests.post(
+                'https://api.paystack.co/subscription',
+                json={
+                    'customer':      customer_code or request.user.email,
+                    'plan':          plan_code,
+                    'authorization': auth_code,
+                    'start_date':    start_date,
+                },
+                headers=ps_headers, timeout=10,
+            )
+            sub_data = sub_res.json()
+        except Exception as e:
+            return Response({'error': f'Card saved but could not create subscription: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not sub_data.get('status'):
+            return Response(
+                {'error': sub_data.get('message', 'Card saved but subscription creation failed.')},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        sub = sub_data.get('data') or {}
+        save_fields = []
+        if sub.get('subscription_code'):
+            shop.paystack_subscription_code = sub['subscription_code']
+            save_fields.append('paystack_subscription_code')
+        if sub.get('email_token'):
+            shop.paystack_email_token = sub['email_token']
+            save_fields.append('paystack_email_token')
+        if save_fields:
+            shop.save(update_fields=save_fields)
+
+        serializer = self.get_serializer(shop, context={'request': request})
+        return Response({'shop': serializer.data, 'next_charge': start_date})
 
     @action(detail=False, methods=['post'], url_path='setup-recurring',
             permission_classes=[permissions.IsAuthenticated],
@@ -339,11 +497,42 @@ class ShopViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='subscription-status',
             permission_classes=[permissions.IsAuthenticated])
     def subscription_status(self, request):
-        """Return Paystack subscription status and next billing date."""
+        """
+        Return Paystack subscription status and next billing date.
+        If we don't have a subscription code stored yet (timing gap after card payment),
+        look it up by customer code and save it so card users never need to set up manually.
+        """
         try:
             shop = Shop.objects.get(owner=request.user)
         except Shop.DoesNotExist:
             return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
+
+        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
+
+        # ── Lazy subscription lookup ──────────────────────────────────────────────
+        # Paystack creates the subscription asynchronously after a card payment with a
+        # plan attached. If we don't have the code yet but we do have a customer code,
+        # check Paystack now and save it — so card users never see the manual setup button.
+        if not shop.paystack_subscription_code and shop.paystack_customer_code:
+            try:
+                lookup = http_requests.get(
+                    f"https://api.paystack.co/subscription?customer={shop.paystack_customer_code}",
+                    headers=ps_headers, timeout=10,
+                )
+                lookup_data = lookup.json()
+                subs = lookup_data.get('data') or []
+                if subs:
+                    shop.paystack_subscription_code = subs[0].get('subscription_code', '')
+                    shop.paystack_email_token       = subs[0].get('email_token', '')
+                    update_fields = []
+                    if shop.paystack_subscription_code:
+                        update_fields.append('paystack_subscription_code')
+                    if shop.paystack_email_token:
+                        update_fields.append('paystack_email_token')
+                    if update_fields:
+                        shop.save(update_fields=update_fields)
+            except Exception:
+                pass
 
         if not shop.paystack_subscription_code:
             return Response({'has_subscription': False})
@@ -351,7 +540,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         try:
             res = http_requests.get(
                 f"https://api.paystack.co/subscription/{shop.paystack_subscription_code}",
-                headers={'Authorization': f'Bearer {PAYSTACK_SECRET}'},
+                headers=ps_headers,
                 timeout=10,
             )
             data = res.json()
@@ -362,6 +551,7 @@ class ShopViewSet(viewsets.ModelViewSet):
                     'status': sub.get('status'),
                     'next_payment_date': sub.get('next_payment_date'),
                     'amount': sub.get('amount'),
+                    'subscription_code': shop.paystack_subscription_code,
                 })
         except Exception:
             pass
@@ -625,6 +815,7 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
             images = request.FILES.getlist('images')
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
+            send_product_listed(request.user, product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
