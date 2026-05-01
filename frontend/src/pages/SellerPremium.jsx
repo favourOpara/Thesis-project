@@ -146,7 +146,7 @@ const UpgradePage = ({ onSuccess }) => {
               <span style={{ fontSize: "16px", fontWeight: 600, color: "#94a3b8" }}>₦</span>
               <span style={{ fontSize: "46px", fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: "-0.04em" }}>10,000</span>
             </div>
-            <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 500, marginTop: "6px" }}>per month · cancel anytime</div>
+            <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 500, marginTop: "6px" }}>billed monthly · card saved automatically</div>
           </div>
           <button
             onClick={handleUpgrade}
@@ -220,10 +220,71 @@ const UpgradePage = ({ onSuccess }) => {
 /* ══════════════════════════════════════════
    MANAGE PAGE (premium active)
 ══════════════════════════════════════════ */
+const SubscriptionIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/><polyline points="12 6 12 12 16 14"/></svg>;
+
 const ManagePage = ({ shop, onShopUpdate }) => {
-  const [videoUrl, setVideoUrl]       = useState(shop.store_video_url || "");
+  // video state
+  const [videoTab,    setVideoTab]    = useState(shop.store_video_file_url ? "upload" : "url");
+  const [videoUrl,    setVideoUrl]    = useState(shop.store_video_url || "");
+  const [videoFile,   setVideoFile]   = useState(null);
+  const [videoPreview,setVideoPreview]= useState(shop.store_video_file_url || null);
+  const [uploadPct,   setUploadPct]   = useState(0);
   const [videoSaving, setVideoSaving] = useState(false);
-  const [videoMsg, setVideoMsg]       = useState(null);
+  const [videoMsg,    setVideoMsg]    = useState(null);
+  const fileInputRef = useRef(null);
+
+  // subscription management state
+  const [subStatus,       setSubStatus]       = useState(null);   // { has_subscription, status, next_payment_date }
+  const [subLoading,      setSubLoading]       = useState(true);
+  const [cancelling,      setCancelling]       = useState(false);
+  const [reactivating,    setReactivating]     = useState(false);
+  const [subMsg,          setSubMsg]           = useState(null);   // { ok, text }
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${BASE}/api/shops/subscription-status/`, ac())
+      .then(res => setSubStatus(res.data))
+      .catch(() => setSubStatus({ has_subscription: false }))
+      .finally(() => setSubLoading(false));
+  }, []);
+
+  const handleCancelSubscription = async () => {
+    setShowCancelConfirm(false);
+    setCancelling(true);
+    setSubMsg(null);
+    try {
+      const res = await axios.post(`${BASE}/api/shops/cancel-premium/`, {}, acJson());
+      onShopUpdate(res.data);
+      const expiresAt = res.data.premium_expires_at;
+      const dateStr = expiresAt
+        ? new Date(expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
+        : null;
+      setSubMsg({ ok: true, text: dateStr
+        ? `Subscription cancelled. Your premium features remain active until ${dateStr}.`
+        : "Subscription cancelled. Auto-renewal has been turned off."
+      });
+      setSubStatus(prev => ({ ...prev, status: "cancelled" }));
+    } catch (e) {
+      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not cancel. Please try again." });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    setReactivating(true);
+    setSubMsg(null);
+    try {
+      const res = await axios.post(`${BASE}/api/shops/reactivate-premium/`, {}, acJson());
+      onShopUpdate(res.data);
+      setSubMsg({ ok: true, text: "Subscription reactivated! Your premium features are active again." });
+      setSubStatus(prev => ({ ...prev, status: "active" }));
+    } catch (e) {
+      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not reactivate. Please try again." });
+    } finally {
+      setReactivating(false);
+    }
+  };
 
   const [blocks, setBlocks]           = useState(
     [...(shop.text_blocks || [])].sort((a, b) => a.insert_after - b.insert_after || a.id - b.id)
@@ -236,17 +297,47 @@ const ManagePage = ({ shop, onShopUpdate }) => {
   const [blockErr, setBlockErr]       = useState("");
 
   const saveVideo = async () => {
-    setVideoSaving(true); setVideoMsg(null);
+    setVideoSaving(true); setVideoMsg(null); setUploadPct(0);
     try {
-      await axios.patch(`${BASE}/api/shops/${shop.slug}/update-video/`, { store_video_url: videoUrl }, acJson());
-      setVideoMsg({ ok: true, text: "Video URL saved." });
-      onShopUpdate({ ...shop, store_video_url: videoUrl });
+      const token = localStorage.getItem("access_token");
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+      if (videoTab === "upload" && videoFile) {
+        const form = new FormData();
+        form.append("store_video_file", videoFile);
+        const res = await axios.patch(`${BASE}/api/shops/${shop.slug}/update-video/`, form, {
+          withCredentials: true,
+          headers: { ...authHeader },   // let browser set multipart boundary
+          onUploadProgress: e => setUploadPct(Math.round((e.loaded / e.total) * 100)),
+        });
+        setVideoPreview(res.data.store_video_file_url);
+        setVideoFile(null);
+        onShopUpdate({ ...shop, store_video_url: "", store_video_file_url: res.data.store_video_file_url });
+        setVideoMsg({ ok: true, text: "Video uploaded and live on your store." });
+      } else {
+        const res = await axios.patch(
+          `${BASE}/api/shops/${shop.slug}/update-video/`,
+          { store_video_url: videoUrl },
+          acJson()
+        );
+        setVideoPreview(null);
+        onShopUpdate({ ...shop, store_video_url: videoUrl, store_video_file_url: null });
+        setVideoMsg({ ok: true, text: "Video URL saved." });
+      }
     } catch {
       setVideoMsg({ ok: false, text: "Could not save. Please try again." });
     } finally {
       setVideoSaving(false);
-      setTimeout(() => setVideoMsg(null), 4000);
+      setUploadPct(0);
+      setTimeout(() => setVideoMsg(null), 5000);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setVideoFile(f);
+    setVideoPreview(URL.createObjectURL(f));
   };
 
   const openEdit = (b) => { setEditingId(b.id); setBlockForm({ title: b.title || "", content: b.content, insert_after: b.insert_after }); setShowNewForm(false); setBlockErr(""); };
@@ -299,10 +390,18 @@ const ManagePage = ({ shop, onShopUpdate }) => {
           <CrownIcon size={18} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>Premium Store — Active</div>
-          <div style={{ fontSize: "12px", color: "#64748b" }}>
-            Member since {new Date(shop.premium_since).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+          <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>
+            Premium Store — {shop.premium_expires_at ? "Cancelling" : "Active"}
           </div>
+          {shop.premium_expires_at ? (
+            <div style={{ fontSize: "12px", color: "#fbbf24" }}>
+              Access until {new Date(shop.premium_expires_at).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} · Auto-renewal off
+            </div>
+          ) : (
+            <div style={{ fontSize: "12px", color: "#64748b" }}>
+              Member since {new Date(shop.premium_since).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+            </div>
+          )}
         </div>
         <a href={`/shop/${shop.slug}`} target="_blank" rel="noreferrer" style={{ fontSize: "12.5px", color: "#fbbf24", fontWeight: 600, textDecoration: "none", background: "rgba(217,119,6,0.15)", border: "1px solid rgba(217,119,6,0.3)", borderRadius: "7px", padding: "6px 14px", whiteSpace: "nowrap" }}>
           View store →
@@ -313,16 +412,85 @@ const ManagePage = ({ shop, onShopUpdate }) => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px", alignItems: "start" }}>
 
         {/* Video */}
-        <Section icon={<VideoIcon />} title="Promo Video" description="Paste a YouTube or Vimeo URL — it will appear on your store page below your profile.">
-          <div style={{ display: "flex", gap: "10px" }}>
-            <input type="url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…" className="sd-input" style={{ flex: 1 }} />
-            <button onClick={saveVideo} disabled={videoSaving} style={btnStyle(videoSaving)}>
-              {videoSaving ? "Saving…" : "Save"}
-            </button>
+        <Section icon={<VideoIcon />} title="Promo Video" description="Upload a video file or paste a YouTube / Vimeo link — it appears on your store page.">
+
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
+            {[{ key: "upload", label: "Upload file" }, { key: "url", label: "Paste URL" }].map(t => (
+              <button key={t.key} onClick={() => setVideoTab(t.key)} style={{
+                padding: "6px 14px", borderRadius: "7px", border: "1.5px solid",
+                borderColor: videoTab === t.key ? "#0f172a" : "#e2e8f0",
+                background: videoTab === t.key ? "#0f172a" : "#fff",
+                color: videoTab === t.key ? "#fff" : "#64748b",
+                fontWeight: 600, fontSize: "12.5px", cursor: "pointer",
+              }}>{t.label}</button>
+            ))}
           </div>
-          {videoMsg && <div style={{ marginTop: "8px", fontSize: "13px", fontWeight: 500, color: videoMsg.ok ? "#15803d" : "#b91c1c" }}>{videoMsg.text}</div>}
-          {shop.store_video_url && <div style={{ marginTop: "8px", fontSize: "12.5px", color: "#94a3b8" }}>Currently live on your store page.</div>}
+
+          {videoTab === "upload" ? (
+            <div>
+              {/* Drop zone */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#0f172a"; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = "#e2e8f0";
+                  const f = e.dataTransfer.files[0];
+                  if (f && f.type.startsWith("video/")) { setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); }
+                }}
+                style={{
+                  border: "2px dashed #e2e8f0", borderRadius: "10px",
+                  padding: "28px 16px", textAlign: "center", cursor: "pointer",
+                  background: "#f8fafc", transition: "border-color 0.15s",
+                  marginBottom: "12px",
+                }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 10px", display: "block" }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div style={{ fontSize: "13.5px", fontWeight: 600, color: "#0f172a", marginBottom: "4px" }}>
+                  {videoFile ? videoFile.name : "Click or drag a video here"}
+                </div>
+                <div style={{ fontSize: "12px", color: "#94a3b8" }}>MP4, MOV, WebM — max 200 MB</div>
+              </div>
+              <input ref={fileInputRef} type="file" accept="video/*" style={{ display: "none" }} onChange={handleFileChange} />
+
+              {/* Preview */}
+              {videoPreview && (
+                <video src={videoPreview} controls style={{ width: "100%", borderRadius: "8px", marginBottom: "12px", maxHeight: "200px", background: "#000" }} />
+              )}
+
+              {/* Upload progress */}
+              {videoSaving && uploadPct > 0 && (
+                <div style={{ marginBottom: "10px" }}>
+                  <div style={{ height: "4px", background: "#e2e8f0", borderRadius: "999px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${uploadPct}%`, background: "#0f172a", transition: "width 0.2s" }} />
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", textAlign: "right" }}>{uploadPct}%</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ marginBottom: "12px" }}>
+              <input type="url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=… or https://vimeo.com/…"
+                className="sd-input" />
+            </div>
+          )}
+
+          <button onClick={saveVideo} disabled={videoSaving || (videoTab === "upload" && !videoFile && !videoPreview)}
+            style={btnStyle(videoSaving || (videoTab === "upload" && !videoFile && !videoPreview))}>
+            {videoSaving ? (videoTab === "upload" ? `Uploading… ${uploadPct}%` : "Saving…") : "Save Video"}
+          </button>
+
+          {videoMsg && (
+            <div style={{ marginTop: "10px", fontSize: "13px", fontWeight: 500, color: videoMsg.ok ? "#15803d" : "#b91c1c" }}>
+              {videoMsg.text}
+            </div>
+          )}
         </Section>
 
         {/* Text blocks */}
@@ -380,6 +548,117 @@ const ManagePage = ({ shop, onShopUpdate }) => {
       </Section>
 
       </div>{/* end grid */}
+
+      {/* ── Subscription Management ── */}
+      <div style={{ marginTop: "16px" }}>
+        <Section icon={<SubscriptionIcon />} title="Subscription" description="Manage your monthly premium subscription and billing.">
+
+          {/* Cancel confirmation dialog */}
+          {showCancelConfirm && (
+            <div style={{
+              background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px",
+              padding: "18px 20px", marginBottom: "16px",
+            }}>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "6px" }}>
+                Cancel subscription?
+              </div>
+              <div style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, marginBottom: "14px" }}>
+                Auto-renewal will be turned off. Your premium features stay active until the end of the current billing period — you won't be charged again. You can reactivate any time before then.
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={cancelling}
+                  style={{ padding: "8px 20px", background: cancelling ? "#94a3b8" : "#b91c1c", color: "#fff", border: "none", borderRadius: "7px", fontWeight: 700, fontSize: "13px", cursor: cancelling ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {cancelling ? <><SpinIcon /> Cancelling…</> : "Yes, cancel subscription"}
+                </button>
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  style={{ padding: "8px 18px", background: "transparent", color: "#374151", border: "1px solid #d1d5db", borderRadius: "7px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
+                >
+                  Keep subscription
+                </button>
+              </div>
+            </div>
+          )}
+
+          {subLoading ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#94a3b8", fontSize: "13px" }}>
+              <SpinIcon /> Loading subscription details…
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+              {/* Status row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>Status:</span>
+                    {subStatus?.status === "active" ? (
+                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Active</span>
+                    ) : subStatus?.status === "cancelled" || subStatus?.status === "non-renewing" ? (
+                      <span style={{ background: "#fef3c7", color: "#92400e", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Cancelled</span>
+                    ) : subStatus?.has_subscription ? (
+                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>{subStatus?.status || "Unknown"}</span>
+                    ) : (
+                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>No recurring subscription</span>
+                    )}
+                  </div>
+                  {subStatus?.next_payment_date && (
+                    <div style={{ fontSize: "12.5px", color: "#64748b" }}>
+                      Next billing: <strong style={{ color: "#374151" }}>
+                        {new Date(subStatus.next_payment_date).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                      </strong>
+                    </div>
+                  )}
+                  {shop.premium_since && (
+                    <div style={{ fontSize: "12.5px", color: "#94a3b8" }}>
+                      Premium since {new Date(shop.premium_since).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {subStatus?.has_subscription && (subStatus?.status === "cancelled" || subStatus?.status === "non-renewing") ? (
+                    <button
+                      onClick={handleReactivate}
+                      disabled={reactivating}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 18px", background: reactivating ? "#94a3b8" : "#15803d", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: reactivating ? "not-allowed" : "pointer" }}
+                    >
+                      {reactivating ? <><SpinIcon /> Reactivating…</> : "Reactivate Subscription"}
+                    </button>
+                  ) : shop.is_premium && !showCancelConfirm && (
+                    <button
+                      onClick={() => setShowCancelConfirm(true)}
+                      style={{ padding: "8px 16px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                    >
+                      Cancel Subscription
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Info note */}
+              {!subStatus?.has_subscription && (
+                <div style={{ fontSize: "12.5px", color: "#64748b", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", lineHeight: 1.6 }}>
+                  No recurring subscription is linked to this account. If you paid a one-time charge, contact support to set up recurring billing.
+                </div>
+              )}
+
+              {/* Feedback message */}
+              {subMsg && (
+                <div style={{ fontSize: "13px", fontWeight: 500, color: subMsg.ok ? "#15803d" : "#b91c1c", background: subMsg.ok ? "#f0fdf4" : "#fef2f2", border: `1px solid ${subMsg.ok ? "#bbf7d0" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px" }}>
+                  {subMsg.text}
+                </div>
+              )}
+
+            </div>
+          )}
+        </Section>
+      </div>
+
     </div>
   );
 };

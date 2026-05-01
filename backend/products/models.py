@@ -30,6 +30,10 @@ class Shop(models.Model):
     # Premium
     is_premium = models.BooleanField(default=False)
     premium_since = models.DateTimeField(null=True, blank=True)
+    premium_expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Set when subscription is cancelled — premium access continues until this date"
+    )
     store_video_url = models.URLField(
         blank=True, null=True,
         help_text="YouTube or Vimeo URL for the store promo video"

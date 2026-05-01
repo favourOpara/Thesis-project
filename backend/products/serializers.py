@@ -17,6 +17,7 @@ class ShopSerializer(serializers.ModelSerializer):
     preview_images = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
     text_blocks = StoreTextBlockSerializer(many=True, read_only=True)
+    store_video_file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shop
@@ -26,15 +27,22 @@ class ShopSerializer(serializers.ModelSerializer):
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
             'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
-            'is_premium', 'premium_since', 'store_video_url', 'store_video_file', 'text_blocks',
+            'is_premium', 'premium_since', 'premium_expires_at', 'store_video_url', 'store_video_file', 'store_video_file_url', 'text_blocks',
             'paystack_subscription_code',
             'created_at', 'updated_at',
         ]
         read_only_fields = [
-            'slug', 'visit_count', 'is_premium', 'premium_since',
+            'slug', 'visit_count', 'is_premium', 'premium_since', 'premium_expires_at',
             'paystack_customer_code', 'paystack_subscription_code', 'paystack_email_token',
             'created_at', 'updated_at',
         ]
+
+    def get_store_video_file_url(self, obj):
+        if obj.store_video_file:
+            request = self.context.get('request')
+            url = obj.store_video_file.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
     def get_owner_name(self, obj):
         u = obj.owner

@@ -451,9 +451,10 @@ const ShopPage = () => {
           {/* ══════════════════════════════
               PROMO VIDEO (premium only)
           ══════════════════════════════ */}
-          {shop.is_premium && shop.store_video_url && (() => {
-            const embedUrl = getEmbedUrl(shop.store_video_url);
-            if (!embedUrl) return null;
+          {shop.is_premium && (shop.store_video_url || shop.store_video_file_url) && (() => {
+            const fileUrl  = shop.store_video_file_url;
+            const embedUrl = fileUrl ? null : getEmbedUrl(shop.store_video_url);
+            if (!fileUrl && !embedUrl) return null;
             return (
               <div style={{ marginTop: "24px" }}>
                 <div style={{
@@ -461,19 +462,25 @@ const ShopPage = () => {
                   border: "1px solid #e2e8f0", overflow: "hidden",
                   boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
                 }}>
-                  {/* 16:9 responsive embed */}
-                  <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
-                    <iframe
-                      src={embedUrl}
-                      title={`${shop.name} — store video`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{
-                        position: "absolute", top: 0, left: 0,
-                        width: "100%", height: "100%", border: "none",
-                      }}
+                  {fileUrl ? (
+                    /* Uploaded video file — native player */
+                    <video
+                      src={fileUrl}
+                      controls
+                      style={{ width: "100%", display: "block", maxHeight: "480px", background: "#000" }}
                     />
-                  </div>
+                  ) : (
+                    /* YouTube / Vimeo embed */
+                    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+                      <iframe
+                        src={embedUrl}
+                        title={`${shop.name} — store video`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             );
