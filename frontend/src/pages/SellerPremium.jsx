@@ -72,9 +72,15 @@ const PERK_GROUPS = [
 /* ══════════════════════════════════════════
    UPGRADE PAGE
 ══════════════════════════════════════════ */
-const UpgradePage = ({ onSuccess }) => {
+const UpgradePage = ({ onSuccess, shop }) => {
   const [loading, setLoading] = useState(false);
   const [err,     setErr]     = useState("");
+
+  // 24-hour cooldown check
+  const cooldownEnd = shop?.premium_cancelled_at
+    ? new Date(new Date(shop.premium_cancelled_at).getTime() + 24 * 60 * 60 * 1000)
+    : null;
+  const inCooldown = cooldownEnd && new Date() < cooldownEnd;
 
   const handleUpgrade = async () => {
     setErr("");
@@ -88,8 +94,12 @@ const UpgradePage = ({ onSuccess }) => {
       // Redirect to Paystack — no iframe, no Permission-Policy issues
       window.location.href = res.data.authorization_url;
     } catch (e) {
-      console.error("Init payment error:", e.response?.status, e.response?.data);
-      setErr(e.response?.data?.error || "Could not start payment. Check your connection and try again.");
+      const data = e.response?.data || {};
+      if (data.error === "cooldown") {
+        setErr(data.message || "You recently cancelled. Please wait 24 hours before resubscribing.");
+      } else {
+        setErr(data.error || "Could not start payment. Check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -98,6 +108,23 @@ const UpgradePage = ({ onSuccess }) => {
   return (
     <div style={{ fontFamily: "inherit" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* ── Cooldown notice ── */}
+      {inCooldown && (
+        <div style={{
+          background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "10px",
+          padding: "14px 18px", marginBottom: "20px",
+          display: "flex", alignItems: "flex-start", gap: "10px",
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div style={{ fontSize: "13.5px", color: "#92400e", lineHeight: 1.6 }}>
+            You recently cancelled your subscription. You can resubscribe after{" "}
+            <strong>{cooldownEnd.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</strong>.
+          </div>
+        </div>
+      )}
 
       {/* ── Error banner ── */}
       {err && (
@@ -150,7 +177,7 @@ const UpgradePage = ({ onSuccess }) => {
           </div>
           <button
             onClick={handleUpgrade}
-            disabled={loading}
+            disabled={loading || inCooldown}
             style={{
               marginTop: "14px", padding: "14px 40px",
               background: loading ? "#64748b" : "#d97706",
@@ -233,88 +260,24 @@ const ManagePage = ({ shop, onShopUpdate }) => {
   const [videoMsg,    setVideoMsg]    = useState(null);
   const fileInputRef = useRef(null);
 
-  // subscription management state
-  const [subStatus,         setSubStatus]         = useState(null);   // { has_subscription, status, next_payment_date }
-  const [subLoading,        setSubLoading]         = useState(true);
-  const [cancelling,        setCancelling]         = useState(false);
-  const [reactivating,      setReactivating]       = useState(false);
-  const [settingUpRecurring,setSettingUpRecurring] = useState(false);
-  const [subMsg,            setSubMsg]             = useState(null);   // { ok, text }
-  const [showCancelConfirm, setShowCancelConfirm]  = useState(false);
-
-  useEffect(() => {
-    axios.get(`${BASE}/api/shops/subscription-status/`, ac())
-      .then(res => setSubStatus(res.data))
-      .catch(() => setSubStatus({ has_subscription: false }))
-      .finally(() => setSubLoading(false));
-  }, []);
+  // cancellation state
+  const [showCancelBox,  setShowCancelBox]  = useState(false);
+  const [cancelInput,    setCancelInput]    = useState("");
+  const [cancelling,     setCancelling]     = useState(false);
+  const [cancelMsg,      setCancelMsg]      = useState(null);
 
   const handleCancelSubscription = async () => {
-    setShowCancelConfirm(false);
     setCancelling(true);
-    setSubMsg(null);
+    setCancelMsg(null);
     try {
       const res = await axios.post(`${BASE}/api/shops/cancel-premium/`, {}, acJson());
-      onShopUpdate(res.data);
-      const expiresAt = res.data.premium_expires_at;
-      const dateStr = expiresAt
-        ? new Date(expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
-        : null;
-      setSubMsg({ ok: true, text: dateStr
-        ? `Subscription cancelled. Your premium features remain active until ${dateStr}.`
-        : "Subscription cancelled. Auto-renewal has been turned off."
-      });
-      setSubStatus(prev => ({ ...prev, status: "cancelled" }));
+      onShopUpdate(res.data);   // premium_expires_at now set — ManagePage shows "Cancelling" state
+      setShowCancelBox(false);
+      setCancelInput("");
     } catch (e) {
-      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not cancel. Please try again." });
+      setCancelMsg(e.response?.data?.error || "Could not cancel. Please try again.");
     } finally {
       setCancelling(false);
-    }
-  };
-
-  const handleReactivate = async () => {
-    setReactivating(true);
-    setSubMsg(null);
-    try {
-      const res = await axios.post(`${BASE}/api/shops/reactivate-premium/`, {}, acJson());
-      onShopUpdate(res.data);
-      setSubMsg({ ok: true, text: "Subscription reactivated! Your premium features are active again." });
-      setSubStatus(prev => ({ ...prev, status: "active" }));
-    } catch (e) {
-      const errCode = e.response?.data?.error;
-      if (errCode === "no_subscription") {
-        // No recurring subscription on file (bank transfer or codes lost).
-        // Backend already cleared premium_expires_at — update local shop state
-        // so the UI switches to the upgrade page.
-        const shopData = e.response?.data?.shop;
-        if (shopData) onShopUpdate(shopData);
-        setSubMsg({
-          ok: false,
-          text: "Your previous plan wasn't linked to auto-renewal. Please subscribe again to continue.",
-        });
-      } else {
-        setSubMsg({ ok: false, text: errCode || "Could not reactivate. Please try again." });
-      }
-    } finally {
-      setReactivating(false);
-    }
-  };
-
-  const handleSetupRecurring = async () => {
-    setSettingUpRecurring(true);
-    setSubMsg(null);
-    try {
-      const res = await axios.post(`${BASE}/api/shops/init-card-setup/`, {}, acJson());
-      if (res.data.already_setup) {
-        setSubMsg({ ok: true, text: "Auto-renewal is already active on your account." });
-        return;
-      }
-      // Redirect to Paystack — seller enters card, we charge ₦100 then immediately refund it
-      window.location.href = res.data.authorization_url;
-    } catch (e) {
-      setSubMsg({ ok: false, text: e.response?.data?.error || "Could not start card setup. Please try again." });
-    } finally {
-      setSettingUpRecurring(false);
     }
   };
 
@@ -323,7 +286,7 @@ const ManagePage = ({ shop, onShopUpdate }) => {
   );
   const [editingId, setEditingId]     = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
-  const EMPTY = { title: "", content: "", insert_after: 0 };
+  const EMPTY = { title: "", content: "", insert_after: 0, tile_color: "#0f172a" };
   const [blockForm, setBlockForm]     = useState(EMPTY);
   const [blockSaving, setBlockSaving] = useState(false);
   const [blockErr, setBlockErr]       = useState("");
@@ -581,136 +544,54 @@ const ManagePage = ({ shop, onShopUpdate }) => {
 
       </div>{/* end grid */}
 
-      {/* ── Subscription Management ── */}
-      <div style={{ marginTop: "16px" }}>
-        <Section icon={<SubscriptionIcon />} title="Subscription" description="Manage your monthly premium subscription and billing.">
-
-          {/* Cancel confirmation dialog */}
-          {showCancelConfirm && (
-            <div style={{
-              background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px",
-              padding: "18px 20px", marginBottom: "16px",
-            }}>
-              <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "6px" }}>
-                Cancel subscription?
-              </div>
-              <div style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, marginBottom: "14px" }}>
-                Auto-renewal will be turned off. Your premium features stay active until the end of the current billing period — you won't be charged again. You can reactivate any time before then.
-              </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={handleCancelSubscription}
-                  disabled={cancelling}
-                  style={{ padding: "8px 20px", background: cancelling ? "#94a3b8" : "#b91c1c", color: "#fff", border: "none", borderRadius: "7px", fontWeight: 700, fontSize: "13px", cursor: cancelling ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  {cancelling ? <><SpinIcon /> Cancelling…</> : "Yes, cancel subscription"}
-                </button>
-                <button
-                  onClick={() => setShowCancelConfirm(false)}
-                  style={{ padding: "8px 18px", background: "transparent", color: "#374151", border: "1px solid #d1d5db", borderRadius: "7px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
-                >
-                  Keep subscription
-                </button>
-              </div>
+      {/* ── Cancel Subscription (Danger Zone) ── */}
+      <div style={{ marginTop: "16px", borderTop: "1px solid #fee2e2", paddingTop: "20px" }}>
+        {shop.premium_expires_at ? (
+          <div style={{ fontSize: "13px", color: "#92400e", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "8px", padding: "10px 14px", lineHeight: 1.6 }}>
+            Subscription cancelled. Your premium features remain active until <strong>{new Date(shop.premium_expires_at).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}</strong>.
+          </div>
+        ) : !showCancelBox ? (
+          <button
+            onClick={() => { setShowCancelBox(true); setCancelInput(""); setCancelMsg(null); }}
+            style={{ padding: "9px 20px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+          >
+            Cancel Subscription
+          </button>
+        ) : (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", padding: "20px 22px" }}>
+            <div style={{ fontWeight: 700, fontSize: "15px", color: "#b91c1c", marginBottom: "8px" }}>Cancel your subscription?</div>
+            <div style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.7, marginBottom: "16px" }}>
+              Auto-renewal will stop and your premium features will remain active until the end of your current billing period — no refunds. After that, your promo video, text blocks, verified badge, warehousing, and logistics services will be deactivated. You can resubscribe after 24 hours.
             </div>
-          )}
-
-          {subLoading ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#94a3b8", fontSize: "13px" }}>
-              <SpinIcon /> Loading subscription details…
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "#7f1d1d", display: "block", marginBottom: "6px" }}>
+              Type <strong>cancel</strong> to confirm
+            </label>
+            <input
+              value={cancelInput}
+              onChange={e => setCancelInput(e.target.value)}
+              placeholder="cancel"
+              style={{ display: "block", width: "100%", maxWidth: "240px", padding: "8px 12px", border: "1.5px solid #fca5a5", borderRadius: "7px", fontSize: "13.5px", marginBottom: "14px", outline: "none", background: "#fff" }}
+            />
+            {cancelMsg && (
+              <div style={{ fontSize: "13px", color: "#b91c1c", marginBottom: "12px" }}>{cancelMsg}</div>
+            )}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelling || cancelInput !== "cancel"}
+                style={{ padding: "8px 20px", background: (cancelling || cancelInput !== "cancel") ? "#94a3b8" : "#b91c1c", color: "#fff", border: "none", borderRadius: "7px", fontWeight: 700, fontSize: "13px", cursor: (cancelling || cancelInput !== "cancel") ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                {cancelling ? <><SpinIcon /> Cancelling…</> : "Confirm cancellation"}
+              </button>
+              <button
+                onClick={() => { setShowCancelBox(false); setCancelInput(""); setCancelMsg(null); }}
+                style={{ padding: "8px 16px", background: "transparent", color: "#374151", border: "1px solid #d1d5db", borderRadius: "7px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
+              >
+                Keep subscription
+              </button>
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-
-              {/* Status row
-                  Source of truth for buttons = shop.premium_expires_at (our DB):
-                    - null + is_premium  → Active (cancel button)
-                    - set  + is_premium  → Cancelling/will expire (reactivate button)
-                  Paystack status is only used to display next billing date — never for button logic. */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>Status:</span>
-                    {shop.premium_expires_at ? (
-                      <span style={{ background: "#fef3c7", color: "#92400e", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Cancelling</span>
-                    ) : !subStatus?.has_subscription ? (
-                      <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>No recurring billing</span>
-                    ) : (
-                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "12px", fontWeight: 700, padding: "2px 10px", borderRadius: "999px" }}>Active</span>
-                    )}
-                  </div>
-                  {shop.premium_expires_at && (
-                    <div style={{ fontSize: "12.5px", color: "#92400e" }}>
-                      Access until <strong>{new Date(shop.premium_expires_at).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}</strong>
-                    </div>
-                  )}
-                  {!shop.premium_expires_at && subStatus?.next_payment_date && (
-                    <div style={{ fontSize: "12.5px", color: "#64748b" }}>
-                      Next billing: <strong style={{ color: "#374151" }}>
-                        {new Date(subStatus.next_payment_date).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-                      </strong>
-                    </div>
-                  )}
-                  {shop.premium_since && (
-                    <div style={{ fontSize: "12.5px", color: "#94a3b8" }}>
-                      Premium since {new Date(shop.premium_since).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Action buttons — driven by shop.premium_expires_at, NOT Paystack status */}
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {/* No card/subscription yet — bank transfer users */}
-                  {!subLoading && !subStatus?.has_subscription && !shop.premium_expires_at && (
-                    <button
-                      onClick={handleSetupRecurring}
-                      disabled={settingUpRecurring}
-                      style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 18px", background: settingUpRecurring ? "#94a3b8" : "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: settingUpRecurring ? "not-allowed" : "pointer" }}
-                    >
-                      {settingUpRecurring ? <><SpinIcon /> Redirecting…</> : "Add card for auto-renewal"}
-                    </button>
-                  )}
-
-                  {/* Subscription was cancelled — premium_expires_at is set */}
-                  {shop.premium_expires_at && (
-                    <button
-                      onClick={handleReactivate}
-                      disabled={reactivating}
-                      style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 18px", background: reactivating ? "#94a3b8" : "#15803d", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: reactivating ? "not-allowed" : "pointer" }}
-                    >
-                      {reactivating ? <><SpinIcon /> Reactivating…</> : "Reactivate Subscription"}
-                    </button>
-                  )}
-
-                  {/* Active — no expiry date set, has subscription */}
-                  {!shop.premium_expires_at && subStatus?.has_subscription && !showCancelConfirm && (
-                    <button
-                      onClick={() => setShowCancelConfirm(true)}
-                      style={{ padding: "8px 16px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
-                    >
-                      Cancel Subscription
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Info note — only shown when no subscription exists */}
-              {!subLoading && !subStatus?.has_subscription && (
-                <div style={{ fontSize: "12.5px", color: "#64748b", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", lineHeight: 1.6 }}>
-                  <strong style={{ color: "#374151" }}>No recurring billing detected.</strong> This usually means you paid via bank transfer. Bank transfers can't be auto-charged, but you can add a card — <strong>you won't be charged today</strong>. We collect a refundable ₦100 to verify your card, then your first monthly charge of ₦10,000 will be next month.
-                </div>
-              )}
-
-              {/* Feedback message */}
-              {subMsg && (
-                <div style={{ fontSize: "13px", fontWeight: 500, color: subMsg.ok ? "#15803d" : "#b91c1c", background: subMsg.ok ? "#f0fdf4" : "#fef2f2", border: `1px solid ${subMsg.ok ? "#bbf7d0" : "#fecaca"}`, borderRadius: "8px", padding: "10px 14px" }}>
-                  {subMsg.text}
-                </div>
-              )}
-
-            </div>
-          )}
-        </Section>
+          </div>
+        )}
       </div>
 
     </div>
@@ -746,6 +627,11 @@ const Section = ({ icon, title, description, children, action, mb }) => (
   </div>
 );
 
+const TILE_COLORS = [
+  "#0f172a", "#1e3a5f", "#1d4ed8", "#7c3aed", "#be185d",
+  "#b91c1c", "#b45309", "#15803d", "#0e7490", "#374151",
+];
+
 const BlockForm = ({ form, setForm, onSave, onCancel, saving, err, isEdit }) => (
   <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
     <div style={{ fontWeight: 600, fontSize: "13px", color: "#0f172a", marginBottom: "14px" }}>
@@ -766,6 +652,34 @@ const BlockForm = ({ form, setForm, onSave, onCancel, saving, err, isEdit }) => 
           <input type="number" min={0} className="sd-input" value={form.insert_after} onChange={e => setForm(f => ({ ...f, insert_after: Math.max(0, parseInt(e.target.value) || 0) }))} style={{ width: "100px" }} />
         </div>
         <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "18px" }}>0 = before all products</div>
+      </div>
+      <div>
+        <label className="sd-label">Tile accent color</label>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+          {TILE_COLORS.map(c => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, tile_color: c }))}
+              title={c}
+              style={{
+                width: "24px", height: "24px", borderRadius: "6px", background: c, border: "none",
+                cursor: "pointer", flexShrink: 0,
+                outline: form.tile_color === c ? `3px solid ${c}` : "none",
+                outlineOffset: "2px",
+                boxShadow: form.tile_color === c ? "0 0 0 2px #fff inset" : "none",
+              }}
+            />
+          ))}
+          <input
+            type="color"
+            value={form.tile_color || "#0f172a"}
+            onChange={e => setForm(f => ({ ...f, tile_color: e.target.value }))}
+            title="Custom color"
+            style={{ width: "28px", height: "24px", padding: 0, border: "1px solid #e2e8f0", borderRadius: "6px", cursor: "pointer", background: "none" }}
+          />
+          <span style={{ fontSize: "11.5px", color: "#94a3b8" }}>This colors the left border accent on your storefront block.</span>
+        </div>
       </div>
     </div>
     {err && <div style={{ marginTop: "10px", fontSize: "13px", color: "#b91c1c", fontWeight: 500 }}>{err}</div>}
@@ -800,30 +714,14 @@ const SellerPremium = () => {
   useEffect(() => {
     const params    = new URLSearchParams(location.search);
     const reference = params.get("reference") || params.get("trxref");
-    const cardSetup = params.get("card_setup") === "1";
     if (!reference || verified.current) return;
     verified.current = true;
 
     navigate("/seller/premium", { replace: true });
     setVerifying(true);
 
-    if (cardSetup) {
-      // ── Card tokenisation return — ₦100 charge, refund, create subscription ──
-      setVerifyMsg("Saving your card and setting up auto-renewal…");
-      axios.post(`${BASE}/api/shops/complete-card-setup/`, { reference }, acJson())
-        .then(res => {
-          setLocalShop(res.data.shop);
-          refreshShop();
-        })
-        .catch(e => {
-          setVerifyErr(
-            e.response?.data?.error
-            || `Card setup failed. Contact support with ref: ${reference}`
-          );
-        })
-        .finally(() => setVerifying(false));
-    } else {
-      // ── Normal premium upgrade ──
+    // ── Normal premium upgrade ──
+    {
       setVerifyMsg("Confirming your payment…");
       axios.post(`${BASE}/api/shops/upgrade-premium/`, { reference }, acJson())
         .then(res => {
@@ -908,7 +806,7 @@ const SellerPremium = () => {
 
   return localShop.is_premium
     ? <ManagePage shop={localShop} onShopUpdate={setLocalShop} />
-    : <UpgradePage onSuccess={handleSuccess} />;
+    : <UpgradePage onSuccess={handleSuccess} shop={localShop} />;
 };
 
 export default SellerPremium;

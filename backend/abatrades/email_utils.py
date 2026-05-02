@@ -296,19 +296,13 @@ def send_new_order_to_sellers(order):
 
 # ── 7. Premium cancelled ─────────────────────────────────────────────────────
 
-def send_premium_cancelled(user, shop, expires_at=None):
+def send_premium_cancelled(user, shop):
     name = user.first_name or user.email.split('@')[0]
-    expiry_str = ""
-    if expires_at:
-        try:
-            expiry_str = f" Your premium features remain active until <strong>{expires_at.strftime('%d %B %Y')}</strong>."
-        except Exception:
-            pass
     body = (
-        _p(f"Hi {name}, you have cancelled auto-renewal for your Premium subscription on <strong>{shop.name}</strong>.")
-        + _p(f"No further charges will be made.{expiry_str}")
-        + _p("If you change your mind, you can reactivate your subscription anytime before the expiry date from your seller dashboard.")
-        + _btn("Manage Subscription", f"{FRONTEND}/seller/premium", color="#92400e")
+        _p(f"Hi {name}, your Premium subscription for <strong>{shop.name}</strong> has been cancelled.")
+        + _p("All premium features — including your promo video, text blocks, verified badge, warehousing, and logistics services — have been removed from your store.")
+        + _p("You can resubscribe after 24 hours from your seller dashboard.")
+        + _btn("Go to Premium", f"{FRONTEND}/seller/premium", color="#92400e")
     )
     _send(
         subject="Premium subscription cancelled — Abatrades",

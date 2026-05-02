@@ -1,6 +1,22 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+const VerifiedBadge = () => (
+  <span
+    title="Verified Premium Seller"
+    style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      width: "17px", height: "17px",
+      background: "linear-gradient(135deg, #d97706, #f59e0b)",
+      borderRadius: "50%", flexShrink: 0,
+    }}
+  >
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </span>
+);
+
 const BANNER_GRADIENTS = [
   "linear-gradient(135deg,#3b7bf8,#7c3aed)",
   "linear-gradient(135deg,#0ea5e9,#2563eb)",
@@ -111,19 +127,22 @@ const ShopCard = ({ shop }) => {
 
         {/* Body */}
         <div style={{ padding: "10px 16px 0", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-          <h6
-            style={{
-              fontWeight: 700,
-              fontSize: "15px",
-              margin: "0 0 4px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              color: "#111827",
-            }}
-          >
-            {shop.name}
-          </h6>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", margin: "0 0 4px" }}>
+            <h6
+              style={{
+                fontWeight: 700,
+                fontSize: "15px",
+                margin: 0,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                color: "#111827",
+              }}
+            >
+              {shop.name}
+            </h6>
+            {shop.is_premium && <VerifiedBadge />}
+          </div>
 
           {shop.description && (
             <p

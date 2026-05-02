@@ -173,8 +173,8 @@ def paystack_webhook(request):
                 # Make sure premium is still active (handles edge cases)
                 if not shop.is_premium:
                     shop.is_premium = True
-                    shop.premium_expires_at = None
-                    shop.save(update_fields=["is_premium", "premium_expires_at"])
+                    shop.premium_cancelled_at = None
+                    shop.save(update_fields=["is_premium", "premium_cancelled_at"])
                 next_date = (data.get("data") or {}).get("subscription", {}).get("next_payment_date")
                 send_subscription_renewed(shop.owner, shop, next_date)
             except Exception:

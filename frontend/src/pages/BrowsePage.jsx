@@ -526,7 +526,7 @@ const BrowsePage = () => {
             {/* Want to know more */}
             <Link to="/knowledge-base" className="know-more-link" style={{ display: "flex", flexDirection: "column", padding: "0 12px", borderRight: "1px solid #e2e8f0", textDecoration: "none" }}>
               <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Want to know more?</span>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: "#f97316" }}>Click here</span>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Click here</span>
             </Link>
 
             {/* Sign in nudge (logged out) or Account (logged in) */}
@@ -698,8 +698,8 @@ const BrowsePage = () => {
           </div>
         )}
 
-        {/* Orange nav */}
-        <div style={{ background: "#f97316", overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+        {/* Nav bar */}
+        <div style={{ background: "#fff", borderTop: "1px solid #f1f5f9", overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
           <div style={{ display: "flex", alignItems: "stretch", minWidth: "max-content", padding: "0 12px" }}>
             {NAV_ITEMS.map(item => {
               const isActive = activeNav === item;
@@ -707,11 +707,12 @@ const BrowsePage = () => {
                 <button key={item}
                   onClick={() => setActiveNav(prev => prev === item ? "" : item)}
                   style={{
-                    padding: "0 14px", height: "38px", background: "none", border: "none",
-                    borderBottom: isActive ? "2px solid #fff" : "2px solid transparent",
-                    color: "#fff", fontSize: "13px", fontWeight: isActive ? 700 : 500,
+                    padding: "0 14px", height: "36px", background: "none", border: "none",
+                    borderBottom: isActive ? "2px solid #111827" : "2px solid transparent",
+                    color: isActive ? "#111827" : "#6b7280",
+                    fontSize: "12.5px", fontWeight: isActive ? 700 : 500,
                     cursor: "pointer", whiteSpace: "nowrap",
-                    opacity: isActive ? 1 : 0.92, transition: "all 0.15s", flexShrink: 0,
+                    transition: "all 0.15s", flexShrink: 0,
                   }}
                 >
                   {item}

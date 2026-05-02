@@ -43,6 +43,26 @@ const EyeIcon = () => (
   </svg>
 );
 
+/* ── Verified badge (reused across storefront, store cards, etc.) ── */
+const VerifiedBadge = ({ size = "md" }) => {
+  const sm = size === "sm";
+  return (
+    <span
+      title="Verified Premium Seller"
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: sm ? "16px" : "20px", height: sm ? "16px" : "20px",
+        background: "linear-gradient(135deg, #d97706, #f59e0b)",
+        borderRadius: "50%", flexShrink: 0,
+      }}
+    >
+      <svg width={sm ? 9 : 11} height={sm ? 9 : 11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </span>
+  );
+};
+
 /* ── Convert YouTube/Vimeo URL to embed URL ── */
 const getEmbedUrl = (url) => {
   if (!url) return null;
@@ -93,9 +113,12 @@ const StoreCard = ({ store }) => {
           </div>
         </div>
         <div style={{ padding: "26px 14px 14px" }}>
-          <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a", marginBottom: "3px",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {store.name}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
+            <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {store.name}
+            </div>
+            {store.is_premium && <VerifiedBadge size="sm" />}
           </div>
           <div style={{ fontSize: "12px", color: "#94a3b8" }}>
             {store.product_count} product{store.product_count !== 1 ? "s" : ""}
@@ -324,21 +347,7 @@ const ShopPage = () => {
                   }}>
                     {shop.name}
                   </h1>
-                  {shop.is_premium && (
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: "4px",
-                      background: "linear-gradient(135deg, #d97706, #f59e0b)",
-                      color: "#fff", fontSize: "10.5px", fontWeight: 700,
-                      padding: "2px 8px", borderRadius: "999px",
-                      letterSpacing: "0.04em", textTransform: "uppercase",
-                      flexShrink: 0,
-                    }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 20h20M4 16l2-10 6 5 6-5 2 10"/>
-                      </svg>
-                      Premium
-                    </span>
-                  )}
+                  {shop.is_premium && <VerifiedBadge />}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   {shop.owner_name && (
@@ -601,13 +610,15 @@ const ShopPage = () => {
                 </div>
               );
 
-              // Index text blocks by insert_after position
+              // Index text blocks by insert_after position (premium only)
               const blocksByPos = {};
-              (shop.text_blocks || []).forEach(block => {
-                const pos = block.insert_after;
-                if (!blocksByPos[pos]) blocksByPos[pos] = [];
-                blocksByPos[pos].push(block);
-              });
+              if (shop.is_premium) {
+                (shop.text_blocks || []).forEach(block => {
+                  const pos = block.insert_after;
+                  if (!blocksByPos[pos]) blocksByPos[pos] = [];
+                  blocksByPos[pos].push(block);
+                });
+              }
 
               // Build mixed array
               const mixed = [];
@@ -634,7 +645,7 @@ const ShopPage = () => {
                         gridColumn: "1 / -1",
                         background: "#fff",
                         border: "1px solid #e2e8f0",
-                        borderLeft: "3px solid #0f172a",
+                        borderLeft: `3px solid ${block.tile_color || "#0f172a"}`,
                         borderRadius: "10px",
                         padding: "16px 20px",
                       }}>

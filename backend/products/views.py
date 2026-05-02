@@ -9,7 +9,7 @@ from django.conf import settings
 import requests as http_requests
 
 from .models import Shop, Category, Product, ProductImage, StoreTextBlock
-from abatrades.email_utils import send_product_listed, send_premium_activated, send_premium_cancelled, send_premium_reactivated
+from abatrades.email_utils import send_product_listed, send_premium_activated, send_premium_cancelled
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
@@ -33,7 +33,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def _expire_premium_if_due(self, shop):
-        """If subscription was cancelled and expiry date has passed, revoke premium."""
+        """If billing period has ended after cancellation, revoke premium access."""
         if shop.is_premium and shop.premium_expires_at and shop.premium_expires_at <= timezone.now():
             shop.is_premium = False
             shop.premium_expires_at = None
@@ -188,10 +188,26 @@ class ShopViewSet(viewsets.ModelViewSet):
             shop = Shop.objects.get(owner=request.user)
         except Shop.DoesNotExist:
             return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
-        # If already premium AND already has a subscription, nothing to do
-        if shop.is_premium and shop.paystack_subscription_code:
+        # Already premium — nothing to do
+        if shop.is_premium:
             serializer = self.get_serializer(shop, context={'request': request})
             return Response(serializer.data)
+
+        # Enforce 24-hour cooldown after cancellation
+        if shop.premium_cancelled_at:
+            cooldown_end = shop.premium_cancelled_at + timezone.timedelta(hours=24)
+            if timezone.now() < cooldown_end:
+                seconds_left = int((cooldown_end - timezone.now()).total_seconds())
+                hours_left   = seconds_left // 3600
+                mins_left    = (seconds_left % 3600) // 60
+                return Response(
+                    {
+                        'error': 'cooldown',
+                        'message': f'You can resubscribe in {hours_left}h {mins_left}m.',
+                        'cooldown_ends': cooldown_end.isoformat(),
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
 
         verify_url = f"https://api.paystack.co/transaction/verify/{reference}"
         ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
@@ -210,14 +226,13 @@ class ShopViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_402_PAYMENT_REQUIRED
             )
 
-        # Save subscription / customer codes for recurring billing
+        # Activate premium and clear any cancellation/expiry record
         already_premium = shop.is_premium
-        update_fields = ['premium_expires_at']
-        shop.premium_expires_at = None  # clear any previous cancellation expiry
-        if not already_premium:
-            shop.is_premium = True
-            shop.premium_since = timezone.now()
-            update_fields += ['is_premium', 'premium_since']
+        update_fields = ['is_premium', 'premium_since', 'premium_cancelled_at', 'premium_expires_at']
+        shop.is_premium = True
+        shop.premium_since = timezone.now()
+        shop.premium_cancelled_at = None
+        shop.premium_expires_at = None
 
         customer = txn_data.get('customer') or {}
         if customer.get('customer_code'):
@@ -563,8 +578,9 @@ class ShopViewSet(viewsets.ModelViewSet):
             parser_classes=[JSONParser, MultiPartParser, FormParser])
     def cancel_premium(self, request):
         """
-        Cancel the recurring Paystack subscription (disables auto-renewal).
-        Premium access is kept until the end of the current billing period.
+        Cancel subscription. Access continues until end of current billing period (premium_expires_at),
+        then is_premium flips to False automatically on next load.
+        Records premium_cancelled_at for the 24-hour resubscribe cooldown.
         """
         try:
             shop = Shop.objects.get(owner=request.user)
@@ -578,7 +594,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         expires_at = None
 
         if shop.paystack_subscription_code and shop.paystack_email_token:
-            # 1. Fetch next payment date before disabling (that becomes the access expiry)
+            # Fetch next payment date — that becomes the access expiry
             try:
                 sub_res = http_requests.get(
                     f"https://api.paystack.co/subscription/{shop.paystack_subscription_code}",
@@ -593,152 +609,22 @@ class ShopViewSet(viewsets.ModelViewSet):
             except Exception:
                 pass
 
-            # 2. Disable auto-renewal on Paystack
+            # Disable auto-renewal on Paystack (best-effort)
             try:
-                res = http_requests.post(
+                http_requests.post(
                     "https://api.paystack.co/subscription/disable",
-                    json={
-                        'code': shop.paystack_subscription_code,
-                        'token': shop.paystack_email_token,
-                    },
-                    headers=ps_headers,
-                    timeout=10,
-                )
-                data = res.json()
-                if not data.get('status'):
-                    return Response(
-                        {'error': data.get('message', 'Could not cancel subscription with Paystack.')},
-                        status=status.HTTP_502_BAD_GATEWAY
-                    )
-            except Exception as e:
-                return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
-
-        # Keep is_premium = True but record when access expires
-        update_fields = ['premium_expires_at']
-        shop.premium_expires_at = expires_at or (timezone.now() + timezone.timedelta(days=30))
-        shop.save(update_fields=update_fields)
-
-        send_premium_cancelled(request.user, shop, shop.premium_expires_at)
-
-        serializer = self.get_serializer(shop, context={'request': request})
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['post'], url_path='reactivate-premium',
-            permission_classes=[permissions.IsAuthenticated],
-            parser_classes=[JSONParser, MultiPartParser, FormParser])
-    def reactivate_premium(self, request):
-        """Re-enable a previously cancelled Paystack subscription."""
-        try:
-            shop = Shop.objects.get(owner=request.user)
-        except Shop.DoesNotExist:
-            return Response({'error': 'You do not have a shop.'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Already fully active (no pending cancellation) — nothing to do
-        if shop.is_premium and not shop.premium_expires_at:
-            serializer = self.get_serializer(shop, context={'request': request})
-            return Response(serializer.data)
-
-        ps_headers = {'Authorization': f'Bearer {PAYSTACK_SECRET}'}
-
-        # Lazy lookup: subscription code may not have been saved yet (async Paystack timing)
-        if (not shop.paystack_subscription_code or not shop.paystack_email_token) and shop.paystack_customer_code:
-            try:
-                lookup = http_requests.get(
-                    f"https://api.paystack.co/subscription?customer={shop.paystack_customer_code}",
+                    json={'code': shop.paystack_subscription_code, 'token': shop.paystack_email_token},
                     headers=ps_headers, timeout=10,
                 )
-                subs = (lookup.json().get('data') or [])
-                if subs:
-                    shop.paystack_subscription_code = subs[0].get('subscription_code', '') or shop.paystack_subscription_code
-                    shop.paystack_email_token       = subs[0].get('email_token', '') or shop.paystack_email_token
-                    update_fields = []
-                    if shop.paystack_subscription_code:
-                        update_fields.append('paystack_subscription_code')
-                    if shop.paystack_email_token:
-                        update_fields.append('paystack_email_token')
-                    if update_fields:
-                        shop.save(update_fields=update_fields)
             except Exception:
                 pass
 
-        if not shop.paystack_subscription_code or not shop.paystack_email_token:
-            # No recurring subscription on file — user paid via bank transfer or codes were lost.
-            # Clear the pending expiry so the frontend falls back to the upgrade flow.
-            if shop.premium_expires_at:
-                shop.premium_expires_at = None
-                shop.save(update_fields=['premium_expires_at'])
-            serializer = self.get_serializer(shop, context={'request': request})
-            return Response(
-                {'error': 'no_subscription', 'shop': serializer.data},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Keep is_premium=True — access continues until expires_at
+        shop.premium_expires_at = expires_at or (timezone.now() + timezone.timedelta(days=30))
+        shop.premium_cancelled_at = timezone.now()
+        shop.save(update_fields=['premium_expires_at', 'premium_cancelled_at'])
 
-        # ── Attempt 1: re-enable the existing disabled subscription ─────────────
-        enable_ok = False
-        try:
-            res = http_requests.post(
-                "https://api.paystack.co/subscription/enable",
-                json={
-                    'code': shop.paystack_subscription_code,
-                    'token': shop.paystack_email_token,
-                },
-                headers=ps_headers,
-                timeout=10,
-            )
-            enable_ok = res.json().get('status', False)
-        except Exception:
-            pass
-
-        # ── Attempt 2: subscription is permanently cancelled on Paystack —
-        #    create a brand-new one using the saved authorization code (no charge) ──
-        if not enable_ok:
-            if not shop.paystack_authorization_code:
-                # No card on file at all — user must go through upgrade flow
-                if shop.premium_expires_at:
-                    shop.premium_expires_at = None
-                    shop.save(update_fields=['premium_expires_at'])
-                serializer = self.get_serializer(shop, context={'request': request})
-                return Response(
-                    {'error': 'no_subscription', 'shop': serializer.data},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            PREMIUM_PLAN_CODE = getattr(settings, 'PAYSTACK_PREMIUM_PLAN_CODE', '')
-            if not PREMIUM_PLAN_CODE:
-                return Response(
-                    {'error': 'Premium plan not configured. Contact support.'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-
-            try:
-                sub_res = http_requests.post(
-                    "https://api.paystack.co/subscription",
-                    json={
-                        'customer':          shop.paystack_customer_code,
-                        'plan':              PREMIUM_PLAN_CODE,
-                        'authorization':     shop.paystack_authorization_code,
-                    },
-                    headers=ps_headers,
-                    timeout=10,
-                )
-                sub_data = sub_res.json()
-                if not sub_data.get('status'):
-                    return Response(
-                        {'error': sub_data.get('message', 'Could not create new subscription.')},
-                        status=status.HTTP_502_BAD_GATEWAY
-                    )
-                new_sub = sub_data.get('data') or {}
-                shop.paystack_subscription_code = new_sub.get('subscription_code', shop.paystack_subscription_code)
-                shop.paystack_email_token       = new_sub.get('email_token', shop.paystack_email_token)
-                shop.save(update_fields=['paystack_subscription_code', 'paystack_email_token'])
-            except Exception as e:
-                return Response({'error': f'Could not reach Paystack: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
-
-        shop.is_premium = True
-        shop.premium_expires_at = None
-        shop.save(update_fields=['is_premium', 'premium_expires_at'])
-
-        send_premium_reactivated(request.user, shop)
+        send_premium_cancelled(request.user, shop)
 
         serializer = self.get_serializer(shop, context={'request': request})
         return Response(serializer.data)

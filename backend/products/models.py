@@ -30,9 +30,13 @@ class Shop(models.Model):
     # Premium
     is_premium = models.BooleanField(default=False)
     premium_since = models.DateTimeField(null=True, blank=True)
+    premium_cancelled_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of last cancellation — used to enforce 24-hour resubscribe cooldown"
+    )
     premium_expires_at = models.DateTimeField(
         null=True, blank=True,
-        help_text="Set when subscription is cancelled — premium access continues until this date"
+        help_text="Access continues until this date after cancellation (end of paid billing period)"
     )
     store_video_url = models.URLField(
         blank=True, null=True,
@@ -77,6 +81,10 @@ class StoreTextBlock(models.Model):
     insert_after = models.PositiveIntegerField(
         default=0,
         help_text="Show this block after the nth product (0 = before all products)"
+    )
+    tile_color = models.CharField(
+        max_length=20, blank=True, null=True, default="#0f172a",
+        help_text="Hex color for the left-border tile accent"
     )
 
     class Meta:
