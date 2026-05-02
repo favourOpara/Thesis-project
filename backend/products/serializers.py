@@ -1,6 +1,6 @@
 import json
 from rest_framework import serializers
-from .models import Shop, Category, Product, ProductImage, StoreTextBlock
+from .models import Shop, Category, Product, ProductImage, StoreTextBlock, StoreContentSection, SectionImage
 
 
 class FlexibleJSONField(serializers.JSONField):
@@ -12,6 +12,33 @@ class FlexibleJSONField(serializers.JSONField):
             except (json.JSONDecodeError, ValueError):
                 return None
         return super().to_internal_value(data)
+
+
+class SectionImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SectionImage
+        fields = ['id', 'image', 'image_url', 'linked_category', 'display_order']
+        read_only_fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            if url.startswith('http'):
+                return url
+            return request.build_absolute_uri(url) if request else url
+        return None
+
+
+class StoreContentSectionSerializer(serializers.ModelSerializer):
+    images = SectionImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StoreContentSection
+        fields = ['id', 'layout', 'display_order', 'images']
+        read_only_fields = ['id']
 
 
 class StoreTextBlockSerializer(serializers.ModelSerializer):
@@ -29,6 +56,7 @@ class ShopSerializer(serializers.ModelSerializer):
     preview_images = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
     text_blocks = StoreTextBlockSerializer(many=True, read_only=True)
+    content_sections = StoreContentSectionSerializer(many=True, read_only=True)
     store_video_file_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -39,7 +67,9 @@ class ShopSerializer(serializers.ModelSerializer):
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
             'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
+            'products_position',
             'is_premium', 'premium_since', 'premium_cancelled_at', 'premium_expires_at', 'store_video_url', 'store_video_file', 'store_video_file_url', 'text_blocks',
+            'content_sections',
             'paystack_subscription_code',
             'created_at', 'updated_at',
         ]

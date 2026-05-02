@@ -127,6 +127,7 @@ const SellerSettings = () => {
     sort_order:           shop?.sort_order           || "newest",
     store_status:         shop?.store_status         || "open",
     store_status_message: shop?.store_status_message || "",
+    products_position:    shop?.products_position    || "first",
     phone_number:         "",
     address:              "",
     first_name:           "",
@@ -139,6 +140,74 @@ const SellerSettings = () => {
   const logoRef   = useRef();
   const bannerRef = useRef();
   const isNew = !shop;
+
+  // ── Store Content Sections ──
+  const [sections, setSections]         = useState([]);
+  const [sectionSaving, setSectionSaving] = useState(false);
+  const [newSection, setNewSection]     = useState({ layout: "2col", images: [], categories: [] });
+  const [showSectionForm, setShowSectionForm] = useState(false);
+  const sectionImgRef = useRef();
+
+  const shopCategories = shop?.categories || [];
+
+  useEffect(() => {
+    if (!shop) return;
+    axios.get(`${BASE}/api/shops/${shop.slug}/content-sections/`, ac())
+      .then(r => setSections(r.data))
+      .catch(() => {});
+  }, [shop]);
+
+  const handleSectionImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    const previews = files.map(f => ({ file: f, url: URL.createObjectURL(f), linked_category: "" }));
+    setNewSection(s => ({ ...s, images: [...s.images, ...previews] }));
+  };
+
+  const handleSectionImageCatChange = (idx, cat) => {
+    setNewSection(s => {
+      const imgs = [...s.images];
+      imgs[idx] = { ...imgs[idx], linked_category: cat };
+      return { ...s, images: imgs };
+    });
+  };
+
+  const removeSectionImageSlot = (idx) => {
+    setNewSection(s => {
+      const imgs = s.images.filter((_, i) => i !== idx);
+      return { ...s, images: imgs };
+    });
+  };
+
+  const handleAddSection = async () => {
+    if (!newSection.images.length) { toast.error("Upload at least one image."); return; }
+    setSectionSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append("layout", newSection.layout);
+      fd.append("display_order", sections.length);
+      newSection.images.forEach(slot => fd.append("images", slot.file));
+      newSection.images.forEach(slot => fd.append("linked_categories", slot.linked_category || ""));
+      const r = await axios.post(`${BASE}/api/shops/${shop.slug}/content-sections/`, fd, ac());
+      setSections(prev => [...prev, r.data]);
+      setNewSection({ layout: "2col", images: [] });
+      setShowSectionForm(false);
+      toast.success("Section added.");
+    } catch {
+      toast.error("Could not save section.");
+    } finally {
+      setSectionSaving(false);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId) => {
+    try {
+      await axios.delete(`${BASE}/api/shops/${shop.slug}/content-sections/${sectionId}/`, ac());
+      setSections(prev => prev.filter(s => s.id !== sectionId));
+      toast.success("Section removed.");
+    } catch {
+      toast.error("Could not remove section.");
+    }
+  };
 
   useEffect(() => {
     setPageTitle("Store Settings");
@@ -167,6 +236,7 @@ const SellerSettings = () => {
         sort_order:           shop.sort_order           || "newest",
         store_status:         shop.store_status         || "open",
         store_status_message: shop.store_status_message || "",
+        products_position:    shop.products_position    || "first",
       }));
     }
   }, [shop]);
@@ -494,6 +564,32 @@ const SellerSettings = () => {
           )}
         </div>
 
+        {/* Products position */}
+        <hr className="sd-divider" />
+        <p className="sd-section-label">Store Content</p>
+
+        <div className="sd-form-grid" style={{ marginBottom: "16px" }}>
+          <div>
+            <label className="sd-label">Product Grid Position</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
+              {[
+                { value: "first", label: "Products first", desc: "Product grid appears above your content section" },
+                { value: "last",  label: "Content first",  desc: "Your images/text appear above the product grid" },
+              ].map(opt => (
+                <label key={opt.value} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+                  <input type="radio" name="products_position" value={opt.value}
+                    checked={form.products_position === opt.value} onChange={handleChange}
+                    style={{ marginTop: "3px", accentColor: "#2563eb" }} />
+                  <span>
+                    <span style={{ fontWeight: 400, fontSize: "13.5px", color: "#374151" }}>{opt.label}</span>
+                    <span style={{ display: "block", fontSize: "12px", color: "#94a3b8" }}>{opt.desc}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div style={{ marginTop: "20px" }}>
           <button type="submit" className="sd-btn-primary" disabled={saving}
             style={{
@@ -507,6 +603,134 @@ const SellerSettings = () => {
           </button>
         </div>
       </form>
+
+      {/* ── Store Content Sections ── */}
+      {shop && (
+        <div style={{ marginTop: "32px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+            <div>
+              <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Image Sections</p>
+              <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#94a3b8" }}>
+                Landscape image grids shown on your store page. Each image can link buyers to a product category.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSectionForm(s => !s)}
+              style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            >
+              + Add Section
+            </button>
+          </div>
+
+          {/* New section form */}
+          {showSectionForm && (
+            <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "12px", padding: "18px", marginBottom: "16px" }}>
+              {/* Layout picker */}
+              <label className="sd-label" style={{ marginBottom: "8px", display: "block" }}>Grid Layout</label>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+                {[
+                  { value: "1col", label: "1 column" },
+                  { value: "2col", label: "2 columns" },
+                  { value: "3col", label: "3 columns" },
+                  { value: "2-1",  label: "Large | Small" },
+                  { value: "1-2",  label: "Small | Large" },
+                ].map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setNewSection(s => ({ ...s, layout: opt.value }))}
+                    style={{
+                      padding: "6px 14px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600,
+                      cursor: "pointer", border: "1.5px solid",
+                      borderColor: newSection.layout === opt.value ? "#2563eb" : "#e2e8f0",
+                      background: newSection.layout === opt.value ? "#eff6ff" : "#fff",
+                      color: newSection.layout === opt.value ? "#2563eb" : "#374151",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Image upload */}
+              <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Upload Images</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "10px", marginBottom: "12px" }}>
+                {newSection.images.map((slot, idx) => (
+                  <div key={idx} style={{ position: "relative", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                    <img src={slot.url} alt="" style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
+                    <button type="button" onClick={() => removeSectionImageSlot(idx)}
+                      style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      ✕
+                    </button>
+                    {/* Category link selector */}
+                    <div style={{ padding: "6px" }}>
+                      <select
+                        value={slot.linked_category}
+                        onChange={e => handleSectionImageCatChange(idx, e.target.value)}
+                        style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #e2e8f0", borderRadius: "6px", background: "#fff" }}
+                      >
+                        <option value="">No link</option>
+                        {shopCategories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+                <div
+                  onClick={() => sectionImgRef.current.click()}
+                  style={{ aspectRatio: "16/9", border: "2px dashed #cbd5e1", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", fontSize: "24px" }}
+                >
+                  +
+                </div>
+              </div>
+              <input ref={sectionImgRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+                onChange={handleSectionImageChange} />
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                <button type="button" onClick={handleAddSection} disabled={sectionSaving}
+                  style={{ padding: "8px 20px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: sectionSaving ? 0.7 : 1 }}>
+                  {sectionSaving ? "Saving…" : "Save Section"}
+                </button>
+                <button type="button" onClick={() => { setShowSectionForm(false); setNewSection({ layout: "2col", images: [] }); }}
+                  style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Existing sections */}
+          {sections.length === 0 && !showSectionForm && (
+            <div style={{ textAlign: "center", padding: "24px", background: "#f8fafc", borderRadius: "12px", color: "#94a3b8", fontSize: "13px" }}>
+              No image sections yet. Click "+ Add Section" to create one.
+            </div>
+          )}
+          {sections.map((sec, i) => (
+            <div key={sec.id} style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflow: "hidden", marginBottom: "12px" }}>
+              <div style={{ background: "#f8fafc", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>
+                  Section {i + 1} — <span style={{ color: "#2563eb" }}>{sec.layout}</span>
+                </span>
+                <button type="button" onClick={() => handleDeleteSection(sec.id)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "12.5px", fontWeight: 600 }}>
+                  Remove
+                </button>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", padding: "12px" }}>
+                {sec.images.map(img => (
+                  <div key={img.id} style={{ position: "relative", borderRadius: "6px", overflow: "hidden" }}>
+                    <img src={img.image_url} alt="" style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
+                    {img.linked_category && (
+                      <div style={{ background: "#2563eb", color: "#fff", fontSize: "10px", padding: "2px 6px", position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        → {img.linked_category}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Danger zone ── */}
       <div style={{ marginTop: "40px", borderTop: "1px solid #fee2e2", paddingTop: "28px" }}>

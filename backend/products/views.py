@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.conf import settings
 import requests as http_requests
 
-from .models import Shop, Category, Product, ProductImage, StoreTextBlock
+from .models import Shop, Category, Product, ProductImage, StoreTextBlock, StoreContentSection, SectionImage
 from abatrades.email_utils import send_product_listed, send_premium_activated, send_premium_cancelled
 from .serializers import (
     ShopSerializer,
@@ -16,6 +16,8 @@ from .serializers import (
     ProductSerializer,
     ProductImageSerializer,
     StoreTextBlockSerializer,
+    StoreContentSectionSerializer,
+    SectionImageSerializer,
 )
 
 PAYSTACK_SECRET = getattr(settings, 'PAYSTACK_SECRET_KEY', '') or "sk_test_3207e50dafa844fb486185ea7aceed100089ff21"
@@ -694,6 +696,61 @@ class ShopViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # ── Store content sections (available to all sellers, no premium required) ──
+
+    @action(detail=True, methods=['get', 'post'], url_path='content-sections',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def content_sections(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'GET':
+            sections = shop.content_sections.prefetch_related('images').all()
+            return Response(StoreContentSectionSerializer(sections, many=True, context={'request': request}).data)
+        # POST: create a new section
+        layout = request.data.get('layout', '2col')
+        display_order = request.data.get('display_order', 0)
+        section = StoreContentSection.objects.create(shop=shop, layout=layout, display_order=display_order)
+        # Handle uploaded images
+        images = request.FILES.getlist('images')
+        categories = request.data.getlist('linked_categories')  # parallel list
+        for i, img_file in enumerate(images):
+            linked_cat = categories[i] if i < len(categories) else None
+            SectionImage.objects.create(section=section, image=img_file, linked_category=linked_cat or None, display_order=i)
+        return Response(StoreContentSectionSerializer(section, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch', 'delete'], url_path=r'content-sections/(?P<section_id>\d+)',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def content_section_detail(self, request, slug=None, section_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        section = get_object_or_404(StoreContentSection, pk=section_id, shop=shop)
+        if request.method == 'DELETE':
+            section.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        # PATCH: update layout/order, replace images if provided
+        if 'layout' in request.data:
+            section.layout = request.data['layout']
+        if 'display_order' in request.data:
+            section.display_order = request.data['display_order']
+        section.save()
+        new_images = request.FILES.getlist('images')
+        if new_images:
+            section.images.all().delete()
+            categories = request.data.getlist('linked_categories')
+            for i, img_file in enumerate(new_images):
+                linked_cat = categories[i] if i < len(categories) else None
+                SectionImage.objects.create(section=section, image=img_file, linked_category=linked_cat or None, display_order=i)
+        # Update existing image categories if sent (no new images)
+        img_ids = request.data.getlist('image_ids')
+        img_cats = request.data.getlist('image_linked_categories')
+        for img_id, cat in zip(img_ids, img_cats):
+            SectionImage.objects.filter(pk=img_id, section=section).update(linked_category=cat or None)
+        return Response(StoreContentSectionSerializer(section, context={'request': request}).data)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

@@ -54,6 +54,13 @@ class Shop(models.Model):
         help_text="Card authorization code — used to create a subscription without a new payment"
     )
 
+    # Store content section positioning
+    PRODUCTS_POSITION_CHOICES = [('first', 'Products First'), ('last', 'Products Last')]
+    products_position = models.CharField(
+        max_length=10, choices=PRODUCTS_POSITION_CHOICES, default='first',
+        help_text="Whether the products grid appears before or after the custom content section"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -70,6 +77,44 @@ class Shop(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class StoreContentSection(models.Model):
+    """A landscape image-grid section sellers can add to their store page."""
+    LAYOUT_CHOICES = [
+        ('1col', 'Single image (full width)'),
+        ('2col', 'Two columns'),
+        ('3col', 'Three columns'),
+        ('2-1', 'Large left + small right'),
+        ('1-2', 'Small left + large right'),
+    ]
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='content_sections')
+    layout = models.CharField(max_length=10, choices=LAYOUT_CHOICES, default='2col')
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"Section for {self.shop.name} (layout={self.layout})"
+
+
+class SectionImage(models.Model):
+    """An individual image within a StoreContentSection."""
+    section = models.ForeignKey(StoreContentSection, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='store_sections/')
+    linked_category = models.CharField(
+        max_length=255, blank=True, null=True,
+        help_text="When clicked, filters the store's product list to this category"
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"Image for section {self.section_id}"
 
 
 class StoreTextBlock(models.Model):

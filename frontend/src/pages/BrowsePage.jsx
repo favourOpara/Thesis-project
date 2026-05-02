@@ -735,6 +735,24 @@ const BrowsePage = () => {
         borderBottom: "1px solid #e5e7eb",
       }}>
         <img src={LargeLogo} alt="Abatrades" className="banner-logo" style={{ height: "36px" }} />
+
+        {/* Middle text — desktop only */}
+        <div className="cta-middle" style={{ display: "none", flex: 1, justifyContent: "center", gap: "0", alignItems: "stretch", margin: "0 40px" }}>
+          {[
+            { heading: "Local stores",       sub: "Every store is run by a real person" },
+            { heading: "Thousands of items", sub: "Across fashion, tech, home & more" },
+            { heading: "Secure checkout",    sub: "Safe payments, every order" },
+          ].map((item, i) => (
+            <div key={i} style={{
+              flex: 1, textAlign: "center", padding: "0 20px",
+              borderLeft: i === 0 ? "none" : "1px solid #e5e7eb",
+            }}>
+              <p style={{ margin: "0 0 2px", fontSize: "13px", fontWeight: 700, color: "#111827" }}>{item.heading}</p>
+              <p style={{ margin: 0, fontSize: "11.5px", color: "#9ca3af", fontWeight: 400 }}>{item.sub}</p>
+            </div>
+          ))}
+        </div>
+
         <div style={{ textAlign: "right" }}>
           <p style={{
             margin: 0,
@@ -820,6 +838,64 @@ const BrowsePage = () => {
       )}
 
       {/* ════════════════════════════
+          TRUST BAR  (desktop only)
+      ════════════════════════════ */}
+      <div className="browse-trust-bar" style={{ background: "#fff", borderTop: "1px solid #f1f5f9", borderBottom: "1px solid #f1f5f9", padding: "28px 100px", display: "none" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr 1px 1fr", alignItems: "center", gap: "0" }}>
+
+          <div style={{ textAlign: "center", padding: "0 24px" }}>
+            <p style={{ margin: "0 0 3px", fontSize: "18px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.4px" }}>1,200+</p>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.2px" }}>Products listed</p>
+          </div>
+
+          <div style={{ background: "#e2e8f0", height: "36px" }} />
+
+          <div style={{ textAlign: "center", padding: "0 24px" }}>
+            <p style={{ margin: "0 0 3px", fontSize: "18px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.4px" }}>80+</p>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.2px" }}>Verified stores</p>
+          </div>
+
+          <div style={{ background: "#e2e8f0", height: "36px" }} />
+
+          <div style={{ textAlign: "center", padding: "0 24px" }}>
+            <p style={{ margin: "0 0 3px", fontSize: "18px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.4px" }}>Secure</p>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.2px" }}>Checkout & payments</p>
+          </div>
+
+          <div style={{ background: "#e2e8f0", height: "36px" }} />
+
+          <div style={{ textAlign: "center", padding: "0 24px" }}>
+            <p style={{ margin: "0 0 3px", fontSize: "18px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.4px" }}>Nigeria-wide</p>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.2px" }}>Delivery coverage</p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ════════════════════════════
+          STORE SECTION INTRO  (desktop only)
+      ════════════════════════════ */}
+      <div className="browse-stores-intro" style={{ display: "none", padding: "36px 100px 0", background: "#f3f4f6" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "1.2px", textTransform: "uppercase" }}>
+              Store Directory
+            </p>
+            <h2 style={{ margin: 0, fontSize: "26px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px", lineHeight: 1.2 }}>
+              Shop from local sellers
+            </h2>
+            <p style={{ margin: "6px 0 0", fontSize: "13.5px", color: "#64748b", fontWeight: 400, maxWidth: "420px", lineHeight: 1.6 }}>
+              Every store on Abatrades is run by a real person. Browse, discover, and buy directly from sellers across Nigeria.
+            </p>
+          </div>
+          <p style={{ margin: 0, fontSize: "12px", color: "#cbd5e1", fontWeight: 500, fontStyle: "italic", paddingBottom: "4px" }}>
+            Filter by category above to narrow results
+          </p>
+        </div>
+        <div style={{ height: "1px", background: "#e2e8f0", marginTop: "24px" }} />
+      </div>
+
+      {/* ════════════════════════════
           STORE DIRECTORY
       ════════════════════════════ */}
       <div ref={storesSectionRef}>
@@ -839,6 +915,9 @@ const BrowsePage = () => {
           .banner-logo { height: 72px !important; }
           .browse-pad { padding-left: 100px !important; padding-right: 100px !important; }
           .browse-pad-scroll { padding-left: 100px !important; padding-right: 100px !important; }
+          .browse-trust-bar { display: block !important; }
+          .browse-stores-intro { display: block !important; }
+          .cta-middle { display: flex !important; }
           .rec-boxes-container {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;

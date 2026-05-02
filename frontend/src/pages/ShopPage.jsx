@@ -75,6 +75,71 @@ const getEmbedUrl = (url) => {
   return null;
 };
 
+/* ── Store content sections renderer ── */
+const GRID_TEMPLATES = {
+  "1col": "1fr",
+  "2col": "1fr 1fr",
+  "3col": "1fr 1fr 1fr",
+  "2-1":  "2fr 1fr",
+  "1-2":  "1fr 2fr",
+};
+
+const StoreSections = ({ sections, onCategoryClick }) => {
+  return (
+    <div style={{ marginTop: "24px", marginBottom: "8px" }}>
+      {sections.map(sec => (
+        <div key={sec.id} style={{ marginBottom: "12px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: GRID_TEMPLATES[sec.layout] || "1fr 1fr",
+            gap: "6px",
+          }}>
+            {sec.images.map(img => {
+              const clickable = !!img.linked_category;
+              return (
+                <div
+                  key={img.id}
+                  onClick={clickable ? () => onCategoryClick(img.linked_category) : undefined}
+                  style={{
+                    position: "relative",
+                    overflow: "hidden",
+                    borderRadius: "8px",
+                    cursor: clickable ? "pointer" : "default",
+                    aspectRatio: "16 / 7",
+                  }}
+                >
+                  <img
+                    src={img.image_url}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
+                    onMouseEnter={e => { if (clickable) e.currentTarget.style.transform = "scale(1.03)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                  />
+                  {clickable && (
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      background: "linear-gradient(transparent, rgba(0,0,0,0.55))",
+                      padding: "18px 14px 10px",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <span style={{ color: "#fff", fontWeight: 700, fontSize: "13px", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                        {img.linked_category}
+                      </span>
+                      <span style={{ color: "#fff", fontSize: "11px", background: "rgba(255,255,255,0.2)", padding: "3px 10px", borderRadius: "99px", fontWeight: 600 }}>
+                        Shop →
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /* ── Store card for "Other Stores" section ── */
 const StoreCard = ({ store }) => {
   const [hovered, setHovered] = useState(false);
@@ -538,9 +603,17 @@ const ShopPage = () => {
           })()}
 
           {/* ══════════════════════════════
+              STORE CONTENT SECTIONS
+          ══════════════════════════════ */}
+          {shop.content_sections && shop.content_sections.length > 0 && shop.products_position === "last" && (
+            <StoreSections sections={shop.content_sections} slug={shop.slug}
+              onCategoryClick={cat => { setActiveCategory(cat); setTimeout(() => document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
+          )}
+
+          {/* ══════════════════════════════
               PRODUCTS SECTION
           ══════════════════════════════ */}
-          <div style={{ marginTop: "32px", paddingBottom: "60px" }}>
+          <div id="shop-products" style={{ marginTop: "32px", paddingBottom: "60px" }}>
 
             {/* Category tabs — only in categories layout mode */}
             {shop.layout_mode === "categories" && categories.length > 2 && (
@@ -734,6 +807,12 @@ const ShopPage = () => {
               );
             })()}
           </div>
+
+          {/* Content sections when products come first */}
+          {shop.content_sections && shop.content_sections.length > 0 && shop.products_position !== "last" && (
+            <StoreSections sections={shop.content_sections} slug={shop.slug}
+              onCategoryClick={cat => { setActiveCategory(cat); document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }); }} />
+          )}
 
           {/* ══════════════════════════════
               OTHER STORES SECTION

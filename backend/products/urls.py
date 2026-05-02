@@ -22,6 +22,8 @@ urlpatterns = [
     path('shops/<slug:slug>/update-video/', ShopViewSet.as_view({'patch': 'update_video'}), name='shop-update-video'),
     path('shops/<slug:slug>/text-blocks/', ShopViewSet.as_view({'get': 'text_blocks', 'post': 'text_blocks'}), name='shop-text-blocks'),
     path('shops/<slug:slug>/text-blocks/<int:block_id>/', ShopViewSet.as_view({'patch': 'text_block_detail', 'delete': 'text_block_detail'}), name='shop-text-block-detail'),
+    path('shops/<slug:slug>/content-sections/', ShopViewSet.as_view({'get': 'content_sections', 'post': 'content_sections'}), name='shop-content-sections'),
+    path('shops/<slug:slug>/content-sections/<int:section_id>/', ShopViewSet.as_view({'patch': 'content_section_detail', 'delete': 'content_section_detail'}), name='shop-content-section-detail'),
 
     # Category URLs
     path('categories/', CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),
