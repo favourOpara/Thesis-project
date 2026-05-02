@@ -78,11 +78,28 @@ const QuickViewModal = ({ product, onClose }) => {
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  /* Lock body scroll */
+  /* Lock body scroll — including touch scroll on iOS/Android */
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
+    const prevTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    document.body.style.touchAction = "none";
+
+    // overflow:hidden alone doesn't stop touch-scroll on mobile.
+    // We need a non-passive touchmove listener so preventDefault() is honoured.
+    // We allow touchmove only inside .qv-info-panel (the scrollable text column).
+    const blockTouchScroll = (e) => {
+      if (!e.target.closest(".qv-info-panel")) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("touchmove", blockTouchScroll, { passive: false });
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.touchAction = prevTouchAction;
+      document.removeEventListener("touchmove", blockTouchScroll);
+    };
   }, []);
 
   const prevImg = (e) => {
@@ -162,11 +179,15 @@ const QuickViewModal = ({ product, onClose }) => {
           min-height: 0 !important;
           height: 0 !important;
           overflow-y: auto !important;
-          overscroll-behavior: contain;
+          overscroll-behavior: contain !important;
+          touch-action: pan-y !important;
           padding: 28px 28px 28px 24px;
           display: flex !important;
           flex-direction: column !important;
           gap: 0;
+        }
+        .qv-img-panel, .qv-main-img {
+          touch-action: none !important;
         }
         .qv-info-panel::-webkit-scrollbar {
           width: 4px;
