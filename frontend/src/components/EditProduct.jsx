@@ -30,6 +30,7 @@ const EditProduct = () => {
 
   // Unified image slots: { key, type:'existing'|'new', url, file?, serverId? }
   const [imageSlots, setImageSlots] = useState([]);
+  const [oversizedFiles, setOversizedFiles] = useState([]);
   const dragIdx = useRef(null);
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
@@ -708,7 +709,9 @@ const EditProduct = () => {
       }
     });
     if (invalidFiles.length > 0) {
-      toast.error(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
+      setOversizedFiles(invalidFiles);
+    } else {
+      setOversizedFiles([]);
     }
     const newSlots = validFiles.map(file => ({
       key: `new-${Date.now()}-${Math.random()}`,
@@ -1196,6 +1199,45 @@ const EditProduct = () => {
                       )}
                     </small>
                   </div>
+
+                  {/* Oversized file instructions */}
+                  {oversizedFiles.length > 0 && (
+                    <div style={{
+                      marginBottom: "16px",
+                      background: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      borderRadius: "10px",
+                      padding: "14px 16px",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                          </svg>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#9a3412" }}>
+                            {oversizedFiles.length === 1 ? "1 image" : `${oversizedFiles.length} images`} too large — each must be under 500 KB
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setOversizedFiles([])}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#9a3412", fontSize: "18px", lineHeight: 1, padding: "0 0 0 8px", flexShrink: 0 }}
+                        >×</button>
+                      </div>
+                      <p style={{ margin: "0 0 6px", fontSize: "12px", color: "#7c2d12", fontWeight: 600 }}>
+                        Rejected: <span style={{ fontWeight: 400 }}>{oversizedFiles.join(", ")}</span>
+                      </p>
+                      <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#7c2d12" }}>
+                        Here's how to reduce your image size before uploading:
+                      </p>
+                      <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#7c2d12", lineHeight: 1.75 }}>
+                        <li><strong>Squoosh (recommended):</strong> Go to <strong>squoosh.app</strong> in your browser — drag your photo in, reduce quality to ~75% or resize to max 1200px wide, then download.</li>
+                        <li><strong>TinyPNG / TinyJPG:</strong> Visit <strong>tinypng.com</strong> — drag and drop your image, it compresses automatically, then download the result.</li>
+                        <li><strong>On iPhone:</strong> Before uploading, open the photo in the Files app, tap Share → Save to Files as a smaller size — or use a free app like "Image Size".</li>
+                        <li><strong>On Android:</strong> Use Google Photos → tap the image → Edit → resize or use a free "Photo Compress" app from the Play Store.</li>
+                      </ol>
+                    </div>
+                  )}
 
                   {/* Image Previews — drag to reorder */}
                   {imageSlots.length > 0 && (
