@@ -62,6 +62,7 @@ const CategoryTile = ({ tile, image, onClick }) => {
         position: "relative",
         aspectRatio: "1 / 1",
         overflow: "hidden",
+        borderRadius: "10px",
         background: tile.gradient,
         opacity: hovered ? 0.88 : 1,
         transition: "opacity 0.18s",
@@ -725,88 +726,50 @@ const BrowsePage = () => {
 
 
       {/* ════════════════════════════
-          HERO BANNER
+          LOGO + CTA STRIP
       ════════════════════════════ */}
-      <div className="hero-banner" style={{
-        position: "relative",
-        width: "100%",
-        height: "220px",
-        overflow: "hidden",
-        background: "#f3f4f6",
+      <div className="cta-strip" style={{
+        background: "#fff",
+        padding: "14px 40px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderBottom: "1px solid #e5e7eb",
       }}>
-        {/* Background image */}
-        <img
-          src="/hero/banner.jpg"
-          alt="Hero banner"
-          style={{
-            position: "absolute", inset: 0,
-            width: "100%", height: "100%",
-            objectFit: "cover",
-            objectPosition: "center top",
-          }}
-        />
-        {/* Dark overlay at top for text readability */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.05) 55%, transparent 70%)",
-        }} />
-        {/* Bottom fade into page background */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          height: "60px",
-          background: "linear-gradient(to bottom, transparent 0%, #f3f4f6 100%)",
-        }} />
-
-        {/* Top text + logo */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0,
-          padding: "20px 40px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <img src={LargeLogo} alt="Abatrades" className="banner-logo" style={{ height: "48px", opacity: 0.95, filter: "brightness(10)" }} />
-          <div style={{ textAlign: "right" }}>
-            <p style={{
-              margin: 0,
-              fontSize: "clamp(13px, 2vw, 18px)",
-              fontWeight: 800,
-              color: "#fff",
-              letterSpacing: "0.5px",
-              lineHeight: 1.3,
-              textShadow: "0 1px 6px rgba(0,0,0,0.4)",
-            }}>
-              Join us.&nbsp; Own a store.&nbsp; Get paid.
-            </p>
-            <Link to="/join" style={{
-              display: "inline-block",
-              marginTop: "8px",
-              fontSize: "12px",
-              fontWeight: 700,
-              color: "#fff",
-              background: "#f97316",
-              padding: "5px 16px",
-              textDecoration: "none",
-              letterSpacing: "0.3px",
-            }}>
-              Open a store
-            </Link>
-          </div>
+        <img src={LargeLogo} alt="Abatrades" className="banner-logo" style={{ height: "36px" }} />
+        <div style={{ textAlign: "right" }}>
+          <p style={{
+            margin: 0,
+            fontSize: "clamp(12px, 2vw, 16px)",
+            fontWeight: 800,
+            color: "#111827",
+            letterSpacing: "0.5px",
+            lineHeight: 1.3,
+          }}>
+            Join us.&nbsp; Own a store.&nbsp; Get paid.
+          </p>
+          <Link to="/join" style={{
+            display: "inline-block",
+            marginTop: "6px",
+            fontSize: "12px",
+            fontWeight: 700,
+            color: "#fff",
+            background: "#f97316",
+            padding: "5px 16px",
+            textDecoration: "none",
+            letterSpacing: "0.3px",
+          }}>
+            Open a store
+          </Link>
         </div>
       </div>
 
       {/* ════════════════════════════
           CATEGORY GRID  (4×4 / 3×3)
       ════════════════════════════ */}
-      <div className="cat-grid-wrapper" style={{ background: "linear-gradient(to bottom, transparent 0%, transparent 28px, #fff 52px)", padding: "8px 40px 20px", marginTop: "-48px", position: "relative", zIndex: 1 }}>
-        {/* Decorative text above category tiles */}
-        <p style={{ margin: "0 0 6px", lineHeight: 1.15 }}>
-          <span style={{ fontSize: "11px", fontWeight: 300, color: "#b0b8c6", fontStyle: "italic", letterSpacing: "0.8px", textTransform: "lowercase" }}>find your </span>
-          <span style={{ fontSize: "13px", fontWeight: 800, color: "#3b7bf8", fontStyle: "italic", letterSpacing: "-0.2px" }}>guilty pleasure.</span>
-        </p>
+      <div className="cat-grid-wrapper" style={{ background: "#fff", padding: "16px 40px 20px", position: "relative", zIndex: 1 }}>
         <div className="cat-grid" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "2px",
-          background: "#e5e7eb",
+          gap: "8px",
         }}>
           {CATEGORY_TILES.map((tile, i) => (
             <div key={tile.label} className={i === 8 ? "cat-hide-desktop" : ""}>
@@ -870,7 +833,7 @@ const BrowsePage = () => {
         @media (min-width: 641px) {
           .cat-hide-desktop { display: none !important; }
           .cat-tile-label { font-size: 11px !important; }
-          .cat-grid-wrapper { padding: 8px 100px 20px !important; margin-top: -48px !important; }
+          .cat-grid-wrapper { padding: 8px 100px 20px !important; }
           .search-mobile-btn { display: none !important; }
           .search-mobile-expanded { display: none !important; }
           .banner-logo { height: 72px !important; }
@@ -895,15 +858,12 @@ const BrowsePage = () => {
 
         /* Mobile: 3-column grid (3×3 = 9 tiles) + consistent padding */
         @media (max-width: 640px) {
-          .hero-banner {
-            height: 180px !important;
-          }
+          .cta-strip { padding: 12px 16px !important; }
           .cat-grid {
             grid-template-columns: repeat(3, 1fr) !important;
           }
           .cat-grid-wrapper {
-            padding: 6px 16px 16px !important;
-            margin-top: -40px !important;
+            padding: 10px 16px 16px !important;
           }
           .product-rows-wrap {
             padding-top: 12px !important;
