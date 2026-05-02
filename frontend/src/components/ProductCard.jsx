@@ -40,7 +40,7 @@ const ProductCard = ({ product }) => {
     <>
       <Link
         to={`/product/${product.id}`}
-        style={{ textDecoration: "none", color: "inherit", display: "block", minWidth: 0, overflow: "hidden" }}
+        style={{ textDecoration: "none", color: "inherit", display: "flex", minWidth: 0, height: "100%" }}
       >
         <div
           onMouseEnter={() => setHovered(true)}
@@ -50,6 +50,9 @@ const ProductCard = ({ product }) => {
             borderRadius: "12px",
             overflow: "hidden",
             minWidth: 0,
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
             border: "1px solid #f1f5f9",
             boxShadow: hovered ? "0 12px 32px rgba(0,0,0,0.10)" : "0 2px 8px rgba(0,0,0,0.05)",
             transform: hovered ? "translateY(-4px)" : "translateY(0)",
@@ -148,11 +151,15 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* Info */}
-          <div style={{ padding: "10px 12px" }}>
+          <div style={{ padding: "10px 12px", flex: "1 1 auto", display: "flex", flexDirection: "column" }}>
             <p style={{
               fontWeight: 700, fontSize: "13px", color: "#0f172a",
               margin: "0 0 6px", lineHeight: 1.3,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              minHeight: "34px",
             }}>
               {product.name}
             </p>

@@ -106,6 +106,7 @@ const QuickViewModal = ({ product, onClose }) => {
           max-width: 780px;
           height: 86vh;
           max-height: 700px;
+          min-height: 320px;
           overflow: hidden;
           display: flex;
           flex-direction: row;
@@ -114,13 +115,16 @@ const QuickViewModal = ({ product, onClose }) => {
         }
         .qv-img-panel {
           flex: 0 0 42%;
+          min-width: 0;
+          min-height: 0;
           display: flex;
           flex-direction: column;
           background: #f1f5f9;
           overflow: hidden;
         }
         .qv-main-img {
-          flex: 1;
+          flex: 1 1 0;
+          min-height: 0;
           position: relative;
           overflow: hidden;
         }
@@ -131,6 +135,7 @@ const QuickViewModal = ({ product, onClose }) => {
           display: block;
         }
         .qv-thumb-strip {
+          flex-shrink: 0;
           display: flex;
           gap: 6px;
           padding: 8px 10px;
@@ -138,7 +143,9 @@ const QuickViewModal = ({ product, onClose }) => {
           flex-wrap: wrap;
         }
         .qv-info-panel {
-          flex: 1;
+          flex: 1 1 0;
+          min-width: 0;
+          min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
           padding: 28px 28px 28px 24px;
@@ -203,18 +210,30 @@ const QuickViewModal = ({ product, onClose }) => {
           line-height: 1.5;
         }
         @media (max-width: 600px) {
+          .qv-overlay {
+            padding: 0;
+            align-items: flex-end;
+          }
           .qv-modal {
             flex-direction: column;
+            width: 100%;
             height: 92vh;
             max-height: 92vh;
-            border-radius: 14px;
+            min-height: 92vh;
+            border-radius: 18px 18px 0 0;
           }
           .qv-img-panel {
-            flex: 0 0 220px;
+            flex: 0 0 210px;
+            min-height: 0;
             width: 100%;
           }
+          .qv-main-img {
+            height: 100%;
+          }
           .qv-info-panel {
-            padding: 18px 18px 20px;
+            flex: 1 1 0;
+            min-height: 0;
+            padding: 16px 18px 24px;
           }
           .qv-char-label {
             flex: 0 0 90px;
@@ -435,109 +454,114 @@ const QuickViewModal = ({ product, onClose }) => {
               )}
             </div>
 
-            {/* Size selector (variants) */}
-            {hasVariants && (
-              <div style={{ marginBottom: "16px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 8px" }}>
-                  Select Size{selectedSize && <span style={{ color: "#2563eb" }}> — {selectedSize}</span>}
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
-                  {product.variants.map(v => {
-                    const oos = v.qty === 0;
-                    const sel = selectedSize === v.size;
-                    return (
-                      <button
-                        key={v.size}
-                        onClick={() => !oos && handleSizeSelect(v.size)}
-                        disabled={oos}
-                        style={{
-                          padding: "6px 14px",
-                          border: sel ? "2px solid #2563eb" : "1.5px solid #e2e8f0",
-                          background: oos ? "#f8fafc" : sel ? "#eff6ff" : "#fff",
-                          color: oos ? "#cbd5e1" : sel ? "#2563eb" : "#374151",
-                          borderRadius: "8px", fontWeight: 600, fontSize: "13px",
-                          cursor: oos ? "not-allowed" : "pointer",
-                          textDecoration: oos ? "line-through" : "none",
-                        }}
-                        title={oos ? "Out of stock" : `${v.qty} in stock`}
-                      >
-                        {v.size}
-                        {!oos && <span style={{ display: "block", fontSize: "10px", color: sel ? "#3b82f6" : "#94a3b8", marginTop: "1px" }}>{v.qty} left</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-                {!selectedSize && (
-                  <p style={{ fontSize: "11px", color: "#f97316", margin: "6px 0 0" }}>Please select a size to add to cart</p>
+            {/* Size selector + action buttons — buyers only */}
+            {!isSeller && (
+              <>
+                {/* Size selector (variants) */}
+                {hasVariants && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <p style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 8px" }}>
+                      Select Size{selectedSize && <span style={{ color: "#2563eb" }}> — {selectedSize}</span>}
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                      {product.variants.map(v => {
+                        const oos = v.qty === 0;
+                        const sel = selectedSize === v.size;
+                        return (
+                          <button
+                            key={v.size}
+                            onClick={() => !oos && handleSizeSelect(v.size)}
+                            disabled={oos}
+                            style={{
+                              padding: "6px 14px",
+                              border: sel ? "2px solid #2563eb" : "1.5px solid #e2e8f0",
+                              background: oos ? "#f8fafc" : sel ? "#eff6ff" : "#fff",
+                              color: oos ? "#cbd5e1" : sel ? "#2563eb" : "#374151",
+                              borderRadius: "8px", fontWeight: 600, fontSize: "13px",
+                              cursor: oos ? "not-allowed" : "pointer",
+                              textDecoration: oos ? "line-through" : "none",
+                            }}
+                            title={oos ? "Out of stock" : `${v.qty} in stock`}
+                          >
+                            {v.size}
+                            {!oos && <span style={{ display: "block", fontSize: "10px", color: sel ? "#3b82f6" : "#94a3b8", marginTop: "1px" }}>{v.qty} left</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {!selectedSize && (
+                      <p style={{ fontSize: "11px", color: "#f97316", margin: "6px 0 0" }}>Please select a size to add to cart</p>
+                    )}
+                  </div>
                 )}
-              </div>
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
+                  {/* Add to Cart */}
+                  <button
+                    disabled={adding || availableQty === 0 || (hasVariants && !selectedSize)}
+                    onClick={async () => {
+                      setAdding(true);
+                      try {
+                        await addToCart(product.id, 1, product);
+                        onClose();
+                        navigate("/cart/added", { state: { product } });
+                      } catch {
+                        toast.error("Could not add to cart.");
+                        setAdding(false);
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+                      padding: "12px 10px", borderRadius: "10px",
+                      background: (availableQty === 0 || (hasVariants && !selectedSize)) ? "#94a3b8" : "#2563eb",
+                      color: "#fff", border: "none",
+                      fontWeight: 700, fontSize: "13px",
+                      cursor: (availableQty === 0 || (hasVariants && !selectedSize)) ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                      opacity: adding ? 0.7 : 1,
+                    }}
+                    onMouseEnter={e => { if (availableQty > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
+                    onMouseLeave={e => { if (availableQty > 0) e.currentTarget.style.background = "#2563eb"; }}
+                  >
+                    <CartIcon />
+                    {availableQty === 0 ? "Out of Stock" : (hasVariants && !selectedSize) ? "Select a Size" : adding ? "Adding…" : "Add to Cart"}
+                  </button>
+
+                  {/* Buy Now */}
+                  {availableQty > 0 && (!hasVariants || selectedSize) && (
+                    <button
+                      disabled={adding}
+                      onClick={async () => {
+                        setAdding(true);
+                        try {
+                          await addToCart(product.id, 1, product);
+                          onClose();
+                          navigate("/cart");
+                        } catch {
+                          toast.error("Could not add to cart.");
+                        } finally {
+                          setAdding(false);
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "12px 10px", borderRadius: "10px",
+                        background: "#0f172a", color: "#fff", border: "none",
+                        fontWeight: 700, fontSize: "13px",
+                        cursor: "pointer", transition: "background 0.15s",
+                        opacity: adding ? 0.7 : 1,
+                      }}
+                      onMouseEnter={e => { if (!adding) e.currentTarget.style.background = "#1e293b"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
+                    >
+                      Buy Now
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
-              {/* Add to Cart */}
-              <button
-                disabled={adding || availableQty === 0 || (hasVariants && !selectedSize)}
-                onClick={async () => {
-                  setAdding(true);
-                  try {
-                    await addToCart(product.id, 1, product);
-                    onClose();
-                    navigate("/cart/added", { state: { product } });
-                  } catch {
-                    toast.error("Could not add to cart.");
-                    setAdding(false);
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-                  padding: "12px 10px", borderRadius: "10px",
-                  background: (availableQty === 0 || (hasVariants && !selectedSize)) ? "#94a3b8" : "#2563eb",
-                  color: "#fff", border: "none",
-                  fontWeight: 700, fontSize: "13px",
-                  cursor: (availableQty === 0 || (hasVariants && !selectedSize)) ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
-                  opacity: adding ? 0.7 : 1,
-                }}
-                onMouseEnter={e => { if (availableQty > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
-                onMouseLeave={e => { if (availableQty > 0) e.currentTarget.style.background = "#2563eb"; }}
-              >
-                <CartIcon />
-                {availableQty === 0 ? "Out of Stock" : (hasVariants && !selectedSize) ? "Select a Size" : adding ? "Adding…" : "Add to Cart"}
-              </button>
-
-              {/* Buy Now */}
-              {availableQty > 0 && (!hasVariants || selectedSize) && (
-                <button
-                  disabled={adding}
-                  onClick={async () => {
-                    setAdding(true);
-                    try {
-                      await addToCart(product.id, 1, product);
-                      onClose();
-                      navigate("/cart");
-                    } catch {
-                      toast.error("Could not add to cart.");
-                    } finally {
-                      setAdding(false);
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: "12px 10px", borderRadius: "10px",
-                    background: "#0f172a", color: "#fff", border: "none",
-                    fontWeight: 700, fontSize: "13px",
-                    cursor: "pointer", transition: "background 0.15s",
-                    opacity: adding ? 0.7 : 1,
-                  }}
-                  onMouseEnter={e => { if (!adding) e.currentTarget.style.background = "#1e293b"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
-                >
-                  Buy Now
-                </button>
-              )}
-            </div>
 
             {/* View full page link */}
             <Link

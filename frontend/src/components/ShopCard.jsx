@@ -127,12 +127,14 @@ const ShopCard = ({ shop }) => {
 
         {/* Body */}
         <div style={{ padding: "10px 16px 0", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", margin: "0 0 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", margin: "0 0 4px", minWidth: 0, overflow: "hidden" }}>
             <h6
               style={{
                 fontWeight: 700,
                 fontSize: "15px",
                 margin: 0,
+                flex: 1,
+                minWidth: 0,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",

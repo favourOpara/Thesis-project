@@ -79,7 +79,7 @@ const getEmbedUrl = (url) => {
 const StoreCard = ({ store }) => {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link to={`/shop/${store.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+    <Link to={`/shop/${store.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block", minWidth: 0 }}>
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -98,6 +98,7 @@ const StoreCard = ({ store }) => {
             ? `url(${store.banner_url}) center/cover`
             : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #7c3aed 100%)",
           position: "relative",
+          flexShrink: 0,
         }}>
           {/* Logo */}
           <div style={{
@@ -108,14 +109,18 @@ const StoreCard = ({ store }) => {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "14px", fontWeight: 700, color: "#fff",
             boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            flexShrink: 0,
           }}>
             {!store.logo_url && store.name.charAt(0).toUpperCase()}
           </div>
         </div>
-        <div style={{ padding: "26px 14px 14px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
-            <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ padding: "26px 14px 14px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px", minWidth: 0, overflow: "hidden" }}>
+            <div style={{
+              fontWeight: 700, fontSize: "14px", color: "#0f172a",
+              flex: 1, minWidth: 0,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
               {store.name}
             </div>
             {store.is_premium && <VerifiedBadge size="sm" />}
@@ -141,9 +146,17 @@ const ShopPage = () => {
   const [search, setSearch] = useState("");
   const [otherStores, setOtherStores] = useState([]);
   const [showMoreStores, setShowMoreStores] = useState(false);
+  const [showMoreProducts, setShowMoreProducts] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const INITIAL = 4;
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   useEffect(() => {
     const fetchShop = async () => {
@@ -620,53 +633,75 @@ const ShopPage = () => {
                 });
               }
 
-              // Build mixed array
+              // Build mixed array — slice products based on Show More state
+              const PRODUCTS_INITIAL = isMobile ? 4 : 7;
+              const productsToShow = showMoreProducts ? visibleProducts : visibleProducts.slice(0, PRODUCTS_INITIAL);
               const mixed = [];
               (blocksByPos[0] || []).forEach(b => mixed.push({ type: "block", data: b }));
-              visibleProducts.forEach((product, i) => {
+              productsToShow.forEach((product, i) => {
                 mixed.push({ type: "product", data: product });
                 (blocksByPos[i + 1] || []).forEach(b => mixed.push({ type: "block", data: b }));
               });
 
               return (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                  gap: "20px",
-                }} className="shop-product-grid">
-                  {mixed.map((item, idx) => {
-                    if (item.type === "product") {
-                      return <ProductCard key={item.data.id} product={item.data} />;
-                    }
-                    // Full-width text block
-                    const block = item.data;
-                    return (
-                      <div key={`block-${block.id}`} style={{
-                        gridColumn: "1 / -1",
-                        background: "#fff",
-                        border: "1px solid #e2e8f0",
-                        borderLeft: `3px solid ${block.tile_color || "#0f172a"}`,
-                        borderRadius: "10px",
-                        padding: "16px 20px",
-                      }}>
-                        {block.title && (
-                          <div style={{
-                            fontWeight: 700, fontSize: "14px", color: "#0f172a",
-                            marginBottom: "5px", letterSpacing: "-0.01em",
-                          }}>
-                            {block.title}
-                          </div>
-                        )}
-                        <div style={{
-                          fontSize: "13.5px", color: "#475569",
-                          lineHeight: 1.7, whiteSpace: "pre-wrap",
+                <>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: "20px",
+                    alignItems: "stretch",
+                  }} className="shop-product-grid">
+                    {mixed.map((item, idx) => {
+                      if (item.type === "product") {
+                        return <ProductCard key={item.data.id} product={item.data} />;
+                      }
+                      // Full-width text block
+                      const block = item.data;
+                      return (
+                        <div key={`block-${block.id}`} style={{
+                          gridColumn: "1 / -1",
+                          background: "#fff",
+                          border: "1px solid #e2e8f0",
+                          borderLeft: `3px solid ${block.tile_color || "#0f172a"}`,
+                          borderRadius: "10px",
+                          padding: "16px 20px",
                         }}>
-                          {block.content}
+                          {block.title && (
+                            <div style={{
+                              fontWeight: 700, fontSize: "14px", color: "#0f172a",
+                              marginBottom: "5px", letterSpacing: "-0.01em",
+                            }}>
+                              {block.title}
+                            </div>
+                          )}
+                          <div style={{
+                            fontSize: "13.5px", color: "#475569",
+                            lineHeight: 1.7, whiteSpace: "pre-wrap",
+                          }}>
+                            {block.content}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                  {visibleProducts.length > PRODUCTS_INITIAL && (
+                    <div style={{ textAlign: "center", marginTop: "28px" }}>
+                      <button
+                        onClick={() => setShowMoreProducts(p => !p)}
+                        style={{
+                          padding: "10px 32px",
+                          background: showMoreProducts ? "#f1f5f9" : "#0f172a",
+                          color: showMoreProducts ? "#374151" : "#fff",
+                          border: "none", borderRadius: "9px",
+                          fontWeight: 700, fontSize: "13.5px", cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                      >
+                        {showMoreProducts ? "Show Less" : `Show More (${visibleProducts.length - PRODUCTS_INITIAL} more)`}
+                      </button>
+                    </div>
+                  )}
+                </>
               );
             })()}
           </div>

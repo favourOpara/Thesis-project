@@ -790,11 +790,29 @@ class OwnerProductViewSet(viewsets.ModelViewSet):
             if product.quantity == 0 and product.is_active:
                 product.is_active = False
                 product.save(update_fields=['is_active'])
-            images = request.FILES.getlist('images')
-            if images:
-                product.images.all().delete()
-                for image in images:
-                    ProductImage.objects.create(product=product, image=image)
+
+            new_images = request.FILES.getlist('images')
+            image_order_str = request.data.get('image_order', '')
+
+            if image_order_str or new_images:
+                if image_order_str:
+                    # Parse ordered list of existing image IDs to keep
+                    ordered_ids = [int(x) for x in image_order_str.split(',') if x.strip().isdigit()]
+                    # Delete images that were removed by the seller
+                    product.images.exclude(id__in=ordered_ids).delete()
+                    # Update order for kept images
+                    for i, img_id in enumerate(ordered_ids):
+                        product.images.filter(id=img_id).update(order=i)
+                    start_order = len(ordered_ids)
+                else:
+                    # No existing images kept — delete all and start fresh
+                    product.images.all().delete()
+                    start_order = 0
+
+                # Append new uploaded images after existing ones
+                for i, image in enumerate(new_images):
+                    ProductImage.objects.create(product=product, image=image, order=start_order + i)
+
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

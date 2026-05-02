@@ -177,8 +177,12 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='products/')  # Local storage for testing
+    image = models.ImageField(upload_to='products/')
     alt_text = models.CharField(max_length=255, blank=True, null=True)
+    order = models.PositiveIntegerField(default=0, help_text="Display order (lower = earlier)")
+
+    class Meta:
+        ordering = ['order', 'id']
 
     def __str__(self):
         return f"Image for {self.product.name}"

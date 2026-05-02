@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -28,8 +28,8 @@ const AddProduct = () => {
   const [sizeVariants, setSizeVariants] = useState([{ size: "", qty: "" }]);
 
   const navigate = useNavigate();
-  const [imageFiles, setImageFiles] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
+  const [imageSlots, setImageSlots] = useState([]); // { key, type:'new', url, file }
+  const dragIdx = useRef(null);
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -626,24 +626,15 @@ const AddProduct = () => {
     }),
   };
 
-  useEffect(() => {
-    return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
-
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    
-    if (files.length + imageFiles.length > 8) {
+    if (files.length + imageSlots.length > 8) {
       toast.error("Maximum 8 images allowed");
       e.target.value = null;
       return;
     }
-
     const validFiles = [];
     const invalidFiles = [];
-    
     files.forEach((file) => {
       if (file.size > 500 * 1024) {
         invalidFiles.push(file.name);
@@ -651,25 +642,34 @@ const AddProduct = () => {
         validFiles.push(file);
       }
     });
-
     if (invalidFiles.length > 0) {
       toast.error(`Uh-oh, The file ${invalidFiles.join(", ")} exceeds 500KB`);
     }
-
-    const newFiles = [...imageFiles, ...validFiles].slice(0, 8);
-    setImageFiles(newFiles);
-    setPreviewUrls(newFiles.map(file => URL.createObjectURL(file)));
+    const newSlots = validFiles.map(file => ({
+      key: `new-${Date.now()}-${Math.random()}`,
+      type: "new", url: URL.createObjectURL(file), file,
+    }));
+    setImageSlots(prev => [...prev, ...newSlots].slice(0, 8));
+    setInvalidFields(prev => ({ ...prev, images: false }));
     e.target.value = null;
   };
 
   const removeImage = (index) => {
-    const newFiles = [...imageFiles];
-    const newUrls = [...previewUrls];
-    URL.revokeObjectURL(newUrls[index]);
-    newFiles.splice(index, 1);
-    newUrls.splice(index, 1);
-    setImageFiles(newFiles);
-    setPreviewUrls(newUrls);
+    setImageSlots(prev => {
+      const slot = prev[index];
+      if (slot.url.startsWith("blob:")) URL.revokeObjectURL(slot.url);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const moveSlot = (from, to) => {
+    if (from === to) return;
+    setImageSlots(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
   };
 
   // ── Variant helpers ────────────────────────────────────────────────────────
@@ -740,7 +740,7 @@ const AddProduct = () => {
       if (f.required && !formData.extra_fields[f.key]) newInvalid[`extra_${f.key}`] = true;
     });
 
-    if (imageFiles.length === 0) newInvalid.images = true;
+    if (imageSlots.length === 0) newInvalid.images = true;
 
     if (Object.keys(newInvalid).length > 0) {
       setInvalidFields(newInvalid);
@@ -779,7 +779,7 @@ const AddProduct = () => {
       });
       dataToSend.append("extra_fields", JSON.stringify(extraData));
 
-      imageFiles.forEach(file => dataToSend.append("images", file));
+      imageSlots.forEach(slot => dataToSend.append("images", slot.file));
 
       const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
       const token = localStorage.getItem("access_token");
@@ -791,8 +791,7 @@ const AddProduct = () => {
       toast.success("Product added successfully!");
       setFormData({ name: "", category: "", sub_category: "", description: "", price: "", quantity: "", material_type: "", brand: "", gender: "", extra_fields: {} });
       setSizeVariants([{ size: "", qty: "" }]);
-      setImageFiles([]);
-      setPreviewUrls([]);
+      setImageSlots([]);
       setTimeout(() => navigate("/seller/products"), 2000);
     } catch (error) {
       console.error("Error adding product:", error);
@@ -1111,28 +1110,64 @@ const AddProduct = () => {
                       onChange={handleImageChange}
                     />
                     {invalidFields.images && <div className="invalid-feedback">At least one image is required</div>}
-                    <small className="text-muted">{imageFiles.length} of 8 images selected</small>
+                    <small className="text-muted">{imageSlots.length} of 8 images selected</small>
                   </div>
 
-                  {/* Image Previews */}
-                  {previewUrls.length > 0 && (
+                  {/* Image Previews — drag to reorder */}
+                  {imageSlots.length > 0 && (
                     <div className="mb-4">
-                      <label className="form-label">Image Previews</label>
+                      <label className="form-label" style={{ marginBottom: "6px" }}>
+                        Image Order
+                        <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 400, marginLeft: "8px" }}>
+                          Drag to reorder · First image is the main photo
+                        </span>
+                      </label>
                       <div className="row g-2 mt-1">
-                        {previewUrls.map((url, index) => (
-                          <div key={url} className="col-6 col-md-4 col-lg-3">
-                            <div className="position-relative">
+                        {imageSlots.map((slot, index) => (
+                          <div
+                            key={slot.key}
+                            className="col-6 col-md-4 col-lg-3"
+                            draggable
+                            onDragStart={() => { dragIdx.current = index; }}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => { moveSlot(dragIdx.current, index); dragIdx.current = null; }}
+                            style={{ cursor: "grab" }}
+                          >
+                            <div style={{
+                              position: "relative", borderRadius: "8px", overflow: "hidden",
+                              border: index === 0 ? "2.5px solid #2563eb" : "2px solid #e2e8f0",
+                            }}>
                               <img
-                                src={url}
+                                src={slot.url}
                                 alt={`Preview ${index + 1}`}
-                                className="img-thumbnail w-100"
-                                style={{ height: "120px", objectFit: "cover" }}
+                                style={{ width: "100%", height: "110px", objectFit: "cover", display: "block" }}
                               />
+                              {index === 0 && (
+                                <div style={{
+                                  position: "absolute", bottom: 0, left: 0, right: 0,
+                                  background: "rgba(37,99,235,0.88)", color: "#fff",
+                                  fontSize: "9px", fontWeight: 700, textAlign: "center", padding: "3px 0", letterSpacing: "0.5px",
+                                }}>
+                                  MAIN PHOTO
+                                </div>
+                              )}
+                              <div style={{
+                                position: "absolute", top: "4px", left: "4px",
+                                background: "rgba(0,0,0,0.55)", color: "#fff",
+                                borderRadius: "4px", fontSize: "10px", fontWeight: 700, padding: "1px 5px",
+                              }}>
+                                {index + 1}
+                              </div>
                               <button
                                 type="button"
-                                className="btn btn-sm position-absolute top-0 end-0 m-1"
-                                style={{ background: "rgba(0,0,0,0.5)", color: "#fff", lineHeight: 1, padding: "2px 6px" }}
                                 onClick={() => removeImage(index)}
+                                style={{
+                                  position: "absolute", top: "4px", right: "4px",
+                                  width: "20px", height: "20px", borderRadius: "50%",
+                                  background: "rgba(0,0,0,0.6)", border: "none", color: "#fff",
+                                  cursor: "pointer", display: "flex", alignItems: "center",
+                                  justifyContent: "center", fontSize: "14px", lineHeight: 1, padding: 0,
+                                }}
                               >
                                 ×
                               </button>
