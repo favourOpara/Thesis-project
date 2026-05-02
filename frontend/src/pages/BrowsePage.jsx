@@ -732,7 +732,7 @@ const BrowsePage = () => {
         width: "100%",
         height: "220px",
         overflow: "hidden",
-        background: "#fff",
+        background: "#f3f4f6",
       }}>
         {/* Background image */}
         <img
@@ -748,7 +748,13 @@ const BrowsePage = () => {
         {/* Dark overlay at top for text readability */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.7) 75%, #fff 100%)",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.05) 55%, transparent 70%)",
+        }} />
+        {/* Bottom fade into page background */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          height: "60px",
+          background: "linear-gradient(to bottom, transparent 0%, #f3f4f6 100%)",
         }} />
 
         {/* Top text + logo */}
