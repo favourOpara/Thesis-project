@@ -39,6 +39,15 @@ const QuickViewModal = ({ product, onClose }) => {
   const isSeller = user?.user_type === "seller";
   const [adding, setAdding] = useState(false);
 
+  // Lock viewport height at the moment the modal opens.
+  // Mobile browsers resize vh units when the address bar hides on scroll —
+  // using a fixed px value means the modal never grows after opening.
+  const isMobileView = window.innerWidth <= 600;
+  const lockedH = window.innerHeight;
+  const modalH = isMobileView
+    ? lockedH * 0.92
+    : Math.min(Math.round(lockedH * 0.86), 700);
+
   const allImages = [
     ...(product.main_image_url ? [product.main_image_url] : []),
     ...(product.images?.map(i => i.image_url) || []),
@@ -105,13 +114,11 @@ const QuickViewModal = ({ product, onClose }) => {
           border-radius: 18px;
           width: 100% !important;
           max-width: 780px !important;
-          height: 86vh !important;
-          max-height: 700px !important;
           min-height: 0 !important;
           overflow: hidden !important;
           display: flex !important;
           flex-direction: row !important;
-          flex-shrink: 0;
+          flex-shrink: 0 !important;
           box-shadow: 0 28px 90px rgba(0,0,0,0.28);
           position: relative;
         }
@@ -224,9 +231,6 @@ const QuickViewModal = ({ product, onClose }) => {
           .qv-modal {
             flex-direction: column !important;
             width: 100% !important;
-            height: 92vh !important;
-            max-height: 92vh !important;
-            min-height: 92vh !important;
             border-radius: 18px 18px 0 0 !important;
           }
           .qv-img-panel {
@@ -255,8 +259,13 @@ const QuickViewModal = ({ product, onClose }) => {
 
       {/* Backdrop */}
       <div className="qv-overlay" onClick={onClose}>
-        {/* Modal */}
-        <div className="qv-modal" onClick={e => e.stopPropagation()} onWheel={stopWheelProp}>
+        {/* Modal — height locked in px at open time so mobile browser-bar changes can't resize it */}
+        <div
+          className="qv-modal"
+          onClick={e => e.stopPropagation()}
+          onWheel={stopWheelProp}
+          style={{ height: `${modalH}px`, maxHeight: `${modalH}px`, minHeight: `${modalH}px` }}
+        >
 
           {/* X button */}
           <button className="qv-close-btn" onClick={onClose} aria-label="Close">×</button>
