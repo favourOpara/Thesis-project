@@ -89,68 +89,75 @@ const QuickViewModal = ({ product, onClose }) => {
       {/* Inject responsive CSS once */}
       <style>{`
         .qv-overlay {
-          position: fixed;
-          inset: 0;
+          position: fixed !important;
+          inset: 0 !important;
           background: rgba(0,0,0,0.58);
           z-index: 10000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
           padding: 16px;
           backdrop-filter: blur(3px);
+          overflow: hidden !important;
         }
         .qv-modal {
           background: #fff;
           border-radius: 18px;
-          width: 100%;
-          max-width: 780px;
-          height: 86vh;
-          max-height: 700px;
-          min-height: 320px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: row;
+          width: 100% !important;
+          max-width: 780px !important;
+          height: 86vh !important;
+          max-height: 700px !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: row !important;
+          flex-shrink: 0;
           box-shadow: 0 28px 90px rgba(0,0,0,0.28);
           position: relative;
         }
         .qv-img-panel {
-          flex: 0 0 42%;
-          min-width: 0;
-          min-height: 0;
-          display: flex;
-          flex-direction: column;
+          flex: 0 0 42% !important;
+          width: 42% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
           background: #f1f5f9;
-          overflow: hidden;
+          overflow: hidden !important;
         }
         .qv-main-img {
-          flex: 1 1 0;
-          min-height: 0;
+          flex: 1 1 0 !important;
+          min-height: 0 !important;
+          height: 0 !important;
           position: relative;
-          overflow: hidden;
+          overflow: hidden !important;
         }
         .qv-main-img img {
           width: 100%;
-          height: 100%;
+          height: 100% !important;
           object-fit: cover;
           display: block;
         }
         .qv-thumb-strip {
-          flex-shrink: 0;
+          flex-shrink: 0 !important;
           display: flex;
           gap: 6px;
           padding: 8px 10px;
           background: #f1f5f9;
           flex-wrap: wrap;
+          max-height: 68px;
+          overflow: hidden;
         }
         .qv-info-panel {
-          flex: 1 1 0;
-          min-width: 0;
-          min-height: 0;
-          overflow-y: auto;
+          flex: 1 1 0 !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          height: 0 !important;
+          overflow-y: auto !important;
           overscroll-behavior: contain;
           padding: 28px 28px 28px 24px;
-          display: flex;
-          flex-direction: column;
+          display: flex !important;
+          flex-direction: column !important;
           gap: 0;
         }
         .qv-info-panel::-webkit-scrollbar {
@@ -211,29 +218,34 @@ const QuickViewModal = ({ product, onClose }) => {
         }
         @media (max-width: 600px) {
           .qv-overlay {
-            padding: 0;
-            align-items: flex-end;
+            padding: 0 !important;
+            align-items: flex-end !important;
           }
           .qv-modal {
-            flex-direction: column;
-            width: 100%;
-            height: 92vh;
-            max-height: 92vh;
-            min-height: 92vh;
-            border-radius: 18px 18px 0 0;
+            flex-direction: column !important;
+            width: 100% !important;
+            height: 92vh !important;
+            max-height: 92vh !important;
+            min-height: 92vh !important;
+            border-radius: 18px 18px 0 0 !important;
           }
           .qv-img-panel {
-            flex: 0 0 210px;
-            min-height: 0;
-            width: 100%;
+            flex: 0 0 200px !important;
+            width: 100% !important;
+            min-height: 0 !important;
+            height: 200px !important;
+            max-height: 200px !important;
           }
           .qv-main-img {
-            height: 100%;
+            flex: 1 1 0 !important;
+            height: 0 !important;
+            min-height: 0 !important;
           }
           .qv-info-panel {
-            flex: 1 1 0;
-            min-height: 0;
-            padding: 16px 18px 24px;
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+            height: 0 !important;
+            padding: 16px 18px 24px !important;
           }
           .qv-char-label {
             flex: 0 0 90px;
