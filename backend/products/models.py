@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
 from accounts.models import CustomUser
-from multiselectfield import MultiSelectField
 
 
 class Shop(models.Model):
@@ -156,10 +155,18 @@ class Product(models.Model):
     sub_category = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=19, decimal_places=2)
-    quantity = models.PositiveIntegerField()
-    material_type = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField(default=0)
+    material_type = models.CharField(max_length=255, blank=True, null=True)
     brand = models.CharField(max_length=255, null=True, blank=True)
-    size = MultiSelectField(choices=SIZE_CHOICES, default="", max_length=200)  # Allow multiple sizes
+    size = models.TextField(blank=True, default="", help_text="Comma-separated sizes stored here for indexing; authoritative data is in variants")
+    variants = models.JSONField(
+        null=True, blank=True,
+        help_text='Per-size stock: [{"size": "S", "qty": 5}, {"size": "M", "qty": 3}]'
+    )
+    extra_fields = models.JSONField(
+        null=True, blank=True,
+        help_text='Category-specific fields: {"storage": "128GB", "ram": "8GB", ...}'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)

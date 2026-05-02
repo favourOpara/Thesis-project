@@ -36,6 +36,7 @@ const QuickViewModal = ({ product, onClose }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const isSeller = user?.user_type === "seller";
   const [adding, setAdding] = useState(false);
 
   const allImages = [
@@ -45,17 +46,20 @@ const QuickViewModal = ({ product, onClose }) => {
 
   const images = allImages.length > 0 ? allImages : ["/OIP.png"];
   const [activeImg, setActiveImg] = useState(0);
+  const [selectedSize, setSelectedSize] = useState(null);
 
-  const hasStock = product.quantity !== undefined && product.quantity !== null;
-  const inStock = product.quantity > 0;
+  const hasVariants = product.variants?.length > 0;
   const categoryLabel = product.sub_category || product.category;
 
-  /* Sizes — may be a comma-string or array */
-  const sizes = product.size
-    ? (Array.isArray(product.size)
-        ? product.size
-        : String(product.size).split(",").map(s => s.trim()).filter(Boolean))
-    : [];
+  // Available qty for the selected size, or total if no variants
+  const availableQty = hasVariants
+    ? (selectedSize ? (product.variants.find(v => v.size === selectedSize)?.qty || 0) : 0)
+    : (product.quantity || 0);
+  const inStock = hasVariants ? product.quantity > 0 : product.quantity > 0;
+
+  const handleSizeSelect = (size) => {
+    setSelectedSize(prev => prev === size ? null : size);
+  };
 
   /* Close on Escape */
   useEffect(() => {
@@ -324,25 +328,25 @@ const QuickViewModal = ({ product, onClose }) => {
             </div>
 
             {/* Stock */}
-            {hasStock && (
-              <div style={{ marginBottom: "18px" }}>
-                {inStock ? (
-                  <span style={{
-                    fontSize: "12px", color: "#16a34a", fontWeight: 600,
-                    background: "#dcfce7", padding: "4px 12px", borderRadius: "999px",
-                  }}>
-                    ✓ In stock ({product.quantity} available)
-                  </span>
-                ) : (
-                  <span style={{
-                    fontSize: "12px", color: "#b91c1c", fontWeight: 600,
-                    background: "#fee2e2", padding: "4px 12px", borderRadius: "999px",
-                  }}>
-                    Out of stock
-                  </span>
-                )}
-              </div>
-            )}
+            <div style={{ marginBottom: "18px" }}>
+              {inStock ? (
+                <span style={{
+                  fontSize: "12px", color: "#16a34a", fontWeight: 600,
+                  background: "#dcfce7", padding: "4px 12px", borderRadius: "999px",
+                }}>
+                  {hasVariants
+                    ? `✓ ${product.quantity} units · ${product.variants.filter(v => v.qty > 0).length} sizes available`
+                    : `✓ In stock (${product.quantity} available)`}
+                </span>
+              ) : (
+                <span style={{
+                  fontSize: "12px", color: "#b91c1c", fontWeight: 600,
+                  background: "#fee2e2", padding: "4px 12px", borderRadius: "999px",
+                }}>
+                  Out of stock
+                </span>
+              )}
+            </div>
 
             {/* Description */}
             {product.description && (
@@ -398,24 +402,15 @@ const QuickViewModal = ({ product, onClose }) => {
                 </div>
               )}
 
-              {sizes.length > 0 && (
-                <div className="qv-char-row">
-                  <span className="qv-char-label">Sizes</span>
-                  <span className="qv-char-value">
-                    <span style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                      {sizes.map(s => (
-                        <span key={s} style={{
-                          background: "#f1f5f9", color: "#374151",
-                          padding: "2px 9px", borderRadius: "6px",
-                          fontSize: "12px", fontWeight: 600,
-                        }}>
-                          {s}
-                        </span>
-                      ))}
-                    </span>
-                  </span>
-                </div>
-              )}
+              {/* Extra fields (category-specific: storage, RAM, condition, etc.) */}
+              {product.extra_fields && Object.keys(product.extra_fields).length > 0 &&
+                Object.entries(product.extra_fields).map(([k, v]) => (
+                  <div key={k} className="qv-char-row">
+                    <span className="qv-char-label">{k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</span>
+                    <span className="qv-char-value">{String(v)}</span>
+                  </div>
+                ))
+              }
 
               {product.is_featured && (
                 <div className="qv-char-row">
@@ -440,11 +435,49 @@ const QuickViewModal = ({ product, onClose }) => {
               )}
             </div>
 
+            {/* Size selector (variants) */}
+            {hasVariants && (
+              <div style={{ marginBottom: "16px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 8px" }}>
+                  Select Size{selectedSize && <span style={{ color: "#2563eb" }}> — {selectedSize}</span>}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                  {product.variants.map(v => {
+                    const oos = v.qty === 0;
+                    const sel = selectedSize === v.size;
+                    return (
+                      <button
+                        key={v.size}
+                        onClick={() => !oos && handleSizeSelect(v.size)}
+                        disabled={oos}
+                        style={{
+                          padding: "6px 14px",
+                          border: sel ? "2px solid #2563eb" : "1.5px solid #e2e8f0",
+                          background: oos ? "#f8fafc" : sel ? "#eff6ff" : "#fff",
+                          color: oos ? "#cbd5e1" : sel ? "#2563eb" : "#374151",
+                          borderRadius: "8px", fontWeight: 600, fontSize: "13px",
+                          cursor: oos ? "not-allowed" : "pointer",
+                          textDecoration: oos ? "line-through" : "none",
+                        }}
+                        title={oos ? "Out of stock" : `${v.qty} in stock`}
+                      >
+                        {v.size}
+                        {!oos && <span style={{ display: "block", fontSize: "10px", color: sel ? "#3b82f6" : "#94a3b8", marginTop: "1px" }}>{v.qty} left</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {!selectedSize && (
+                  <p style={{ fontSize: "11px", color: "#f97316", margin: "6px 0 0" }}>Please select a size to add to cart</p>
+                )}
+              </div>
+            )}
+
             {/* Action buttons */}
             <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
               {/* Add to Cart */}
               <button
-                disabled={adding || product.quantity === 0}
+                disabled={adding || availableQty === 0 || (hasVariants && !selectedSize)}
                 onClick={async () => {
                   setAdding(true);
                   try {
@@ -460,22 +493,22 @@ const QuickViewModal = ({ product, onClose }) => {
                   flex: 1,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
                   padding: "12px 10px", borderRadius: "10px",
-                  background: product.quantity === 0 ? "#94a3b8" : "#2563eb",
+                  background: (availableQty === 0 || (hasVariants && !selectedSize)) ? "#94a3b8" : "#2563eb",
                   color: "#fff", border: "none",
                   fontWeight: 700, fontSize: "13px",
-                  cursor: product.quantity === 0 ? "not-allowed" : "pointer",
+                  cursor: (availableQty === 0 || (hasVariants && !selectedSize)) ? "not-allowed" : "pointer",
                   transition: "background 0.15s",
                   opacity: adding ? 0.7 : 1,
                 }}
-                onMouseEnter={e => { if (product.quantity > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
-                onMouseLeave={e => { if (product.quantity > 0) e.currentTarget.style.background = "#2563eb"; }}
+                onMouseEnter={e => { if (availableQty > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
+                onMouseLeave={e => { if (availableQty > 0) e.currentTarget.style.background = "#2563eb"; }}
               >
                 <CartIcon />
-                {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
+                {availableQty === 0 ? "Out of Stock" : (hasVariants && !selectedSize) ? "Select a Size" : adding ? "Adding…" : "Add to Cart"}
               </button>
 
               {/* Buy Now */}
-              {product.quantity > 0 && (
+              {availableQty > 0 && (!hasVariants || selectedSize) && (
                 <button
                   disabled={adding}
                   onClick={async () => {

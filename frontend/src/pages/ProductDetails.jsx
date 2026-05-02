@@ -50,7 +50,7 @@ const ProductDetails = () => {
 
   const [product, setProduct]             = useState(null);
   const [loading, setLoading]             = useState(true);
-  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedSize, setSelectedSize]   = useState(null); // single selected size
   const [shop, setShop]                   = useState(null);
   const [showInquiry, setShowInquiry]     = useState(false);
   const [qty, setQty]                     = useState(1);
@@ -111,11 +111,22 @@ const ProductDetails = () => {
     if (product && hasConsentedToCookies()) addProductToHistory(product);
   }, [product]);
 
-  const handleSizeToggle = (size) => {
-    setSelectedSizes(prev =>
-      prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
-    );
+  const handleSizeSelect = (size) => {
+    setSelectedSize(prev => prev === size ? null : size);
+    setQty(1); // reset qty when changing size
   };
+
+  // Get available qty for the currently selected size (or total if no variants)
+  const getAvailableQty = () => {
+    if (product?.variants?.length > 0) {
+      if (!selectedSize) return 0; // must select a size first
+      const v = product.variants.find(v => v.size === selectedSize);
+      return v ? v.qty : 0;
+    }
+    return product?.quantity || 0;
+  };
+  const availableQty = product ? getAvailableQty() : 0;
+  const hasVariants = product?.variants?.length > 0;
 
   if (loading) return <Spinner />;
   if (!product) return (
@@ -139,13 +150,23 @@ const ProductDetails = () => {
   });
   const images = imgSet.size > 0 ? [...imgSet] : ["/OIP.png"];
 
+  // Build meta info rows — base fields + extra_fields
+  const extraEntries = product.extra_fields
+    ? Object.entries(product.extra_fields).map(([k, v]) => ({
+        label: k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+        value: String(v),
+      }))
+    : [];
+
   const meta = [
-    product.category    && { label: "Category",    value: product.category },
+    product.category     && { label: "Category",     value: product.category },
     product.sub_category && { label: "Sub-category", value: product.sub_category },
-    product.gender      && { label: "Gender",      value: product.gender },
-    product.material_type && { label: "Material",  value: product.material_type },
-    product.brand       && { label: "Brand",       value: product.brand },
-    product.quantity !== undefined && { label: "In Stock", value: `${product.quantity} available` },
+    product.gender       && { label: "Gender",       value: product.gender },
+    product.material_type && { label: "Material",   value: product.material_type },
+    product.brand        && { label: "Brand",        value: product.brand },
+    // Only show total in-stock if no variants (variants show per-size stock inline)
+    !hasVariants && product.quantity !== undefined && { label: "In Stock", value: `${product.quantity} available` },
+    ...extraEntries,
   ].filter(Boolean);
 
   return (
@@ -330,7 +351,7 @@ const ProductDetails = () => {
             <div style={{ marginBottom: "20px" }}>
               {product.quantity > 0 ? (
                 <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: "12px", fontWeight: 600, padding: "4px 12px", borderRadius: "999px" }}>
-                  In stock — {product.quantity} available
+                  {hasVariants ? `${product.quantity} units across ${product.variants.length} sizes` : `In stock — ${product.quantity} available`}
                 </span>
               ) : (
                 <span style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "12px", fontWeight: 600, padding: "4px 12px", borderRadius: "999px" }}>
@@ -358,35 +379,48 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Size selector */}
-            {product.size?.length > 0 && (
+            {/* Size selector — variant-aware */}
+            {hasVariants && (
               <div style={{ marginBottom: "20px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
-                  Size {selectedSizes.length > 0 && <span style={{ color: "#2563eb" }}>— {selectedSizes.join(", ")}</span>}
+                  Select Size{selectedSize && <span style={{ color: "#2563eb" }}> — {selectedSize}</span>}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {product.size.map(size => (
-                    <button
-                      key={size}
-                      onClick={() => handleSizeToggle(size)}
-                      style={{
-                        padding: "7px 16px",
-                        border: selectedSizes.includes(size) ? "2px solid #2563eb" : "1.5px solid #e2e8f0",
-                        background: selectedSizes.includes(size) ? "#eff6ff" : "#fff",
-                        color: selectedSizes.includes(size) ? "#2563eb" : "#374151",
-                        borderRadius: "8px", fontWeight: 600, fontSize: "13px",
-                        cursor: "pointer", transition: "all 0.15s",
-                      }}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {product.variants.map(v => {
+                    const outOfStock = v.qty === 0;
+                    const isSelected = selectedSize === v.size;
+                    return (
+                      <button
+                        key={v.size}
+                        onClick={() => !outOfStock && handleSizeSelect(v.size)}
+                        disabled={outOfStock}
+                        style={{
+                          padding: "7px 14px",
+                          border: isSelected ? "2px solid #2563eb" : "1.5px solid #e2e8f0",
+                          background: outOfStock ? "#f8fafc" : isSelected ? "#eff6ff" : "#fff",
+                          color: outOfStock ? "#cbd5e1" : isSelected ? "#2563eb" : "#374151",
+                          borderRadius: "8px", fontWeight: 600, fontSize: "13px",
+                          cursor: outOfStock ? "not-allowed" : "pointer",
+                          transition: "all 0.15s",
+                          textDecoration: outOfStock ? "line-through" : "none",
+                          position: "relative",
+                        }}
+                        title={outOfStock ? "Out of stock" : `${v.qty} in stock`}
+                      >
+                        {v.size}
+                        {!outOfStock && <span style={{ display: "block", fontSize: "10px", color: isSelected ? "#3b82f6" : "#94a3b8", marginTop: "1px" }}>{v.qty} left</span>}
+                      </button>
+                    );
+                  })}
                 </div>
+                {!selectedSize && (
+                  <small style={{ color: "#f97316", display: "block", marginTop: "6px" }}>Please select a size to continue</small>
+                )}
               </div>
             )}
 
             {/* Qty picker */}
-            {!isSeller && product.quantity > 0 && (
+            {!isSeller && availableQty > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
                 <span style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Qty</span>
                 <div style={{
@@ -400,10 +434,13 @@ const ProductDetails = () => {
                   >−</button>
                   <span style={{ width: "40px", textAlign: "center", fontWeight: 700, fontSize: "14px" }}>{qty}</span>
                   <button
-                    onClick={() => setQty(q => Math.min(product.quantity, q + 1))}
+                    onClick={() => setQty(q => Math.min(availableQty, q + 1))}
                     style={{ width: "36px", height: "36px", border: "none", background: "#f8fafc", fontWeight: 700, fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   >+</button>
                 </div>
+                {hasVariants && selectedSize && (
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>{availableQty} available in this size</span>
+                )}
               </div>
             )}
 
@@ -422,25 +459,25 @@ const ProductDetails = () => {
                       setAdding(false);
                     }
                   }}
-                  disabled={adding || product.quantity === 0}
+                  disabled={adding || availableQty === 0 || (hasVariants && !selectedSize)}
                   style={{
                     flex: 1, padding: "13px",
-                    background: product.quantity > 0 ? "#2563eb" : "#94a3b8",
+                    background: (availableQty > 0 && (!hasVariants || selectedSize)) ? "#2563eb" : "#94a3b8",
                     color: "#fff", border: "none", borderRadius: "10px",
                     fontWeight: 700, fontSize: "15px",
-                    cursor: product.quantity > 0 ? "pointer" : "not-allowed",
+                    cursor: (availableQty > 0 && (!hasVariants || selectedSize)) ? "pointer" : "not-allowed",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => { if (product.quantity > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
-                  onMouseLeave={e => { if (product.quantity > 0) e.currentTarget.style.background = "#2563eb"; }}
+                  onMouseEnter={e => { if (availableQty > 0 && !adding) e.currentTarget.style.background = "#1d4ed8"; }}
+                  onMouseLeave={e => { if (availableQty > 0) e.currentTarget.style.background = "#2563eb"; }}
                 >
                   <CartIcon />
-                  {product.quantity === 0 ? "Out of Stock" : adding ? "Adding…" : "Add to Cart"}
+                  {availableQty === 0 ? "Out of Stock" : (hasVariants && !selectedSize) ? "Select a Size" : adding ? "Adding…" : "Add to Cart"}
                 </button>
 
                 {/* Buy Now */}
-                {product.quantity > 0 && (
+                {availableQty > 0 && (
                   <button
                     onClick={async () => {
                       setAdding(true);

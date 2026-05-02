@@ -1,5 +1,17 @@
+import json
 from rest_framework import serializers
 from .models import Shop, Category, Product, ProductImage, StoreTextBlock
+
+
+class FlexibleJSONField(serializers.JSONField):
+    """Accepts a JSON string (multipart form) or a dict/list (JSON body)."""
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            try:
+                return json.loads(data)
+            except (json.JSONDecodeError, ValueError):
+                return None
+        return super().to_internal_value(data)
 
 
 class StoreTextBlockSerializer(serializers.ModelSerializer):
@@ -114,8 +126,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
     images = ProductImageSerializer(many=True, read_only=True)
-    size = serializers.MultipleChoiceField(choices=Product.SIZE_CHOICES)
     main_image_url = serializers.SerializerMethodField()
+    variants = FlexibleJSONField(required=False, allow_null=True)
+    extra_fields = FlexibleJSONField(required=False, allow_null=True)
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
         write_only=True,
@@ -127,6 +140,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'owner', 'name', 'category', 'sub_category', 'description',
             'price', 'quantity', 'material_type', 'brand', 'size',
+            'variants', 'extra_fields',
             'is_active', 'is_featured', 'created_at', 'updated_at', 'main_image_url',
             'images', 'uploaded_images'
         ]

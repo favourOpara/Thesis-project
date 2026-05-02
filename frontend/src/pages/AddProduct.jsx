@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
+import { getFieldConfig, getSizeOptions } from "../utils/productConfig";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
@@ -15,18 +16,29 @@ const AddProduct = () => {
     sub_category: "",
     description: "",
     price: "",
-    quantity: "",
+    quantity: "",      // used only when sizeType === "none"
     material_type: "",
     brand: "",
-    size: [],
     gender: "",
+    extra_fields: {},  // category-specific extra fields
   });
+
+  // Size variants: [{size: "S", qty: "5"}, ...]
+  // Used when sizeType !== "none"
+  const [sizeVariants, setSizeVariants] = useState([{ size: "", qty: "" }]);
 
   const navigate = useNavigate();
   const [imageFiles, setImageFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [invalidFields, setInvalidFields] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Derive field config from category + sub_category
+  const fieldConfig = useMemo(
+    () => getFieldConfig(formData.category, formData.sub_category),
+    [formData.category, formData.sub_category]
+  );
+  const sizeOptions = useMemo(() => getSizeOptions(fieldConfig.sizeType), [fieldConfig.sizeType]);
 
   // Complete Categories and Subcategories Configuration
   const CATEGORIES = [
@@ -587,56 +599,6 @@ const AddProduct = () => {
     { value: "unisex", label: "Unisex" },
   ];
 
-  const sizeOptions = [
-    { value: "XS", label: "Extra Small" },
-    { value: "S", label: "Small" },
-    { value: "M", label: "Medium" },
-    { value: "L", label: "Large" },
-    { value: "XL", label: "Extra Large" },
-    { value: "XXL", label: "2XL" },
-    { value: "XXXL", label: "3XL" },
-    { value: "4XL", label: "4XL" },
-    { value: "5XL", label: "5XL" },
-    { value: "6XL", label: "6XL" },
-    { value: "Free Size", label: "Free Size" },
-
-    // Shoe Sizes
-    { value: "EU 36", label: "EU 36" },
-    { value: "EU 37", label: "EU 37" },
-    { value: "EU 38", label: "EU 38" },
-    { value: "EU 39", label: "EU 39" },
-    { value: "EU 40", label: "EU 40" },
-    { value: "EU 41", label: "EU 41" },
-    { value: "EU 42", label: "EU 42" },
-    { value: "EU 43", label: "EU 43" },
-    { value: "EU 44", label: "EU 44" },
-    { value: "EU 45", label: "EU 45" },
-    { value: "EU 46", label: "EU 46" },
-    { value: "US 6", label: "US 6" },
-    { value: "US 7", label: "US 7" },
-    { value: "US 8", label: "US 8" },
-    { value: "US 9", label: "US 9" },
-    { value: "US 10", label: "US 10" },
-    { value: "US 11", label: "US 11" },
-    { value: "US 12", label: "US 12" },
-
-    // Kids Sizes
-    { value: "0-3M", label: "0-3 Months" },
-    { value: "3-6M", label: "3-6 Months" },
-    { value: "6-12M", label: "6-12 Months" },
-    { value: "1-2Y", label: "1-2 Years" },
-    { value: "2-3Y", label: "2-3 Years" },
-    { value: "3-4Y", label: "3-4 Years" },
-    { value: "4-5Y", label: "4-5 Years" },
-    { value: "5-6Y", label: "5-6 Years" },
-    { value: "6-7Y", label: "6-7 Years" },
-    { value: "7-8Y", label: "7-8 Years" },
-    { value: "8-9Y", label: "8-9 Years" },
-    { value: "9-10Y", label: "9-10 Years" },
-
-    { value: "Custom", label: "Custom (Specify in Description)" },
-  ];
-
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -710,27 +672,30 @@ const AddProduct = () => {
     setPreviewUrls(newUrls);
   };
 
+  // ── Variant helpers ────────────────────────────────────────────────────────
+  const addVariant = () => setSizeVariants(prev => [...prev, { size: "", qty: "" }]);
+  const removeVariant = (i) => setSizeVariants(prev => prev.filter((_, idx) => idx !== i));
+  const updateVariant = (i, field, value) => {
+    setSizeVariants(prev => prev.map((v, idx) => idx === i ? { ...v, [field]: value } : v));
+    setInvalidFields(prev => ({ ...prev, sizeVariants: false }));
+  };
+
   const handleSelectChange = (name, selectedOption) => {
     if (name === "category") {
-        setFormData(prev => ({
-          ...prev,
-          category: selectedOption?.value || "",
-          sub_category: "",
-          gender: ""
-        }));
-    } else if (name === "size") {
-      // Handle multi-select for size
-      const values = selectedOption ? selectedOption.map(opt => opt.value) : [];
       setFormData(prev => ({
         ...prev,
-        [name]: values
+        category: selectedOption?.value || "",
+        sub_category: "",
+        gender: "",
+        extra_fields: {},
       }));
-      setInvalidFields(prev => ({ ...prev, [name]: false }));
+      setSizeVariants([{ size: "", qty: "" }]);
+    } else if (name === "sub_category") {
+      setFormData(prev => ({ ...prev, sub_category: selectedOption?.value || "", extra_fields: {} }));
+      setSizeVariants([{ size: "", qty: "" }]);
+      setInvalidFields(prev => ({ ...prev, sub_category: false }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: selectedOption?.value || ""
-      }));
+      setFormData(prev => ({ ...prev, [name]: selectedOption?.value || "" }));
       setInvalidFields(prev => ({ ...prev, [name]: false }));
     }
   };
@@ -741,23 +706,44 @@ const AddProduct = () => {
     setInvalidFields(prev => ({ ...prev, [name]: false }));
   };
 
+  const handleExtraFieldChange = (key, value) => {
+    setFormData(prev => ({ ...prev, extra_fields: { ...prev.extra_fields, [key]: value } }));
+    setInvalidFields(prev => ({ ...prev, [`extra_${key}`]: false }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setInvalidFields({});
+    const newInvalid = {};
 
-    const requiredFields = [
-      "name", "category", "sub_category", "description",
-      "price", "quantity", "material_type", "brand", "size"
-    ];
+    // ── Core required fields ──────────────────────────────────────────────────
+    if (!formData.name) newInvalid.name = true;
+    if (!formData.category) newInvalid.category = true;
+    if (!formData.sub_category) newInvalid.sub_category = true;
+    if (!formData.description) newInvalid.description = true;
+    if (!formData.price) newInvalid.price = true;
 
-    const newInvalidFields = requiredFields.reduce((acc, field) => {
-      if (!formData[field] || (field === "size" && formData[field].length === 0)) acc[field] = true;
-      return acc;
-    }, {});
+    // ── Size / quantity logic ─────────────────────────────────────────────────
+    let validVariants = [];
+    if (fieldConfig.sizeType !== "none") {
+      validVariants = sizeVariants.filter(v => v.size && Number(v.qty) > 0);
+      if (validVariants.length === 0) newInvalid.sizeVariants = true;
+    } else {
+      if (!formData.quantity) newInvalid.quantity = true;
+    }
 
-    if (Object.keys(newInvalidFields).length > 0 || imageFiles.length === 0) {
-      setInvalidFields({ ...newInvalidFields, images: imageFiles.length === 0 });
+    // ── Material (when applicable) ────────────────────────────────────────────
+    if (fieldConfig.showMaterial && !formData.material_type) newInvalid.material_type = true;
+
+    // ── Required extra fields ─────────────────────────────────────────────────
+    fieldConfig.extraFields.forEach(f => {
+      if (f.required && !formData.extra_fields[f.key]) newInvalid[`extra_${f.key}`] = true;
+    });
+
+    if (imageFiles.length === 0) newInvalid.images = true;
+
+    if (Object.keys(newInvalid).length > 0) {
+      setInvalidFields(newInvalid);
       toast.error("Please fill all required fields");
       setLoading(false);
       return;
@@ -765,51 +751,49 @@ const AddProduct = () => {
 
     try {
       const dataToSend = new FormData();
+      dataToSend.append("name", formData.name);
+      dataToSend.append("category", formData.category);
+      dataToSend.append("sub_category", formData.sub_category);
+      dataToSend.append("description", formData.description);
+      dataToSend.append("price", formData.price);
+      if (formData.gender) dataToSend.append("gender", formData.gender);
+      if (fieldConfig.showMaterial) dataToSend.append("material_type", formData.material_type || "");
+      if (fieldConfig.showBrand && formData.brand) dataToSend.append("brand", formData.brand);
 
-      // Append all regular fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "size") {
-          dataToSend.append(key, value);
-        }
+      // Size variants
+      if (fieldConfig.sizeType !== "none" && validVariants.length > 0) {
+        const totalQty = validVariants.reduce((sum, v) => sum + Number(v.qty), 0);
+        dataToSend.append("quantity", totalQty);
+        dataToSend.append("size", validVariants.map(v => v.size).join(","));
+        dataToSend.append("variants", JSON.stringify(validVariants.map(v => ({ size: v.size, qty: Number(v.qty) }))));
+      } else {
+        dataToSend.append("quantity", formData.quantity || 0);
+        dataToSend.append("size", "");
+        dataToSend.append("variants", JSON.stringify([]));
+      }
+
+      // Extra category fields
+      const extraData = {};
+      fieldConfig.extraFields.forEach(f => {
+        if (formData.extra_fields[f.key]) extraData[f.key] = formData.extra_fields[f.key];
       });
+      dataToSend.append("extra_fields", JSON.stringify(extraData));
 
-      // Append sizes correctly
-      formData.size.forEach(size => {
-        dataToSend.append("size", size);
-      });
+      imageFiles.forEach(file => dataToSend.append("images", file));
 
-      // Append images
-      imageFiles.forEach(file => {
-        dataToSend.append("images", file);
-      });
-
-      // Use environment variable or default to production
       const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
       const token = localStorage.getItem("access_token");
       await axios.post(`${baseURL}/api/owner-products/`, dataToSend, {
         withCredentials: true,
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
 
       toast.success("Product added successfully!");
-      setFormData({
-        name: "",
-        category: "",
-        sub_category: "",
-        description: "",
-        price: "",
-        quantity: "",
-        material_type: "",
-        brand: "",
-        size: [], // Reset size to an empty array
-        gender: "",
-      });
+      setFormData({ name: "", category: "", sub_category: "", description: "", price: "", quantity: "", material_type: "", brand: "", gender: "", extra_fields: {} });
+      setSizeVariants([{ size: "", qty: "" }]);
       setImageFiles([]);
       setPreviewUrls([]);
-      setTimeout(() => navigate(-1), 500);
+      setTimeout(() => navigate("/seller/products"), 2000);
     } catch (error) {
       console.error("Error adding product:", error);
       toast.error(error.response?.data?.message || "Failed to add product");
@@ -822,12 +806,8 @@ const AddProduct = () => {
     option => option.category === formData.category
   );
 
-  const showGenderDropdown = [
-    "Clothing materials",
-    "Body accessories",
-    "Cosmetic and beauty products",
-    "Jewelry and watches"
-  ].includes(formData.category);
+  // Total stock preview for variant builder
+  const totalVariantQty = sizeVariants.reduce((sum, v) => sum + (Number(v.qty) || 0), 0);
 
   return (
     <>
@@ -925,20 +905,17 @@ const AddProduct = () => {
                   )}
 
                   {/* Gender */}
-                  {showGenderDropdown && (
+                  {fieldConfig.showGender && (
                     <div className="form-group mb-3">
-                      <label className="form-label">Gender *</label>
+                      <label className="form-label">Gender</label>
                       <Select
                         options={genderOptions}
-                        value={genderOptions.find(opt => opt.value === formData.gender)}
+                        value={genderOptions.find(opt => opt.value === formData.gender) || null}
                         onChange={(selected) => handleSelectChange("gender", selected)}
                         styles={customStyles}
-                        isSearchable
-                        placeholder="Select gender"
-                        className={invalidFields.gender ? "is-invalid" : ""}
+                        placeholder="Select gender (optional)"
                         isClearable
                       />
-                      {invalidFields.gender && <div className="invalid-feedback d-block">Gender is required for this category</div>}
                     </div>
                   )}
 
@@ -951,95 +928,177 @@ const AddProduct = () => {
                       rows="4"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Describe your product in detail..."
+                      placeholder="Describe your product in detail — features, condition, what's included, etc."
                     ></textarea>
                     {invalidFields.description && <div className="invalid-feedback">Description is required</div>}
-                    <small className="text-muted">Include key features, materials, dimensions, and any other relevant details</small>
                   </div>
 
-                  {/* Price and Quantity Row */}
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
-                        <label className="form-label">Price (₦) *</label>
-                        <input
-                          type="number"
-                          className={`form-control ${invalidFields.price ? "is-invalid" : ""}`}
-                          name="price"
-                          value={formData.price}
-                          onChange={handleInputChange}
-                          placeholder="0.00"
-                          min="0"
-                          step="0.01"
-                        />
-                        {invalidFields.price && <div className="invalid-feedback">Price is required</div>}
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
-                        <label className="form-label">Quantity *</label>
-                        <input
-                          type="number"
-                          className={`form-control ${invalidFields.quantity ? "is-invalid" : ""}`}
-                          name="quantity"
-                          value={formData.quantity}
-                          onChange={handleInputChange}
-                          placeholder="0"
-                          min="0"
-                        />
-                        {invalidFields.quantity && <div className="invalid-feedback">Quantity is required</div>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Material Type and Brand Row */}
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
-                        <label className="form-label">Material Type *</label>
-                        <input
-                          type="text"
-                          className={`form-control ${invalidFields.material_type ? "is-invalid" : ""}`}
-                          name="material_type"
-                          value={formData.material_type}
-                          onChange={handleInputChange}
-                          placeholder="e.g., Cotton, Plastic, Metal"
-                        />
-                        {invalidFields.material_type && <div className="invalid-feedback">Material type is required</div>}
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
-                        <label className="form-label">Brand *</label>
-                        <input
-                          type="text"
-                          className={`form-control ${invalidFields.brand ? "is-invalid" : ""}`}
-                          name="brand"
-                          value={formData.brand}
-                          onChange={handleInputChange}
-                          placeholder="Enter brand name"
-                        />
-                        {invalidFields.brand && <div className="invalid-feedback">Brand is required</div>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Size */}
+                  {/* Price */}
                   <div className="form-group mb-3">
-                    <label className="form-label">Available Sizes *</label>
-                    <Select
-                      options={sizeOptions}
-                      isMulti
-                      value={sizeOptions.filter(opt => formData.size.includes(opt.value))}
-                      onChange={(selected) => handleSelectChange("size", selected)}
-                      styles={customStyles}
-                      isSearchable
-                      placeholder="Select available sizes"
-                      className={invalidFields.size ? "is-invalid" : ""}
+                    <label className="form-label">Price (₦) *</label>
+                    <input
+                      type="number"
+                      className={`form-control ${invalidFields.price ? "is-invalid" : ""}`}
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
                     />
-                    {invalidFields.size && <div className="invalid-feedback d-block">At least one size is required</div>}
-                    <small className="text-muted">Select all sizes available for this product</small>
+                    {invalidFields.price && <div className="invalid-feedback">Price is required</div>}
                   </div>
+
+                  {/* ── Size & Stock Variants (when category has sizes) ─────────────────────── */}
+                  {fieldConfig.sizeType !== "none" ? (
+                    <div className="form-group mb-4">
+                      <label className="form-label">Size &amp; Stock Variants *</label>
+                      <small className="d-block text-muted mb-2">
+                        Add each size separately with how many units you have in stock for that size.
+                      </small>
+                      {sizeVariants.map((variant, i) => (
+                        <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "8px" }}>
+                          <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+                            <Select
+                              options={sizeOptions}
+                              value={sizeOptions.find(o => o.value === variant.size) || null}
+                              onChange={sel => updateVariant(i, "size", sel?.value || "")}
+                              styles={customStyles}
+                              placeholder="Size"
+                              menuPortalTarget={document.body}
+                              menuPosition="fixed"
+                            />
+                          </div>
+                          <div style={{ flex: "0 0 90px" }}>
+                            <input
+                              type="number"
+                              className="form-control"
+                              value={variant.qty}
+                              onChange={e => updateVariant(i, "qty", e.target.value)}
+                              placeholder="Qty"
+                              min="0"
+                            />
+                          </div>
+                          {sizeVariants.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeVariant(i)}
+                              style={{ flex: "none", background: "none", border: "none", color: "#ef4444", fontSize: "18px", padding: "6px", lineHeight: 1, cursor: "pointer" }}
+                              title="Remove this size"
+                            >×</button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addVariant}
+                        style={{ fontSize: "13px", color: "#3b7bf8", background: "none", border: "1px dashed #3b7bf8", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", marginTop: "4px" }}
+                      >
+                        + Add Size
+                      </button>
+                      {invalidFields.sizeVariants && (
+                        <div style={{ color: "#dc3545", fontSize: "12px", marginTop: "6px" }}>
+                          Add at least one size with a quantity greater than 0
+                        </div>
+                      )}
+                      {totalVariantQty > 0 && (
+                        <small className="text-muted d-block mt-1">
+                          Total stock: <strong>{totalVariantQty}</strong> units across {sizeVariants.filter(v => v.size && Number(v.qty) > 0).length} size(s)
+                        </small>
+                      )}
+                    </div>
+                  ) : (
+                    /* ── Single quantity field (no sizes) ─────────────────────────────────── */
+                    <div className="form-group mb-3">
+                      <label className="form-label">Quantity in Stock *</label>
+                      <input
+                        type="number"
+                        className={`form-control ${invalidFields.quantity ? "is-invalid" : ""}`}
+                        name="quantity"
+                        value={formData.quantity}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        min="0"
+                      />
+                      {invalidFields.quantity && <div className="invalid-feedback">Quantity is required</div>}
+                    </div>
+                  )}
+
+                  {/* Material Type (category-dependent) */}
+                  {fieldConfig.showMaterial && (
+                    <div className="form-group mb-3">
+                      <label className="form-label">Material Type *</label>
+                      <input
+                        type="text"
+                        className={`form-control ${invalidFields.material_type ? "is-invalid" : ""}`}
+                        name="material_type"
+                        value={formData.material_type}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 100% Cotton, Genuine Leather, Stainless Steel"
+                      />
+                      {invalidFields.material_type && <div className="invalid-feedback">Material type is required</div>}
+                    </div>
+                  )}
+
+                  {/* Brand (category-dependent, always optional) */}
+                  {fieldConfig.showBrand && (
+                    <div className="form-group mb-3">
+                      <label className="form-label">Brand</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="brand"
+                        value={formData.brand}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Samsung, Nike, Unbranded"
+                      />
+                    </div>
+                  )}
+
+                  {/* ── Category-specific extra fields ──────────────────────────────────────── */}
+                  {fieldConfig.extraFields.length > 0 && (
+                    <div className="mb-1">
+                      <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                          {formData.sub_category || formData.category} Details
+                        </span>
+                      </div>
+                      {fieldConfig.extraFields.map(field => (
+                        <div key={field.key} className="form-group mb-3">
+                          <label className="form-label">
+                            {field.label}{field.required ? " *" : ""}
+                          </label>
+                          {field.type === "select" ? (
+                            <>
+                              <Select
+                                options={field.options.map(o => ({ value: o, label: o }))}
+                                value={formData.extra_fields[field.key] ? { value: formData.extra_fields[field.key], label: formData.extra_fields[field.key] } : null}
+                                onChange={sel => handleExtraFieldChange(field.key, sel?.value || "")}
+                                styles={customStyles}
+                                placeholder={`Select ${field.label.toLowerCase()}`}
+                                isClearable
+                                className={invalidFields[`extra_${field.key}`] ? "is-invalid" : ""}
+                              />
+                              {invalidFields[`extra_${field.key}`] && (
+                                <div className="invalid-feedback d-block">{field.label} is required</div>
+                              )}
+                            </>
+                          ) : (
+                            <input
+                              type="text"
+                              className={`form-control ${invalidFields[`extra_${field.key}`] ? "is-invalid" : ""}`}
+                              value={formData.extra_fields[field.key] || ""}
+                              onChange={e => handleExtraFieldChange(field.key, e.target.value)}
+                              placeholder={field.placeholder || ""}
+                            />
+                          )}
+                          {field.type !== "select" && invalidFields[`extra_${field.key}`] && (
+                            <div className="invalid-feedback">{field.label} is required</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Image Upload */}
                   <div className="form-group mb-3">

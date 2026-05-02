@@ -178,6 +178,28 @@ const ProductCard = ({ product }) => {
                 )
               )}
             </div>
+
+            {/* Size chips — show available sizes at a glance */}
+            {product.variants?.length > 0 && (
+              <div style={{ marginTop: "6px", display: "flex", flexWrap: "wrap", gap: "3px", alignItems: "center" }}>
+                {product.variants.slice(0, 5).map(v => (
+                  <span key={v.size} style={{
+                    fontSize: "10px",
+                    color: v.qty > 0 ? "#475569" : "#cbd5e1",
+                    background: v.qty > 0 ? "#f1f5f9" : "#f8fafc",
+                    padding: "1px 7px", borderRadius: "5px", fontWeight: 600,
+                    textDecoration: v.qty === 0 ? "line-through" : "none",
+                  }}>
+                    {v.size}
+                  </span>
+                ))}
+                {product.variants.length > 5 && (
+                  <span style={{ fontSize: "10px", color: "#94a3b8", fontWeight: 500 }}>
+                    +{product.variants.length - 5}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </Link>
