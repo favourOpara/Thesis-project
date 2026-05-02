@@ -39,14 +39,15 @@ const QuickViewModal = ({ product, onClose }) => {
   const isSeller = user?.user_type === "seller";
   const [adding, setAdding] = useState(false);
 
-  // Lock viewport height at the moment the modal opens.
-  // Mobile browsers resize vh units when the address bar hides on scroll —
-  // using a fixed px value means the modal never grows after opening.
-  const isMobileView = window.innerWidth <= 600;
-  const lockedH = window.innerHeight;
-  const modalH = isMobileView
-    ? lockedH * 0.92
-    : Math.min(Math.round(lockedH * 0.86), 700);
+  // Lock viewport dimensions at mount — useState initializer runs ONCE only.
+  // Plain variables (const x = window.innerHeight) re-read on every re-render,
+  // so any state change (e.g. swiping images) would pick up the new vh after
+  // the browser bar hides. useState(() => ...) is immune to re-renders.
+  const [modalH] = useState(() => {
+    const h = window.innerHeight;
+    const mobile = window.innerWidth <= 600;
+    return mobile ? Math.round(h * 0.92) : Math.min(Math.round(h * 0.86), 700);
+  });
 
   const allImages = [
     ...(product.main_image_url ? [product.main_image_url] : []),
