@@ -147,6 +147,7 @@ const ShopPage = () => {
   const [otherStores, setOtherStores] = useState([]);
   const [showMoreStores, setShowMoreStores] = useState(false);
   const [showMoreProducts, setShowMoreProducts] = useState(false);
+  const [showFullDesc, setShowFullDesc] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const INITIAL = 4;
 
@@ -457,17 +458,45 @@ const ShopPage = () => {
               </p>
             )}
 
-            {/* Description — only if present, slim */}
-            {shop.description && (
-              <p style={{
-                fontSize: "13px", color: "#64748b", margin: "6px 0 0",
-                lineHeight: 1.6, maxWidth: "640px",
-                overflow: "hidden", display: "-webkit-box",
-                WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-              }}>
-                {shop.description}
-              </p>
-            )}
+            {/* Description — expandable if long */}
+            {shop.description && (() => {
+              const long = shop.description.length > 160;
+              return (
+                <div style={{ margin: "6px 0 0", maxWidth: "640px" }}>
+                  <p style={{
+                    fontSize: "13px", color: "#64748b", margin: 0,
+                    lineHeight: 1.6,
+                    overflow: "hidden",
+                    display: "-webkit-box",
+                    WebkitLineClamp: showFullDesc ? "unset" : 2,
+                    WebkitBoxOrient: "vertical",
+                  }}>
+                    {shop.description}
+                  </p>
+                  {long && (
+                    <button
+                      onClick={() => setShowFullDesc(p => !p)}
+                      style={{
+                        background: "none", border: "none", padding: "3px 0 0",
+                        cursor: "pointer", color: "#2563eb",
+                        fontSize: "12px", fontWeight: 600,
+                        display: "inline-flex", alignItems: "center", gap: "3px",
+                      }}
+                    >
+                      {showFullDesc ? "Show less" : "Show more"}
+                      <svg
+                        width="11" height="11" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        style={{ transform: showFullDesc ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* ══════════════════════════════

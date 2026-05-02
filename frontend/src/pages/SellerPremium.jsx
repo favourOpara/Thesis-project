@@ -142,13 +142,77 @@ const UpgradePage = ({ onSuccess, shop }) => {
       )}
 
       {/* ── Hero banner ── */}
-      <div style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-        borderRadius: "16px", padding: "48px 40px", marginBottom: "24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: "32px", flexWrap: "wrap",
-      }}>
-        <div style={{ flex: "1 1 340px" }}>
+      <style>{`
+        .premium-hero {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          border-radius: 16px;
+          padding: 48px 40px;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 32px;
+          flex-wrap: wrap;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+        .premium-hero-right {
+          flex-shrink: 0;
+          text-align: center;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .premium-price-box {
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 24px 40px;
+          box-sizing: border-box;
+        }
+        .premium-cta-btn {
+          margin-top: 14px;
+          padding: 14px 24px;
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-weight: 700;
+          font-size: 15px;
+          width: 100%;
+          cursor: pointer;
+          letter-spacing: -0.01em;
+          transition: background 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          box-sizing: border-box;
+          white-space: nowrap;
+        }
+        @media (max-width: 640px) {
+          .premium-hero {
+            padding: 28px 20px;
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .premium-hero-right {
+            width: 100%;
+            flex-shrink: 1;
+          }
+          .premium-price-box {
+            padding: 20px 16px;
+            width: 100%;
+          }
+          .premium-cta-btn {
+            font-size: 14px;
+            padding: 13px 16px;
+            white-space: normal;
+            text-align: center;
+          }
+        }
+      `}</style>
+      <div className="premium-hero">
+        <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "8px",
             background: "rgba(217,119,6,0.15)", border: "1px solid rgba(217,119,6,0.35)",
@@ -164,11 +228,8 @@ const UpgradePage = ({ onSuccess, shop }) => {
             Custom storefronts, featured placements, warehousing, logistics, and more — all in one plan.
           </p>
         </div>
-        <div style={{ flexShrink: 0, textAlign: "center" }}>
-          <div style={{
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "16px", padding: "24px 40px",
-          }}>
+        <div className="premium-hero-right">
+          <div className="premium-price-box">
             <div style={{ display: "flex", alignItems: "baseline", gap: "4px", justifyContent: "center" }}>
               <span style={{ fontSize: "16px", fontWeight: 600, color: "#94a3b8" }}>₦</span>
               <span style={{ fontSize: "46px", fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: "-0.04em" }}>10,000</span>
@@ -178,17 +239,10 @@ const UpgradePage = ({ onSuccess, shop }) => {
           <button
             onClick={handleUpgrade}
             disabled={loading || inCooldown}
-            style={{
-              marginTop: "14px", padding: "14px 40px",
-              background: loading ? "#64748b" : "#d97706",
-              color: "#fff", border: "none", borderRadius: "10px",
-              fontWeight: 700, fontSize: "15px", width: "100%",
-              cursor: loading ? "not-allowed" : "pointer",
-              letterSpacing: "-0.01em", transition: "background 0.15s",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = "#b45309"; }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.background = "#d97706"; }}
+            className="premium-cta-btn"
+            style={{ background: loading || inCooldown ? "#64748b" : "#d97706", cursor: loading || inCooldown ? "not-allowed" : "pointer" }}
+            onMouseEnter={e => { if (!loading && !inCooldown) e.currentTarget.style.background = "#b45309"; }}
+            onMouseLeave={e => { if (!loading && !inCooldown) e.currentTarget.style.background = "#d97706"; }}
           >
             {loading ? <><SpinIcon /> Redirecting to Paystack…</> : "Activate Premium — ₦10,000 / mo"}
           </button>
