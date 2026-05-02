@@ -81,6 +81,19 @@ const ProductCard = ({ product }) => {
               }}
             />
 
+            {/* Discount badge */}
+            {product.discount_percentage > 0 && (
+              <div style={{
+                position: "absolute", top: "8px", left: "8px",
+                background: "#ef4444", color: "#fff",
+                fontSize: "10px", fontWeight: 700,
+                padding: "2px 7px", borderRadius: "999px",
+                letterSpacing: "0.2px",
+              }}>
+                -{product.discount_percentage}%
+              </div>
+            )}
+
             {/* Hover overlay */}
             <div style={{
               position: "absolute", inset: 0,
@@ -164,9 +177,22 @@ const ProductCard = ({ product }) => {
               {product.name}
             </p>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4px" }}>
-              <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "14px" }}>
-                {product.price ? fmtPrice(product.price) : "N/A"}
-              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                {product.discounted_price ? (
+                  <>
+                    <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "14px" }}>
+                      {fmtPrice(product.discounted_price)}
+                    </span>
+                    <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: "11px", textDecoration: "line-through" }}>
+                      {fmtPrice(product.price)}
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "14px" }}>
+                    {product.price ? fmtPrice(product.price) : "N/A"}
+                  </span>
+                )}
+              </div>
               {hasStock && (
                 inStock ? (
                   <span style={{

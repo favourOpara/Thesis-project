@@ -165,15 +165,24 @@ class ProductSerializer(serializers.ModelSerializer):
         required=False
     )
 
+    discounted_price = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
             'id', 'owner', 'name', 'category', 'sub_category', 'description',
-            'price', 'quantity', 'material_type', 'brand', 'size',
+            'price', 'discount_percentage', 'discounted_price',
+            'quantity', 'material_type', 'brand', 'size',
             'variants', 'extra_fields',
             'is_active', 'is_featured', 'created_at', 'updated_at', 'main_image_url',
             'images', 'uploaded_images'
         ]
+
+    def get_discounted_price(self, obj):
+        if obj.discount_percentage and obj.discount_percentage > 0:
+            discount = min(obj.discount_percentage, 100)
+            return round(float(obj.price) * (1 - discount / 100), 2)
+        return None
 
     def get_main_image_url(self, obj):
         first = obj.images.order_by('order', 'id').first()

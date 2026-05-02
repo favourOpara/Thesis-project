@@ -200,6 +200,10 @@ class Product(models.Model):
     sub_category = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=19, decimal_places=2)
+    discount_percentage = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Discount as a percentage (0 = no discount, max 100)"
+    )
     quantity = models.PositiveIntegerField(default=0)
     material_type = models.CharField(max_length=255, blank=True, null=True)
     brand = models.CharField(max_length=255, null=True, blank=True)

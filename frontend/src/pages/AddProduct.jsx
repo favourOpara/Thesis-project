@@ -16,6 +16,7 @@ const AddProduct = () => {
     sub_category: "",
     description: "",
     price: "",
+    discount_percentage: "",
     quantity: "",      // used only when sizeType === "none"
     material_type: "",
     brand: "",
@@ -759,6 +760,7 @@ const AddProduct = () => {
       dataToSend.append("sub_category", formData.sub_category);
       dataToSend.append("description", formData.description);
       dataToSend.append("price", formData.price);
+      dataToSend.append("discount_percentage", formData.discount_percentage || 0);
       if (formData.gender) dataToSend.append("gender", formData.gender);
       if (fieldConfig.showMaterial) dataToSend.append("material_type", formData.material_type || "");
       if (fieldConfig.showBrand && formData.brand) dataToSend.append("brand", formData.brand);
@@ -792,7 +794,7 @@ const AddProduct = () => {
       });
 
       toast.success("Product added successfully!");
-      setFormData({ name: "", category: "", sub_category: "", description: "", price: "", quantity: "", material_type: "", brand: "", gender: "", extra_fields: {} });
+      setFormData({ name: "", category: "", sub_category: "", description: "", price: "", discount_percentage: "", quantity: "", material_type: "", brand: "", gender: "", extra_fields: {} });
       setSizeVariants([{ size: "", qty: "" }]);
       setImageSlots([]);
       setTimeout(() => navigate("/seller/products"), 2000);
@@ -949,6 +951,31 @@ const AddProduct = () => {
                       step="0.01"
                     />
                     {invalidFields.price && <div className="invalid-feedback">Price is required</div>}
+                  </div>
+
+                  {/* Discount */}
+                  <div className="form-group mb-3">
+                    <label className="form-label">Discount (%)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="discount_percentage"
+                      value={formData.discount_percentage}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 10 for 10% off (leave blank for no discount)"
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    {formData.discount_percentage > 0 && formData.price > 0 && (
+                      <small style={{ color: "#16a34a", fontWeight: 600 }}>
+                        Selling price: ₦{(parseFloat(formData.price) * (1 - parseFloat(formData.discount_percentage) / 100)).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        &nbsp;·&nbsp;
+                        <span style={{ color: "#64748b", fontWeight: 400, textDecoration: "line-through" }}>
+                          ₦{parseFloat(formData.price).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </small>
+                    )}
                   </div>
 
                   {/* ── Size & Stock Variants (when category has sizes) ─────────────────────── */}
