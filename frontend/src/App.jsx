@@ -31,7 +31,8 @@ import SellerOverview  from "./pages/SellerOverview";
 import SellerProducts  from "./pages/SellerProducts";
 import SellerOrders    from "./pages/SellerOrders";
 import SellerInquiries from "./pages/SellerInquiries";
-import SellerSettings  from "./pages/SellerSettings";
+import SellerSettings      from "./pages/SellerSettings";
+import SellerStoreBuilder  from "./pages/SellerStoreBuilder";
 import SellerPremium   from "./pages/SellerPremium";
 import SellerWarehouse from "./pages/SellerWarehouse";
 import SellerLogistics from "./pages/SellerLogistics";
@@ -98,8 +99,9 @@ const App = () => {
                     <Route path="products"   element={<SellerProducts />} />
                     <Route path="orders"     element={<SellerOrders />} />
                     <Route path="inquiries"  element={<SellerInquiries />} />
-                    <Route path="settings"   element={<SellerSettings />} />
-                    <Route path="premium"    element={<SellerPremium />} />
+                    <Route path="settings"       element={<SellerSettings />} />
+                    <Route path="store-builder"  element={<SellerStoreBuilder />} />
+                    <Route path="premium"        element={<SellerPremium />} />
                     <Route path="warehouse"  element={<SellerWarehouse />} />
                     <Route path="logistics"  element={<SellerLogistics />} />
                   </Route>

@@ -68,7 +68,7 @@ class StoreBlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StoreBlock
-        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'images']
+        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'style_config', 'images']
         read_only_fields = ['id']
 
 
@@ -95,7 +95,7 @@ class CategoryBlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CategoryBlock
-        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'images']
+        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'style_config', 'images']
         read_only_fields = ['id']
 
 

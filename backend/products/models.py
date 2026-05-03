@@ -178,8 +178,10 @@ class StoreBlock(models.Model):
     # Text block fields
     text_title   = models.CharField(max_length=200, blank=True, null=True)
     text_content = models.TextField(blank=True, null=True)
-    # Image grid fields
-    layout = models.CharField(max_length=10, choices=LAYOUT_CHOICES, blank=True, null=True)
+    # Image grid / layout fields
+    layout       = models.CharField(max_length=20, choices=LAYOUT_CHOICES, blank=True, null=True)
+    # Per-block style overrides (padding, typography, visibility, etc.)
+    style_config = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['order', 'id']
@@ -243,7 +245,8 @@ class CategoryBlock(models.Model):
     order         = models.PositiveIntegerField(default=0)
     text_title    = models.CharField(max_length=200, blank=True, null=True)
     text_content  = models.TextField(blank=True, null=True)
-    layout        = models.CharField(max_length=10, choices=LAYOUT_CHOICES, blank=True, null=True)
+    layout        = models.CharField(max_length=20, choices=LAYOUT_CHOICES, blank=True, null=True)
+    style_config  = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['order', 'id']

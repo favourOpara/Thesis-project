@@ -37,6 +37,7 @@ export function IconStar({ filled } = {}) { return <svg width="14" height="14" v
 export function IconCrown()     { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20h20M4 16l2-10 6 5 6-5 2 10"/></svg>; }
 export function IconWarehouse() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>; }
 export function IconTruck()     { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>; }
+export function IconBrush()     { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>; }
 
 /* ── Shared helpers ── */
 export const fmtDate = (d) => {
@@ -629,8 +630,9 @@ const NAV = [
   { path: "/seller/products",   label: "Products",          Icon: IconProducts   },
   { path: "/seller/orders",     label: "Orders",            Icon: IconOrders     },
   { path: "/seller/inquiries",  label: "Inquiries",         Icon: IconInquiries  },
-  { path: "/seller/settings",   label: "Store Settings",    Icon: IconStore      },
-  { path: "/seller/premium",    label: "Premium Store",     Icon: IconCrown,     gold: true },
+  { path: "/seller/settings",       label: "Store Settings",    Icon: IconStore      },
+  { path: "/seller/store-builder",  label: "Store Builder",     Icon: IconBrush      },
+  { path: "/seller/premium",        label: "Premium Store",     Icon: IconCrown,     gold: true },
   { path: "/seller/warehouse",  label: "Warehousing",       Icon: IconWarehouse, gold: true },
   { path: "/seller/logistics",  label: "Logistics",         Icon: IconTruck,     gold: true },
 ];

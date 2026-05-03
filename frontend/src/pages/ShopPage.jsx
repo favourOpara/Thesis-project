@@ -886,13 +886,27 @@ const ShopPage = () => {
                 (blocksByPos[i + 1] || []).forEach(b => mixed.push({ type: "block", data: b }));
               });
 
+              // If seller hasn't set a fixed column count, auto-size by product count
+              const effectiveGridTemplate = (() => {
+                if (prodGridTemplate !== "repeat(auto-fill, minmax(220px, 1fr))") {
+                  // Seller explicitly chose a column count
+                  return prodGridTemplate;
+                }
+                const n = visibleProducts.length;
+                if (n === 1) return "repeat(1, minmax(0, 420px))"; // 1 product: narrow centred card
+                if (n === 2) return "repeat(2, 1fr)";
+                if (n === 3) return "repeat(3, 1fr)";
+                return "repeat(auto-fill, minmax(220px, 1fr))"; // 4+ → responsive
+              })();
+
               return (
                 <>
                   <div style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gridTemplateColumns: effectiveGridTemplate,
                     gap: "20px",
                     alignItems: "stretch",
+                    justifyContent: visibleProducts.length === 1 ? "center" : undefined,
                   }} className="shop-product-grid">
                     {mixed.map((item, idx) => {
                       if (item.type === "product") {
