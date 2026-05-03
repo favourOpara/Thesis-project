@@ -1,6 +1,10 @@
 import json
 from rest_framework import serializers
-from .models import Shop, Category, Product, ProductImage, StoreTextBlock, StoreContentSection, SectionImage
+from .models import (
+    Shop, Category, Product, ProductImage, StoreTextBlock,
+    StoreContentSection, SectionImage,
+    StoreBlock, BlockImage, CategoryPage, CategoryBlock, CategoryBlockImage,
+)
 
 
 class FlexibleJSONField(serializers.JSONField):
@@ -41,6 +45,69 @@ class StoreContentSectionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class BlockImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlockImage
+        fields = ['id', 'image', 'image_url', 'linked_category', 'display_order']
+        read_only_fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            if url.startswith('http'):
+                return url
+            return request.build_absolute_uri(url) if request else url
+        return None
+
+
+class StoreBlockSerializer(serializers.ModelSerializer):
+    images = BlockImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StoreBlock
+        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'images']
+        read_only_fields = ['id']
+
+
+class CategoryBlockImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CategoryBlockImage
+        fields = ['id', 'image', 'image_url', 'linked_category', 'display_order']
+        read_only_fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            if url.startswith('http'):
+                return url
+            return request.build_absolute_uri(url) if request else url
+        return None
+
+
+class CategoryBlockSerializer(serializers.ModelSerializer):
+    images = CategoryBlockImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CategoryBlock
+        fields = ['id', 'block_type', 'order', 'text_title', 'text_content', 'layout', 'images']
+        read_only_fields = ['id']
+
+
+class CategoryPageSerializer(serializers.ModelSerializer):
+    blocks = CategoryBlockSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CategoryPage
+        fields = ['id', 'category_name', 'blocks']
+        read_only_fields = ['id']
+
+
 class StoreTextBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoreTextBlock
@@ -57,6 +124,8 @@ class ShopSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()
     text_blocks = StoreTextBlockSerializer(many=True, read_only=True)
     content_sections = StoreContentSectionSerializer(many=True, read_only=True)
+    store_blocks   = StoreBlockSerializer(many=True, read_only=True)
+    category_pages = CategoryPageSerializer(many=True, read_only=True)
     store_video_file_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -70,6 +139,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'products_position',
             'is_premium', 'premium_since', 'premium_cancelled_at', 'premium_expires_at', 'store_video_url', 'store_video_file', 'store_video_file_url', 'text_blocks',
             'content_sections',
+            'store_blocks', 'category_pages',
             'paystack_subscription_code',
             'created_at', 'updated_at',
         ]

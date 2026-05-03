@@ -62,7 +62,7 @@ const CategoryTile = ({ tile, image, onClick }) => {
         position: "relative",
         aspectRatio: "1 / 1",
         overflow: "hidden",
-        borderRadius: "10px",
+        borderRadius: "18px",
         background: tile.gradient,
         opacity: hovered ? 0.88 : 1,
         transition: "opacity 0.18s",

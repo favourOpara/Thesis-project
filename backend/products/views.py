@@ -8,7 +8,11 @@ from django.utils import timezone
 from django.conf import settings
 import requests as http_requests
 
-from .models import Shop, Category, Product, ProductImage, StoreTextBlock, StoreContentSection, SectionImage
+from .models import (
+    Shop, Category, Product, ProductImage, StoreTextBlock,
+    StoreContentSection, SectionImage,
+    StoreBlock, BlockImage, CategoryPage, CategoryBlock, CategoryBlockImage,
+)
 from abatrades.email_utils import send_product_listed, send_premium_activated, send_premium_cancelled
 from .serializers import (
     ShopSerializer,
@@ -18,6 +22,9 @@ from .serializers import (
     StoreTextBlockSerializer,
     StoreContentSectionSerializer,
     SectionImageSerializer,
+    StoreBlockSerializer,
+    CategoryPageSerializer,
+    CategoryBlockSerializer,
 )
 
 PAYSTACK_SECRET = getattr(settings, 'PAYSTACK_SECRET_KEY', '') or "sk_test_3207e50dafa844fb486185ea7aceed100089ff21"
@@ -53,7 +60,11 @@ class ShopViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return Shop.objects.filter(owner=self.request.user)
-        queryset = Shop.objects.all()
+        queryset = Shop.objects.all().prefetch_related(
+            'store_blocks__images',
+            'category_pages__blocks__images',
+            'content_sections__images',
+        )
         # Public listing/searching: only expose shops that have at least one active product
         if self.action in ['list']:
             queryset = queryset.filter(
@@ -751,6 +762,158 @@ class ShopViewSet(viewsets.ModelViewSet):
         for img_id, cat in zip(img_ids, img_cats):
             SectionImage.objects.filter(pk=img_id, section=section).update(linked_category=cat or None)
         return Response(StoreContentSectionSerializer(section, context={'request': request}).data)
+
+    # ── Unified store block builder ──────────────────────────────────────────
+
+    def _build_block_images(self, block_obj, image_class, files, categories):
+        for i, img_file in enumerate(files):
+            cat = categories[i] if i < len(categories) else None
+            image_class.objects.create(
+                block=block_obj, image=img_file,
+                linked_category=cat or None, display_order=i,
+            )
+
+    @action(detail=True, methods=['get', 'post'], url_path='store-blocks',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def store_blocks(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'GET':
+            blocks = shop.store_blocks.prefetch_related('images').all()
+            return Response(StoreBlockSerializer(blocks, many=True, context={'request': request}).data)
+        block = StoreBlock.objects.create(
+            shop=shop,
+            block_type=request.data.get('block_type', 'text'),
+            order=request.data.get('order', shop.store_blocks.count()),
+            text_title=request.data.get('text_title') or None,
+            text_content=request.data.get('text_content') or None,
+            layout=request.data.get('layout') or None,
+        )
+        self._build_block_images(block, BlockImage, request.FILES.getlist('images'), request.data.getlist('linked_categories'))
+        return Response(StoreBlockSerializer(block, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch', 'delete'], url_path=r'store-blocks/(?P<block_id>\d+)',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def store_block_detail(self, request, slug=None, block_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        block = get_object_or_404(StoreBlock, pk=block_id, shop=shop)
+        if request.method == 'DELETE':
+            block.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        for field in ('text_title', 'text_content', 'layout'):
+            if field in request.data:
+                setattr(block, field, request.data[field] or None)
+        if 'order' in request.data:
+            block.order = request.data['order']
+        block.save()
+        new_images = request.FILES.getlist('images')
+        if new_images:
+            block.images.all().delete()
+            self._build_block_images(block, BlockImage, new_images, request.data.getlist('linked_categories'))
+        return Response(StoreBlockSerializer(block, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'], url_path='store-blocks/reorder',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser])
+    def store_blocks_reorder(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        for idx, block_id in enumerate(request.data.get('order', [])):
+            StoreBlock.objects.filter(pk=block_id, shop=shop).update(order=idx)
+        blocks = shop.store_blocks.prefetch_related('images').all()
+        return Response(StoreBlockSerializer(blocks, many=True, context={'request': request}).data)
+
+    # ── Category page builder ────────────────────────────────────────────────
+
+    @action(detail=True, methods=['get', 'post'], url_path='category-pages',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser])
+    def category_pages_list(self, request, slug=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'GET':
+            pages = shop.category_pages.prefetch_related('blocks__images').all()
+            return Response(CategoryPageSerializer(pages, many=True, context={'request': request}).data)
+        cat_name = request.data.get('category_name', '').strip()
+        if not cat_name:
+            return Response({'error': 'category_name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        page, created = CategoryPage.objects.get_or_create(shop=shop, category_name=cat_name)
+        return Response(CategoryPageSerializer(page, context={'request': request}).data,
+                        status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path=r'category-pages/(?P<cat_id>\d+)',
+            permission_classes=[permissions.IsAuthenticated])
+    def category_page_detail(self, request, slug=None, cat_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        page = get_object_or_404(CategoryPage, pk=cat_id, shop=shop)
+        page.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path=r'category-pages/(?P<cat_id>\d+)/blocks',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def category_blocks(self, request, slug=None, cat_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        page = get_object_or_404(CategoryPage, pk=cat_id, shop=shop)
+        block = CategoryBlock.objects.create(
+            category_page=page,
+            block_type=request.data.get('block_type', 'text'),
+            order=page.blocks.count(),
+            text_title=request.data.get('text_title') or None,
+            text_content=request.data.get('text_content') or None,
+            layout=request.data.get('layout') or None,
+        )
+        self._build_block_images(block, CategoryBlockImage, request.FILES.getlist('images'), request.data.getlist('linked_categories'))
+        return Response(CategoryBlockSerializer(block, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch', 'delete'],
+            url_path=r'category-pages/(?P<cat_id>\d+)/blocks/(?P<block_id>\d+)',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def category_block_detail(self, request, slug=None, cat_id=None, block_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        page = get_object_or_404(CategoryPage, pk=cat_id, shop=shop)
+        block = get_object_or_404(CategoryBlock, pk=block_id, category_page=page)
+        if request.method == 'DELETE':
+            block.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        for field in ('text_title', 'text_content', 'layout'):
+            if field in request.data:
+                setattr(block, field, request.data[field] or None)
+        if 'order' in request.data:
+            block.order = request.data['order']
+        block.save()
+        new_images = request.FILES.getlist('images')
+        if new_images:
+            block.images.all().delete()
+            self._build_block_images(block, CategoryBlockImage, new_images, request.data.getlist('linked_categories'))
+        return Response(CategoryBlockSerializer(block, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'],
+            url_path=r'category-pages/(?P<cat_id>\d+)/blocks/reorder',
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[JSONParser])
+    def category_blocks_reorder(self, request, slug=None, cat_id=None):
+        shop = self.get_object()
+        if shop.owner != request.user:
+            return Response({'error': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        page = get_object_or_404(CategoryPage, pk=cat_id, shop=shop)
+        for idx, block_id in enumerate(request.data.get('order', [])):
+            CategoryBlock.objects.filter(pk=block_id, category_page=page).update(order=idx)
+        return Response(CategoryPageSerializer(page, context={'request': request}).data)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

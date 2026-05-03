@@ -84,15 +84,20 @@ const GRID_TEMPLATES = {
   "1-2":  "1fr 2fr",
 };
 
+const FIXED_HEIGHT_LAYOUTS = new Set(["2-1", "1-2"]);
+
 const StoreSections = ({ sections, onCategoryClick }) => {
   return (
     <div style={{ marginTop: "24px", marginBottom: "8px" }}>
-      {sections.map(sec => (
+      {sections.map(sec => {
+        const fixedHeight = FIXED_HEIGHT_LAYOUTS.has(sec.layout);
+        return (
         <div key={sec.id} style={{ marginBottom: "12px" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: GRID_TEMPLATES[sec.layout] || "1fr 1fr",
             gap: "6px",
+            ...(fixedHeight ? { height: "320px" } : {}),
           }}>
             {sec.images.map(img => {
               const clickable = !!img.linked_category;
@@ -105,7 +110,7 @@ const StoreSections = ({ sections, onCategoryClick }) => {
                     overflow: "hidden",
                     borderRadius: "8px",
                     cursor: clickable ? "pointer" : "default",
-                    aspectRatio: "16 / 7",
+                    ...(fixedHeight ? {} : { aspectRatio: "16 / 7" }),
                   }}
                 >
                   <img
@@ -135,7 +140,8 @@ const StoreSections = ({ sections, onCategoryClick }) => {
             })}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -367,7 +373,7 @@ const ShopPage = () => {
         {/* ══════════════════════════════
             STORE IDENTITY CARD
         ══════════════════════════════ */}
-        <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 16px" }}>
+        <div className="shop-main-wrap" style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 16px" }}>
 
           {/* Logo — overlaps banner, sits outside the card flow */}
           <div style={{ marginTop: "-30px", paddingLeft: "20px", marginBottom: "-8px", position: "relative", zIndex: 11 }}>
@@ -884,6 +890,12 @@ const ShopPage = () => {
       </div>
 
       <style>{`
+        @media (min-width: 641px) {
+          .shop-main-wrap {
+            max-width: 1400px !important;
+            padding: 0 48px !important;
+          }
+        }
         @media (max-width: 640px) {
           .shop-identity-row {
             gap: 10px !important;

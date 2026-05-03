@@ -138,6 +138,106 @@ class StoreTextBlock(models.Model):
         return f"Block for {self.shop.name} (after #{self.insert_after})"
 
 
+class StoreBlock(models.Model):
+    """Unified ordered content block for a seller's store page."""
+    TYPE_PRODUCTS   = 'products'
+    TYPE_TEXT       = 'text'
+    TYPE_IMAGE_GRID = 'image_grid'
+    BLOCK_TYPE_CHOICES = [
+        (TYPE_PRODUCTS,   'Products Grid'),
+        (TYPE_TEXT,       'Text Block'),
+        (TYPE_IMAGE_GRID, 'Image Grid'),
+    ]
+    LAYOUT_CHOICES = [
+        ('1col', 'Single image (full width)'),
+        ('2col', 'Two columns'),
+        ('3col', 'Three columns'),
+        ('2-1',  'Large left + small right'),
+        ('1-2',  'Small left + large right'),
+    ]
+    shop       = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='store_blocks')
+    block_type = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES, default=TYPE_PRODUCTS)
+    order      = models.PositiveIntegerField(default=0)
+    # Text block fields
+    text_title   = models.CharField(max_length=200, blank=True, null=True)
+    text_content = models.TextField(blank=True, null=True)
+    # Image grid fields
+    layout = models.CharField(max_length=10, choices=LAYOUT_CHOICES, blank=True, null=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.get_block_type_display()} block for {self.shop.name} (order={self.order})"
+
+
+class BlockImage(models.Model):
+    """Image within a StoreBlock of type image_grid."""
+    block          = models.ForeignKey(StoreBlock, on_delete=models.CASCADE, related_name='images')
+    image          = models.ImageField(upload_to='store_blocks/')
+    linked_category = models.CharField(max_length=255, blank=True, null=True)
+    display_order  = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"Image for block {self.block_id}"
+
+
+class CategoryPage(models.Model):
+    """Custom content layout for one product category within a shop."""
+    shop          = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='category_pages')
+    category_name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = [('shop', 'category_name')]
+
+    def __str__(self):
+        return f"Category page: {self.category_name} ({self.shop.name})"
+
+
+class CategoryBlock(models.Model):
+    """Ordered content block inside a CategoryPage."""
+    BLOCK_TYPE_CHOICES = [
+        ('text',       'Text Block'),
+        ('image_grid', 'Image Grid'),
+    ]
+    LAYOUT_CHOICES = [
+        ('1col', 'Single image (full width)'),
+        ('2col', 'Two columns'),
+        ('3col', 'Three columns'),
+        ('2-1',  'Large left + small right'),
+        ('1-2',  'Small left + large right'),
+    ]
+    category_page = models.ForeignKey(CategoryPage, on_delete=models.CASCADE, related_name='blocks')
+    block_type    = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES, default='text')
+    order         = models.PositiveIntegerField(default=0)
+    text_title    = models.CharField(max_length=200, blank=True, null=True)
+    text_content  = models.TextField(blank=True, null=True)
+    layout        = models.CharField(max_length=10, choices=LAYOUT_CHOICES, blank=True, null=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.block_type} block for {self.category_page}"
+
+
+class CategoryBlockImage(models.Model):
+    """Image within a CategoryBlock of type image_grid."""
+    block           = models.ForeignKey(CategoryBlock, on_delete=models.CASCADE, related_name='images')
+    image           = models.ImageField(upload_to='category_blocks/')
+    linked_category = models.CharField(max_length=255, blank=True, null=True)
+    display_order   = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"Image for category block {self.block_id}"
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)

@@ -180,7 +180,7 @@ const ProductCard = ({ product }) => {
               <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
                 {product.discounted_price ? (
                   <>
-                    <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "14px" }}>
+                    <span style={{ color: "#2563eb", fontWeight: 600, fontSize: "14px" }}>
                       {fmtPrice(product.discounted_price)}
                     </span>
                     <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: "11px", textDecoration: "line-through" }}>
@@ -188,7 +188,7 @@ const ProductCard = ({ product }) => {
                     </span>
                   </>
                 ) : (
-                  <span style={{ color: "#2563eb", fontWeight: 800, fontSize: "14px" }}>
+                  <span style={{ color: "#2563eb", fontWeight: 600, fontSize: "14px" }}>
                     {product.price ? fmtPrice(product.price) : "N/A"}
                   </span>
                 )}

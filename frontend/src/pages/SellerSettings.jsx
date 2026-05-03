@@ -141,72 +141,144 @@ const SellerSettings = () => {
   const bannerRef = useRef();
   const isNew = !shop;
 
-  // ── Store Content Sections ──
-  const [sections, setSections]         = useState([]);
-  const [sectionSaving, setSectionSaving] = useState(false);
-  const [newSection, setNewSection]     = useState({ layout: "2col", images: [], categories: [] });
-  const [showSectionForm, setShowSectionForm] = useState(false);
-  const sectionImgRef = useRef();
-
+  // ── Store Builder ──
   const shopCategories = shop?.categories || [];
+  const [storeBlocks, setStoreBlocks]   = useState([]);
+  const [catPages,    setCatPages]      = useState([]);
+  const [blockSaving, setBlockSaving]   = useState(false);
+  const [addingBlock, setAddingBlock]   = useState(null); // null | 'text' | 'image_grid'
+  const [expandedCat, setExpandedCat]  = useState(null); // category_name of open accordion
+  const [addingCatBlock, setAddingCatBlock] = useState(null); // null | 'text' | 'image_grid'
+  const [newBlock, setNewBlock] = useState({ text_title: "", text_content: "", layout: "2col", images: [] });
+  const [newCatBlock, setNewCatBlock] = useState({ text_title: "", text_content: "", layout: "2col", images: [] });
+  const blockImgRef    = useRef();
+  const catBlockImgRef = useRef();
 
   useEffect(() => {
     if (!shop) return;
-    axios.get(`${BASE}/api/shops/${shop.slug}/content-sections/`, ac())
-      .then(r => setSections(r.data))
-      .catch(() => {});
+    Promise.all([
+      axios.get(`${BASE}/api/shops/${shop.slug}/store-blocks/`, ac()),
+      axios.get(`${BASE}/api/shops/${shop.slug}/category-pages/`, ac()),
+    ]).then(([blocksRes, pagesRes]) => {
+      setStoreBlocks(blocksRes.data);
+      setCatPages(pagesRes.data);
+    }).catch(() => {});
   }, [shop]);
 
-  const handleSectionImageChange = (e) => {
+  // Ensure a Products block always exists once shop is loaded
+  useEffect(() => {
+    if (!shop || storeBlocks.length > 0) return;
+    // Seed with a single Products block so sellers have something to move around
+    axios.post(`${BASE}/api/shops/${shop.slug}/store-blocks/`, { block_type: "products", order: 0 }, ac())
+      .then(r => setStoreBlocks([r.data]))
+      .catch(() => {});
+  }, [shop, storeBlocks.length]);
+
+  const reorderBlocks = async (newOrder) => {
+    setStoreBlocks(newOrder);
+    try {
+      const res = await axios.post(`${BASE}/api/shops/${shop.slug}/store-blocks/reorder/`,
+        { order: newOrder.map(b => b.id) }, ac());
+      setStoreBlocks(res.data);
+    } catch { toast.error("Could not reorder."); }
+  };
+
+  const moveBlock = (idx, dir) => {
+    const arr = [...storeBlocks];
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= arr.length) return;
+    [arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]];
+    reorderBlocks(arr);
+  };
+
+  const deleteBlock = async (blockId) => {
+    try {
+      await axios.delete(`${BASE}/api/shops/${shop.slug}/store-blocks/${blockId}/`, ac());
+      setStoreBlocks(prev => prev.filter(b => b.id !== blockId));
+    } catch { toast.error("Could not remove block."); }
+  };
+
+  const buildBlockImages = (draft) => {
+    const fd = new FormData();
+    draft.images.forEach(s => fd.append("images", s.file));
+    draft.images.forEach(s => fd.append("linked_categories", s.linked_category || ""));
+    return fd;
+  };
+
+  const handleAddBlock = async () => {
+    if (addingBlock === "image_grid" && !newBlock.images.length) { toast.error("Upload at least one image."); return; }
+    setBlockSaving(true);
+    try {
+      const fd = buildBlockImages(newBlock);
+      fd.append("block_type", addingBlock);
+      fd.append("order", storeBlocks.length);
+      if (addingBlock === "text") { fd.append("text_title", newBlock.text_title); fd.append("text_content", newBlock.text_content); }
+      if (addingBlock === "image_grid") fd.append("layout", newBlock.layout);
+      const r = await axios.post(`${BASE}/api/shops/${shop.slug}/store-blocks/`, fd, ac());
+      setStoreBlocks(prev => [...prev, r.data]);
+      setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] });
+      setAddingBlock(null);
+      toast.success("Block added.");
+    } catch { toast.error("Could not save block."); }
+    finally { setBlockSaving(false); }
+  };
+
+  // ── Category page handlers ──
+  const getOrCreateCatPage = async (catName) => {
+    const existing = catPages.find(p => p.category_name === catName);
+    if (existing) return existing;
+    const r = await axios.post(`${BASE}/api/shops/${shop.slug}/category-pages/`, { category_name: catName }, ac());
+    setCatPages(prev => [...prev, r.data]);
+    return r.data;
+  };
+
+  const handleAddCatBlock = async (catName) => {
+    if (addingCatBlock === "image_grid" && !newCatBlock.images.length) { toast.error("Upload at least one image."); return; }
+    setBlockSaving(true);
+    try {
+      const page = await getOrCreateCatPage(catName);
+      const fd = buildBlockImages(newCatBlock);
+      fd.append("block_type", addingCatBlock);
+      if (addingCatBlock === "text") { fd.append("text_title", newCatBlock.text_title); fd.append("text_content", newCatBlock.text_content); }
+      if (addingCatBlock === "image_grid") fd.append("layout", newCatBlock.layout);
+      const r = await axios.post(`${BASE}/api/shops/${shop.slug}/category-pages/${page.id}/blocks/`, fd, ac());
+      setCatPages(prev => prev.map(p => p.id === page.id ? { ...p, blocks: [...p.blocks, r.data] } : p));
+      setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] });
+      setAddingCatBlock(null);
+      toast.success("Block added.");
+    } catch { toast.error("Could not save block."); }
+    finally { setBlockSaving(false); }
+  };
+
+  const deleteCatBlock = async (pageId, blockId) => {
+    try {
+      await axios.delete(`${BASE}/api/shops/${shop.slug}/category-pages/${pageId}/blocks/${blockId}/`, ac());
+      setCatPages(prev => prev.map(p => p.id === pageId ? { ...p, blocks: p.blocks.filter(b => b.id !== blockId) } : p));
+    } catch { toast.error("Could not remove block."); }
+  };
+
+  const reorderCatBlocks = async (pageId, newOrder) => {
+    setCatPages(prev => prev.map(p => p.id === pageId ? { ...p, blocks: newOrder } : p));
+    try {
+      await axios.post(`${BASE}/api/shops/${shop.slug}/category-pages/${pageId}/blocks/reorder/`,
+        { order: newOrder.map(b => b.id) }, ac());
+    } catch { toast.error("Could not reorder."); }
+  };
+
+  const moveCatBlock = (pageId, idx, dir) => {
+    const page = catPages.find(p => p.id === pageId);
+    if (!page) return;
+    const arr = [...page.blocks];
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= arr.length) return;
+    [arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]];
+    reorderCatBlocks(pageId, arr);
+  };
+
+  const handleBlockImageAdd = (e, setter) => {
     const files = Array.from(e.target.files);
-    const previews = files.map(f => ({ file: f, url: URL.createObjectURL(f), linked_category: "" }));
-    setNewSection(s => ({ ...s, images: [...s.images, ...previews] }));
-  };
-
-  const handleSectionImageCatChange = (idx, cat) => {
-    setNewSection(s => {
-      const imgs = [...s.images];
-      imgs[idx] = { ...imgs[idx], linked_category: cat };
-      return { ...s, images: imgs };
-    });
-  };
-
-  const removeSectionImageSlot = (idx) => {
-    setNewSection(s => {
-      const imgs = s.images.filter((_, i) => i !== idx);
-      return { ...s, images: imgs };
-    });
-  };
-
-  const handleAddSection = async () => {
-    if (!newSection.images.length) { toast.error("Upload at least one image."); return; }
-    setSectionSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append("layout", newSection.layout);
-      fd.append("display_order", sections.length);
-      newSection.images.forEach(slot => fd.append("images", slot.file));
-      newSection.images.forEach(slot => fd.append("linked_categories", slot.linked_category || ""));
-      const r = await axios.post(`${BASE}/api/shops/${shop.slug}/content-sections/`, fd, ac());
-      setSections(prev => [...prev, r.data]);
-      setNewSection({ layout: "2col", images: [] });
-      setShowSectionForm(false);
-      toast.success("Section added.");
-    } catch {
-      toast.error("Could not save section.");
-    } finally {
-      setSectionSaving(false);
-    }
-  };
-
-  const handleDeleteSection = async (sectionId) => {
-    try {
-      await axios.delete(`${BASE}/api/shops/${shop.slug}/content-sections/${sectionId}/`, ac());
-      setSections(prev => prev.filter(s => s.id !== sectionId));
-      toast.success("Section removed.");
-    } catch {
-      toast.error("Could not remove section.");
-    }
+    const slots = files.map(f => ({ file: f, url: URL.createObjectURL(f), linked_category: "" }));
+    setter(s => ({ ...s, images: [...s.images, ...slots] }));
   };
 
   useEffect(() => {
@@ -564,32 +636,6 @@ const SellerSettings = () => {
           )}
         </div>
 
-        {/* Products position */}
-        <hr className="sd-divider" />
-        <p className="sd-section-label">Store Content</p>
-
-        <div className="sd-form-grid" style={{ marginBottom: "16px" }}>
-          <div>
-            <label className="sd-label">Product Grid Position</label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
-              {[
-                { value: "first", label: "Products first", desc: "Product grid appears above your content section" },
-                { value: "last",  label: "Content first",  desc: "Your images/text appear above the product grid" },
-              ].map(opt => (
-                <label key={opt.value} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-                  <input type="radio" name="products_position" value={opt.value}
-                    checked={form.products_position === opt.value} onChange={handleChange}
-                    style={{ marginTop: "3px", accentColor: "#2563eb" }} />
-                  <span>
-                    <span style={{ fontWeight: 400, fontSize: "13.5px", color: "#374151" }}>{opt.label}</span>
-                    <span style={{ display: "block", fontSize: "12px", color: "#94a3b8" }}>{opt.desc}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
         <div style={{ marginTop: "20px" }}>
           <button type="submit" className="sd-btn-primary" disabled={saving}
             style={{
@@ -604,133 +650,259 @@ const SellerSettings = () => {
         </div>
       </form>
 
-      {/* ── Store Content Sections ── */}
-      {shop && (
-        <div style={{ marginTop: "32px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-            <div>
-              <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Image Sections</p>
-              <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#94a3b8" }}>
-                Landscape image grids shown on your store page. Each image can link buyers to a product category.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowSectionForm(s => !s)}
-              style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
-            >
-              + Add Section
-            </button>
-          </div>
+      {/* ══════════════════════════════════════════════
+          STORE BUILDER
+      ══════════════════════════════════════════════ */}
+      {shop && (() => {
+        const LAYOUTS = [
+          { value: "1col", label: "1 column" },
+          { value: "2col", label: "2 columns" },
+          { value: "3col", label: "3 columns" },
+          { value: "2-1",  label: "Large | Small" },
+          { value: "1-2",  label: "Small | Large" },
+        ];
+        const BLOCK_LABELS = { products: "Products Grid", text: "Text Block", image_grid: "Image Section" };
 
-          {/* New section form */}
-          {showSectionForm && (
-            <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "12px", padding: "18px", marginBottom: "16px" }}>
-              {/* Layout picker */}
-              <label className="sd-label" style={{ marginBottom: "8px", display: "block" }}>Grid Layout</label>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
-                {[
-                  { value: "1col", label: "1 column" },
-                  { value: "2col", label: "2 columns" },
-                  { value: "3col", label: "3 columns" },
-                  { value: "2-1",  label: "Large | Small" },
-                  { value: "1-2",  label: "Small | Large" },
-                ].map(opt => (
-                  <button key={opt.value} type="button"
-                    onClick={() => setNewSection(s => ({ ...s, layout: opt.value }))}
-                    style={{
-                      padding: "6px 14px", borderRadius: "8px", fontSize: "12.5px", fontWeight: 600,
-                      cursor: "pointer", border: "1.5px solid",
-                      borderColor: newSection.layout === opt.value ? "#2563eb" : "#e2e8f0",
-                      background: newSection.layout === opt.value ? "#eff6ff" : "#fff",
-                      color: newSection.layout === opt.value ? "#2563eb" : "#374151",
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Image upload */}
-              <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Upload Images</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "10px", marginBottom: "12px" }}>
-                {newSection.images.map((slot, idx) => (
-                  <div key={idx} style={{ position: "relative", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-                    <img src={slot.url} alt="" style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
-                    <button type="button" onClick={() => removeSectionImageSlot(idx)}
-                      style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: "50%", width: "20px", height: "20px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      ✕
+        const BlockAddForm = ({ draft, setDraft, imgRef, onSave, onCancel, forCategory }) => (
+          <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "12px", padding: "18px", marginTop: "12px" }}>
+            {addingBlock === "text" || forCategory === "text" ? (
+              <>
+                <label className="sd-label" style={{ display: "block", marginBottom: "6px" }}>Title (optional)</label>
+                <input className="sd-input-line" value={draft.text_title}
+                  onChange={e => setDraft(s => ({ ...s, text_title: e.target.value }))}
+                  placeholder="e.g. Our Story" style={{ marginBottom: "12px" }} />
+                <label className="sd-label" style={{ display: "block", marginBottom: "6px" }}>Content *</label>
+                <textarea className="sd-input" rows={4} value={draft.text_content}
+                  onChange={e => setDraft(s => ({ ...s, text_content: e.target.value }))}
+                  placeholder="Write something about your store, products, values…"
+                  style={{ resize: "vertical" }} />
+              </>
+            ) : (
+              <>
+                <label className="sd-label" style={{ marginBottom: "8px", display: "block" }}>Grid Layout</label>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }}>
+                  {LAYOUTS.map(opt => (
+                    <button key={opt.value} type="button"
+                      onClick={() => setDraft(s => ({ ...s, layout: opt.value }))}
+                      style={{ padding: "5px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1.5px solid", borderColor: draft.layout === opt.value ? "#2563eb" : "#e2e8f0", background: draft.layout === opt.value ? "#eff6ff" : "#fff", color: draft.layout === opt.value ? "#2563eb" : "#374151" }}>
+                      {opt.label}
                     </button>
-                    {/* Category link selector */}
-                    <div style={{ padding: "6px" }}>
-                      <select
-                        value={slot.linked_category}
-                        onChange={e => handleSectionImageCatChange(idx, e.target.value)}
-                        style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #e2e8f0", borderRadius: "6px", background: "#fff" }}
-                      >
-                        <option value="">No link</option>
-                        {shopCategories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
-                <div
-                  onClick={() => sectionImgRef.current.click()}
-                  style={{ aspectRatio: "16/9", border: "2px dashed #cbd5e1", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", fontSize: "24px" }}
-                >
-                  +
+                  ))}
                 </div>
-              </div>
-              <input ref={sectionImgRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-                onChange={handleSectionImageChange} />
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-                <button type="button" onClick={handleAddSection} disabled={sectionSaving}
-                  style={{ padding: "8px 20px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: sectionSaving ? 0.7 : 1 }}>
-                  {sectionSaving ? "Saving…" : "Save Section"}
-                </button>
-                <button type="button" onClick={() => { setShowSectionForm(false); setNewSection({ layout: "2col", images: [] }); }}
-                  style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}>
-                  Cancel
-                </button>
-              </div>
+                <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Images</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "8px", marginBottom: "10px" }}>
+                  {draft.images.map((slot, idx) => (
+                    <div key={idx} style={{ position: "relative", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                      <img src={slot.url} alt="" style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
+                      <button type="button" onClick={() => setDraft(s => ({ ...s, images: s.images.filter((_, i) => i !== idx) }))}
+                        style={{ position: "absolute", top: "3px", right: "3px", background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: "50%", width: "18px", height: "18px", cursor: "pointer", fontSize: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                      <div style={{ padding: "4px 5px" }}>
+                        <select value={slot.linked_category}
+                          onChange={e => setDraft(s => { const imgs = [...s.images]; imgs[idx] = { ...imgs[idx], linked_category: e.target.value }; return { ...s, images: imgs }; })}
+                          style={{ width: "100%", padding: "3px 5px", fontSize: "10px", border: "1px solid #e2e8f0", borderRadius: "5px", background: "#fff" }}>
+                          <option value="">No link</option>
+                          {shopCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                  <div onClick={() => imgRef.current.click()}
+                    style={{ aspectRatio: "16/9", border: "2px dashed #cbd5e1", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", fontSize: "22px" }}>+</div>
+                </div>
+                <input ref={imgRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+                  onChange={e => handleBlockImageAdd(e, setDraft)} />
+              </>
+            )}
+            <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+              <button type="button" onClick={onSave} disabled={blockSaving}
+                style={{ padding: "7px 18px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", opacity: blockSaving ? 0.7 : 1 }}>
+                {blockSaving ? "Saving…" : "Save Block"}
+              </button>
+              <button type="button" onClick={onCancel}
+                style={{ padding: "7px 14px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}>
+                Cancel
+              </button>
             </div>
-          )}
+          </div>
+        );
 
-          {/* Existing sections */}
-          {sections.length === 0 && !showSectionForm && (
-            <div style={{ textAlign: "center", padding: "24px", background: "#f8fafc", borderRadius: "12px", color: "#94a3b8", fontSize: "13px" }}>
-              No image sections yet. Click "+ Add Section" to create one.
-            </div>
-          )}
-          {sections.map((sec, i) => (
-            <div key={sec.id} style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflow: "hidden", marginBottom: "12px" }}>
-              <div style={{ background: "#f8fafc", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>
-                  Section {i + 1} — <span style={{ color: "#2563eb" }}>{sec.layout}</span>
-                </span>
-                <button type="button" onClick={() => handleDeleteSection(sec.id)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "12.5px", fontWeight: 600 }}>
-                  Remove
-                </button>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", padding: "12px" }}>
-                {sec.images.map(img => (
-                  <div key={img.id} style={{ position: "relative", borderRadius: "6px", overflow: "hidden" }}>
-                    <img src={img.image_url} alt="" style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
-                    {img.linked_category && (
-                      <div style={{ background: "#2563eb", color: "#fff", fontSize: "10px", padding: "2px 6px", position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        → {img.linked_category}
+        return (
+          <>
+            {/* ── Store Builder ── */}
+            <div style={{ marginTop: "32px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Store Builder</p>
+              <p style={{ margin: "0 0 16px", fontSize: "12px", color: "#94a3b8" }}>
+                Arrange your store page. Use ▲ ▼ to reorder. The <strong>Products Grid</strong> block is always present — move it anywhere.
+              </p>
+
+              {/* Block list */}
+              {storeBlocks.map((block, idx) => (
+                <div key={block.id} style={{ border: "1px solid #e2e8f0", borderRadius: "10px", marginBottom: "8px", overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "#f8fafc" }}>
+                    {/* Reorder arrows */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
+                      <button type="button" onClick={() => moveBlock(idx, -1)} disabled={idx === 0}
+                        style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: "4px", cursor: idx === 0 ? "default" : "pointer", padding: "1px 5px", fontSize: "10px", color: idx === 0 ? "#d1d5db" : "#374151" }}>▲</button>
+                      <button type="button" onClick={() => moveBlock(idx, 1)} disabled={idx === storeBlocks.length - 1}
+                        style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: "4px", cursor: idx === storeBlocks.length - 1 ? "default" : "pointer", padding: "1px 5px", fontSize: "10px", color: idx === storeBlocks.length - 1 ? "#d1d5db" : "#374151" }}>▼</button>
+                    </div>
+                    {/* Label */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{BLOCK_LABELS[block.block_type]}</span>
+                      {block.block_type === "text" && block.text_title && (
+                        <span style={{ fontSize: "12px", color: "#94a3b8", marginLeft: "8px" }}>— {block.text_title}</span>
+                      )}
+                      {block.block_type === "image_grid" && block.layout && (
+                        <span style={{ fontSize: "11px", background: "#eff6ff", color: "#2563eb", padding: "1px 7px", borderRadius: "99px", marginLeft: "8px", fontWeight: 600 }}>{block.layout}</span>
+                      )}
+                    </div>
+                    {/* Preview thumbnails for image_grid */}
+                    {block.block_type === "image_grid" && block.images?.length > 0 && (
+                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                        {block.images.slice(0, 3).map(img => (
+                          <img key={img.id} src={img.image_url} alt="" style={{ width: "36px", height: "24px", objectFit: "cover", borderRadius: "4px" }} />
+                        ))}
                       </div>
                     )}
+                    {/* Delete (not for products block) */}
+                    {block.block_type !== "products" && (
+                      <button type="button" onClick={() => deleteBlock(block.id)}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "12px", fontWeight: 600, flexShrink: 0, padding: "0 4px" }}>
+                        Remove
+                      </button>
+                    )}
                   </div>
-                ))}
-              </div>
+                  {/* Text preview */}
+                  {block.block_type === "text" && block.text_content && (
+                    <div style={{ padding: "10px 14px", fontSize: "12.5px", color: "#64748b", lineHeight: 1.55, borderTop: "1px solid #f1f5f9" }}>
+                      {block.text_content.slice(0, 140)}{block.text_content.length > 140 ? "…" : ""}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Add block buttons */}
+              {!addingBlock && (
+                <div style={{ display: "flex", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
+                  <button type="button" onClick={() => { setAddingBlock("text"); setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                    style={{ padding: "7px 16px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontWeight: 600, fontSize: "12.5px", cursor: "pointer", color: "#374151" }}>
+                    + Text Block
+                  </button>
+                  <button type="button" onClick={() => { setAddingBlock("image_grid"); setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                    style={{ padding: "7px 16px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontWeight: 600, fontSize: "12.5px", cursor: "pointer", color: "#374151" }}>
+                    + Image Section
+                  </button>
+                </div>
+              )}
+              {addingBlock && (
+                <BlockAddForm
+                  draft={newBlock} setDraft={setNewBlock} imgRef={blockImgRef}
+                  onSave={handleAddBlock}
+                  onCancel={() => { setAddingBlock(null); setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                />
+              )}
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* ── Category Pages ── */}
+            {form.layout_mode === "categories" && (
+              <div style={{ marginTop: "28px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Category Pages</p>
+                <p style={{ margin: "0 0 16px", fontSize: "12px", color: "#94a3b8" }}>
+                  Customise what buyers see when they click a category tab — add images and text above the products.
+                </p>
+
+                {shopCategories.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "20px", background: "#f8fafc", borderRadius: "10px", color: "#94a3b8", fontSize: "13px" }}>
+                    Add products first — categories will appear here once your shop has products.
+                  </div>
+                )}
+
+                {shopCategories.map(catName => {
+                  const page = catPages.find(p => p.category_name === catName);
+                  const isOpen = expandedCat === catName;
+                  return (
+                    <div key={catName} style={{ border: "1px solid #e2e8f0", borderRadius: "10px", marginBottom: "8px", overflow: "hidden" }}>
+                      {/* Accordion header */}
+                      <button type="button" onClick={() => setExpandedCat(isOpen ? null : catName)}
+                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", background: isOpen ? "#eff6ff" : "#f8fafc", border: "none", cursor: "pointer" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: isOpen ? "#2563eb" : "#374151" }}>{catName}</span>
+                        <span style={{ fontSize: "12px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
+                          {page?.blocks?.length ? `${page.blocks.length} block${page.blocks.length > 1 ? "s" : ""}` : "No custom content"}
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.15s" }}>
+                            <polyline points="6 9 12 15 18 9"/>
+                          </svg>
+                        </span>
+                      </button>
+
+                      {/* Accordion body */}
+                      {isOpen && (
+                        <div style={{ padding: "14px 16px", borderTop: "1px solid #e2e8f0" }}>
+                          {/* Existing blocks */}
+                          {page?.blocks?.map((block, bIdx) => (
+                            <div key={block.id} style={{ border: "1px solid #f1f5f9", borderRadius: "8px", marginBottom: "8px", overflow: "hidden" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "#fafafa" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
+                                  <button type="button" onClick={() => moveCatBlock(page.id, bIdx, -1)} disabled={bIdx === 0}
+                                    style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: "3px", cursor: bIdx === 0 ? "default" : "pointer", padding: "0 4px", fontSize: "10px", color: bIdx === 0 ? "#d1d5db" : "#374151" }}>▲</button>
+                                  <button type="button" onClick={() => moveCatBlock(page.id, bIdx, 1)} disabled={bIdx === page.blocks.length - 1}
+                                    style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: "3px", cursor: bIdx === page.blocks.length - 1 ? "default" : "pointer", padding: "0 4px", fontSize: "10px", color: bIdx === page.blocks.length - 1 ? "#d1d5db" : "#374151" }}>▼</button>
+                                </div>
+                                <span style={{ flex: 1, fontSize: "12.5px", fontWeight: 600, color: "#374151" }}>
+                                  {block.block_type === "text" ? "Text Block" : "Image Section"}
+                                  {block.text_title && <span style={{ color: "#94a3b8", fontWeight: 400, marginLeft: "6px" }}>— {block.text_title}</span>}
+                                  {block.layout && <span style={{ fontSize: "11px", background: "#eff6ff", color: "#2563eb", padding: "1px 6px", borderRadius: "99px", marginLeft: "6px", fontWeight: 600 }}>{block.layout}</span>}
+                                </span>
+                                {block.block_type === "image_grid" && block.images?.length > 0 && (
+                                  <div style={{ display: "flex", gap: "3px" }}>
+                                    {block.images.slice(0, 3).map(img => (
+                                      <img key={img.id} src={img.image_url} alt="" style={{ width: "30px", height: "20px", objectFit: "cover", borderRadius: "3px" }} />
+                                    ))}
+                                  </div>
+                                )}
+                                <button type="button" onClick={() => deleteCatBlock(page.id, block.id)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "12px", fontWeight: 600, padding: "0 3px" }}>Remove</button>
+                              </div>
+                              {block.block_type === "text" && block.text_content && (
+                                <div style={{ padding: "8px 12px", fontSize: "12px", color: "#64748b", lineHeight: 1.5, borderTop: "1px solid #f1f5f9" }}>
+                                  {block.text_content.slice(0, 120)}{block.text_content.length > 120 ? "…" : ""}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {/* Add cat block buttons */}
+                          {!addingCatBlock && (
+                            <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                              <button type="button" onClick={() => { setAddingCatBlock("text"); setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                                style={{ padding: "6px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontWeight: 600, fontSize: "12px", cursor: "pointer", color: "#374151" }}>
+                                + Text
+                              </button>
+                              <button type="button" onClick={() => { setAddingCatBlock("image_grid"); setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                                style={{ padding: "6px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontWeight: 600, fontSize: "12px", cursor: "pointer", color: "#374151" }}>
+                                + Image Section
+                              </button>
+                            </div>
+                          )}
+                          {addingCatBlock && (
+                            <BlockAddForm
+                              draft={newCatBlock} setDraft={setNewCatBlock} imgRef={catBlockImgRef}
+                              forCategory={addingCatBlock}
+                              onSave={() => handleAddCatBlock(catName)}
+                              onCancel={() => { setAddingCatBlock(null); setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                            />
+                          )}
+                          <input ref={catBlockImgRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+                            onChange={e => handleBlockImageAdd(e, setNewCatBlock)} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* ── Danger zone ── */}
       <div style={{ marginTop: "40px", borderTop: "1px solid #fee2e2", paddingTop: "28px" }}>

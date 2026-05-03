@@ -25,6 +25,18 @@ urlpatterns = [
     path('shops/<slug:slug>/content-sections/', ShopViewSet.as_view({'get': 'content_sections', 'post': 'content_sections'}), name='shop-content-sections'),
     path('shops/<slug:slug>/content-sections/<int:section_id>/', ShopViewSet.as_view({'patch': 'content_section_detail', 'delete': 'content_section_detail'}), name='shop-content-section-detail'),
 
+    # Store block builder (reorder must be before <int:block_id>)
+    path('shops/<slug:slug>/store-blocks/', ShopViewSet.as_view({'get': 'store_blocks', 'post': 'store_blocks'}), name='shop-store-blocks'),
+    path('shops/<slug:slug>/store-blocks/reorder/', ShopViewSet.as_view({'post': 'store_blocks_reorder'}), name='shop-store-blocks-reorder'),
+    path('shops/<slug:slug>/store-blocks/<int:block_id>/', ShopViewSet.as_view({'patch': 'store_block_detail', 'delete': 'store_block_detail'}), name='shop-store-block-detail'),
+
+    # Category page builder (reorder must be before <int:block_id>)
+    path('shops/<slug:slug>/category-pages/', ShopViewSet.as_view({'get': 'category_pages_list', 'post': 'category_pages_list'}), name='shop-category-pages'),
+    path('shops/<slug:slug>/category-pages/<int:cat_id>/', ShopViewSet.as_view({'delete': 'category_page_detail'}), name='shop-category-page-detail'),
+    path('shops/<slug:slug>/category-pages/<int:cat_id>/blocks/reorder/', ShopViewSet.as_view({'post': 'category_blocks_reorder'}), name='shop-category-blocks-reorder'),
+    path('shops/<slug:slug>/category-pages/<int:cat_id>/blocks/', ShopViewSet.as_view({'post': 'category_blocks'}), name='shop-category-blocks'),
+    path('shops/<slug:slug>/category-pages/<int:cat_id>/blocks/<int:block_id>/', ShopViewSet.as_view({'patch': 'category_block_detail', 'delete': 'category_block_detail'}), name='shop-category-block-detail'),
+
     # Category URLs
     path('categories/', CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),
     path('categories/<int:pk>/', CategoryViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='category-detail'),
