@@ -609,17 +609,149 @@ const ShopPage = () => {
           })()}
 
           {/* ══════════════════════════════
-              STORE CONTENT SECTIONS
+              STORE BUILDER BLOCKS + PRODUCTS
           ══════════════════════════════ */}
-          {shop.content_sections && shop.content_sections.length > 0 && shop.products_position === "last" && (
-            <StoreSections sections={shop.content_sections} slug={shop.slug}
-              onCategoryClick={cat => { setActiveCategory(cat); setTimeout(() => document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
-          )}
+          {(() => {
+            const sBlocks = (shop.store_blocks || []).slice().sort((a, b) => a.order - b.order);
+            const onCatClick = cat => {
+              setActiveCategory(cat);
+              setTimeout(() => document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }), 80);
+            };
+            const prodIdx = sBlocks.findIndex(b => b.block_type === "products");
+            const productsBlock = prodIdx >= 0 ? sBlocks[prodIdx] : null;
+            const blocksBeforeProds = prodIdx >= 0 ? sBlocks.slice(0, prodIdx) : [];
+            const blocksAfterProds  = prodIdx >= 0 ? sBlocks.slice(prodIdx + 1) : [];
+            // Map products block layout to CSS grid-template-columns
+            const prodGridTemplate = (() => {
+              const l = productsBlock?.layout;
+              if (l === "1col") return "1fr";
+              if (l === "2col") return "repeat(2, 1fr)";
+              if (l === "3col") return "repeat(3, 1fr)";
+              return "repeat(auto-fill, minmax(220px, 1fr))"; // auto / null / unrecognised
+            })();
 
-          {/* ══════════════════════════════
-              PRODUCTS SECTION
-          ══════════════════════════════ */}
-          <div id="shop-products" style={{ marginTop: "32px", paddingBottom: "60px" }}>
+            const renderImgGrid = (block) => {
+              const fh = FIXED_HEIGHT_LAYOUTS.has(block.layout);
+              return (
+                <div style={{ marginTop: "24px", marginBottom: "8px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: GRID_TEMPLATES[block.layout] || "1fr 1fr", gap: "6px", ...(fh ? { height: "320px" } : {}) }}>
+                    {(block.images || []).slice().sort((a, b) => a.display_order - b.display_order).map(img => {
+                      const cl = !!img.linked_category;
+                      return (
+                        <div key={img.id} onClick={cl ? () => onCatClick(img.linked_category) : undefined}
+                          style={{ position: "relative", overflow: "hidden", borderRadius: "8px", cursor: cl ? "pointer" : "default", ...(fh ? {} : { aspectRatio: "16 / 7" }) }}>
+                          <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
+                            onMouseEnter={e => { if (cl) e.currentTarget.style.transform = "scale(1.03)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }} />
+                          {cl && (
+                            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.55))", padding: "18px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <span style={{ color: "#fff", fontWeight: 700, fontSize: "13px", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{img.linked_category}</span>
+                              <span style={{ color: "#fff", fontSize: "11px", background: "rgba(255,255,255,0.2)", padding: "3px 10px", borderRadius: "99px", fontWeight: 600 }}>Shop →</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            };
+
+            const renderTxtBlock = (block) => (
+              <div style={{ marginTop: "20px", background: "#fff", border: "1px solid #e2e8f0", borderLeft: "4px solid #2563eb", borderRadius: "10px", padding: "18px 22px" }}>
+                {block.text_title && <div style={{ fontWeight: 700, fontSize: "15px", color: "#0f172a", marginBottom: "6px" }}>{block.text_title}</div>}
+                {block.text_content && <div style={{ fontSize: "13.5px", color: "#475569", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.text_content}</div>}
+              </div>
+            );
+
+            const renderBanner = (block) => {
+              const img = block.images?.[0];
+              if (!img) return null;
+              return (
+                <div style={{ marginTop: "20px", position: "relative", borderRadius: "12px", overflow: "hidden", aspectRatio: "3/1" }}>
+                  <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  {(block.text_title || block.text_content) && (
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 32px" }}>
+                      {block.text_title && <div style={{ color: "#fff", fontWeight: 800, fontSize: "clamp(16px, 3vw, 26px)", textShadow: "0 2px 8px rgba(0,0,0,0.4)", marginBottom: "6px", maxWidth: "60%" }}>{block.text_title}</div>}
+                      {block.text_content && <div style={{ color: "rgba(255,255,255,0.88)", fontSize: "clamp(12px, 2vw, 15px)", textShadow: "0 1px 4px rgba(0,0,0,0.4)", maxWidth: "55%" }}>{block.text_content}</div>}
+                    </div>
+                  )}
+                </div>
+              );
+            };
+
+            const ANNOUNCEMENT_STYLES = {
+              promo:   { background: "linear-gradient(90deg,#7c3aed,#db2777)", color: "#fff" },
+              sale:    { background: "#fee2e2", color: "#b91c1c" },
+              info:    { background: "#eff6ff", color: "#1d4ed8" },
+              neutral: { background: "#f1f5f9", color: "#475569" },
+            };
+
+            const renderAnnouncement = (block) => {
+              if (!block.text_content) return null;
+              const style = ANNOUNCEMENT_STYLES[block.layout] || ANNOUNCEMENT_STYLES.promo;
+              return (
+                <div style={{ marginTop: "16px", borderRadius: "10px", padding: "12px 20px", textAlign: "center", fontWeight: 700, fontSize: "13.5px", letterSpacing: "0.01em", ...style }}>
+                  {block.text_content}
+                </div>
+              );
+            };
+
+            const renderVideo = (block) => {
+              if (!block.text_content) return null;
+              let src = block.text_content.trim();
+              // Convert youtube watch URL to embed URL
+              const ytMatch = src.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/\s]+)/);
+              if (ytMatch) src = `https://www.youtube.com/embed/${ytMatch[1]}`;
+              return (
+                <div style={{ marginTop: "20px" }}>
+                  <div style={{ position: "relative", paddingBottom: "56.25%", borderRadius: "12px", overflow: "hidden", background: "#000" }}>
+                    <iframe src={src} title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} />
+                  </div>
+                  {block.text_title && <div style={{ marginTop: "8px", textAlign: "center", fontSize: "12.5px", color: "#64748b" }}>{block.text_title}</div>}
+                </div>
+              );
+            };
+
+            const renderDivider = (block) => {
+              const style = block.layout || "line";
+              if (style === "space") return <div style={{ marginTop: "28px" }} />;
+              if (style === "dots") return (
+                <div style={{ marginTop: "24px", display: "flex", justifyContent: "center", gap: "6px" }}>
+                  {[0,1,2,3,4].map(i => <div key={i} style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#cbd5e1" }} />)}
+                </div>
+              );
+              return <div style={{ marginTop: "24px", height: "1px", background: "#e2e8f0", borderRadius: "1px" }} />;
+            };
+
+            const renderBlock = (b) => {
+              if (b.block_type === "text")         return renderTxtBlock(b);
+              if (b.block_type === "image_grid")   return renderImgGrid(b);
+              if (b.block_type === "banner")       return renderBanner(b);
+              if (b.block_type === "announcement") return renderAnnouncement(b);
+              if (b.block_type === "video")        return renderVideo(b);
+              if (b.block_type === "divider")      return renderDivider(b);
+              return null;
+            };
+
+            const renderSideBlocks = (blocks) => blocks.map(b => (
+              <React.Fragment key={`sb-${b.id}`}>{renderBlock(b)}</React.Fragment>
+            ));
+
+            const catPageContent = (() => {
+              if (shop.layout_mode !== "categories" || activeCategory === "All") return null;
+              const pg = (shop.category_pages || []).find(p => p.category_name === activeCategory);
+              if (!pg?.blocks?.length) return null;
+              return pg.blocks.slice().sort((a, b) => a.order - b.order).map(cb => (
+                <React.Fragment key={`cp-${cb.id}`}>{renderBlock(cb)}</React.Fragment>
+              ));
+            })();
+
+            return (
+              <>
+                {renderSideBlocks(blocksBeforeProds)}
+                <div id="shop-products" style={{ marginTop: "32px", paddingBottom: "60px" }}>
 
             {/* Category tabs — only in categories layout mode */}
             {shop.layout_mode === "categories" && categories.length > 2 && (
@@ -651,6 +783,9 @@ const ShopPage = () => {
                 ))}
               </div>
             )}
+
+            {/* Category page custom blocks (shown when a category tab is active) */}
+            {catPageContent}
 
             {/* Products header + search */}
             <div style={{
@@ -814,11 +949,10 @@ const ShopPage = () => {
             })()}
           </div>
 
-          {/* Content sections when products come first */}
-          {shop.content_sections && shop.content_sections.length > 0 && shop.products_position !== "last" && (
-            <StoreSections sections={shop.content_sections} slug={shop.slug}
-              onCategoryClick={cat => { setActiveCategory(cat); document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }); }} />
-          )}
+                {renderSideBlocks(blocksAfterProds)}
+              </>
+            );
+          })()}
 
           {/* ══════════════════════════════
               OTHER STORES SECTION

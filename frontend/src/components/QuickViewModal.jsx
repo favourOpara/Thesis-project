@@ -177,7 +177,9 @@ const QuickViewModal = ({ product, onClose }) => {
           flex: 1 1 0 !important;
           min-width: 0 !important;
           min-height: 0 !important;
-          height: 0 !important;
+          /* No height:0 here — on desktop (row flex) that collapses the panel to 0px.
+             The parent's fixed height + overflow:hidden bounds the panel; min-height:0
+             is the correct trick to enable overflow-y scrolling in a flex child. */
           overflow-y: auto !important;
           overscroll-behavior: contain !important;
           touch-action: pan-y !important;
@@ -270,7 +272,6 @@ const QuickViewModal = ({ product, onClose }) => {
           .qv-info-panel {
             flex: 1 1 0 !important;
             min-height: 0 !important;
-            height: 0 !important;
             padding: 16px 18px 24px !important;
           }
           .qv-char-label {

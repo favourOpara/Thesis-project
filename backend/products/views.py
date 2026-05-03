@@ -726,7 +726,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         section = StoreContentSection.objects.create(shop=shop, layout=layout, display_order=display_order)
         # Handle uploaded images
         images = request.FILES.getlist('images')
-        categories = request.data.getlist('linked_categories')  # parallel list
+        categories = self._getlist(request.data, 'linked_categories')  # parallel list
         for i, img_file in enumerate(images):
             linked_cat = categories[i] if i < len(categories) else None
             SectionImage.objects.create(section=section, image=img_file, linked_category=linked_cat or None, display_order=i)
@@ -752,18 +752,28 @@ class ShopViewSet(viewsets.ModelViewSet):
         new_images = request.FILES.getlist('images')
         if new_images:
             section.images.all().delete()
-            categories = request.data.getlist('linked_categories')
+            categories = self._getlist(request.data, 'linked_categories')
             for i, img_file in enumerate(new_images):
                 linked_cat = categories[i] if i < len(categories) else None
                 SectionImage.objects.create(section=section, image=img_file, linked_category=linked_cat or None, display_order=i)
         # Update existing image categories if sent (no new images)
-        img_ids = request.data.getlist('image_ids')
-        img_cats = request.data.getlist('image_linked_categories')
+        img_ids = self._getlist(request.data, 'image_ids')
+        img_cats = self._getlist(request.data, 'image_linked_categories')
         for img_id, cat in zip(img_ids, img_cats):
             SectionImage.objects.filter(pk=img_id, section=section).update(linked_category=cat or None)
         return Response(StoreContentSectionSerializer(section, context={'request': request}).data)
 
     # ── Unified store block builder ──────────────────────────────────────────
+
+    @staticmethod
+    def _getlist(data, key):
+        """Works for both QueryDict (multipart/form) and plain dict (JSON parser)."""
+        if hasattr(data, 'getlist'):
+            return data.getlist(key)
+        val = data.get(key, [])
+        if isinstance(val, list):
+            return val
+        return [val] if val else []
 
     def _build_block_images(self, block_obj, image_class, files, categories):
         for i, img_file in enumerate(files):
@@ -791,7 +801,7 @@ class ShopViewSet(viewsets.ModelViewSet):
             text_content=request.data.get('text_content') or None,
             layout=request.data.get('layout') or None,
         )
-        self._build_block_images(block, BlockImage, request.FILES.getlist('images'), request.data.getlist('linked_categories'))
+        self._build_block_images(block, BlockImage, request.FILES.getlist('images'), self._getlist(request.data, 'linked_categories'))
         return Response(StoreBlockSerializer(block, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['patch', 'delete'], url_path=r'store-blocks/(?P<block_id>\d+)',
@@ -814,7 +824,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         new_images = request.FILES.getlist('images')
         if new_images:
             block.images.all().delete()
-            self._build_block_images(block, BlockImage, new_images, request.data.getlist('linked_categories'))
+            self._build_block_images(block, BlockImage, new_images, self._getlist(request.data, 'linked_categories'))
         return Response(StoreBlockSerializer(block, context={'request': request}).data)
 
     @action(detail=True, methods=['post'], url_path='store-blocks/reorder',
@@ -874,7 +884,7 @@ class ShopViewSet(viewsets.ModelViewSet):
             text_content=request.data.get('text_content') or None,
             layout=request.data.get('layout') or None,
         )
-        self._build_block_images(block, CategoryBlockImage, request.FILES.getlist('images'), request.data.getlist('linked_categories'))
+        self._build_block_images(block, CategoryBlockImage, request.FILES.getlist('images'), self._getlist(request.data, 'linked_categories'))
         return Response(CategoryBlockSerializer(block, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['patch', 'delete'],
@@ -899,7 +909,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         new_images = request.FILES.getlist('images')
         if new_images:
             block.images.all().delete()
-            self._build_block_images(block, CategoryBlockImage, new_images, request.data.getlist('linked_categories'))
+            self._build_block_images(block, CategoryBlockImage, new_images, self._getlist(request.data, 'linked_categories'))
         return Response(CategoryBlockSerializer(block, context={'request': request}).data)
 
     @action(detail=True, methods=['post'],

@@ -140,13 +140,21 @@ class StoreTextBlock(models.Model):
 
 class StoreBlock(models.Model):
     """Unified ordered content block for a seller's store page."""
-    TYPE_PRODUCTS   = 'products'
-    TYPE_TEXT       = 'text'
-    TYPE_IMAGE_GRID = 'image_grid'
+    TYPE_PRODUCTS     = 'products'
+    TYPE_TEXT         = 'text'
+    TYPE_IMAGE_GRID   = 'image_grid'
+    TYPE_BANNER       = 'banner'
+    TYPE_ANNOUNCEMENT = 'announcement'
+    TYPE_VIDEO        = 'video'
+    TYPE_DIVIDER      = 'divider'
     BLOCK_TYPE_CHOICES = [
-        (TYPE_PRODUCTS,   'Products Grid'),
-        (TYPE_TEXT,       'Text Block'),
-        (TYPE_IMAGE_GRID, 'Image Grid'),
+        (TYPE_PRODUCTS,     'Products Grid'),
+        (TYPE_TEXT,         'Text Block'),
+        (TYPE_IMAGE_GRID,   'Image Grid'),
+        (TYPE_BANNER,       'Banner'),
+        (TYPE_ANNOUNCEMENT, 'Announcement'),
+        (TYPE_VIDEO,        'Video'),
+        (TYPE_DIVIDER,      'Divider'),
     ]
     LAYOUT_CHOICES = [
         ('1col', 'Single image (full width)'),
@@ -154,6 +162,15 @@ class StoreBlock(models.Model):
         ('3col', 'Three columns'),
         ('2-1',  'Large left + small right'),
         ('1-2',  'Small left + large right'),
+        # Announcement colour variants
+        ('promo',   'Promo (gradient)'),
+        ('sale',    'Sale (red)'),
+        ('info',    'Info (blue)'),
+        ('neutral', 'Neutral (grey)'),
+        # Divider style variants
+        ('line',    'Thin line'),
+        ('dots',    'Dotted'),
+        ('space',   'Spacer only'),
     ]
     shop       = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='store_blocks')
     block_type = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES, default=TYPE_PRODUCTS)
@@ -200,8 +217,12 @@ class CategoryPage(models.Model):
 class CategoryBlock(models.Model):
     """Ordered content block inside a CategoryPage."""
     BLOCK_TYPE_CHOICES = [
-        ('text',       'Text Block'),
-        ('image_grid', 'Image Grid'),
+        ('text',         'Text Block'),
+        ('image_grid',   'Image Grid'),
+        ('banner',       'Banner'),
+        ('announcement', 'Announcement'),
+        ('video',        'Video'),
+        ('divider',      'Divider'),
     ]
     LAYOUT_CHOICES = [
         ('1col', 'Single image (full width)'),
@@ -209,6 +230,13 @@ class CategoryBlock(models.Model):
         ('3col', 'Three columns'),
         ('2-1',  'Large left + small right'),
         ('1-2',  'Small left + large right'),
+        ('promo',   'Promo (gradient)'),
+        ('sale',    'Sale (red)'),
+        ('info',    'Info (blue)'),
+        ('neutral', 'Neutral (grey)'),
+        ('line',    'Thin line'),
+        ('dots',    'Dotted'),
+        ('space',   'Spacer only'),
     ]
     category_page = models.ForeignKey(CategoryPage, on_delete=models.CASCADE, related_name='blocks')
     block_type    = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES, default='text')
