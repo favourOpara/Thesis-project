@@ -3,6 +3,9 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSellerCtx, ac, BASE } from "../components/SellerLayout";
 import { useLocation, useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 /* ac() with explicit JSON content type — avoids 415 errors */
 const acJson = () => {
@@ -412,16 +415,28 @@ const ManagePage = ({ shop, onShopUpdate }) => {
     }
   };
 
+  const [confirmDelBlock, setConfirmDelBlock] = useState(null); // block id to delete
+
   const deleteBlock = async (id) => {
-    if (!window.confirm("Delete this text block?")) return;
     try {
       await axios.delete(`${BASE}/api/shops/${shop.slug}/text-blocks/${id}/`, ac());
       setBlocks(p => p.filter(b => b.id !== id));
-    } catch { alert("Could not delete."); }
+      setConfirmDelBlock(null);
+    } catch { toast.error("Could not delete."); }
   };
 
   return (
     <div style={{ fontFamily: "inherit" }}>
+      <ToastContainer position="bottom-center" />
+      <ConfirmDialog
+        open={!!confirmDelBlock}
+        title="Delete text block?"
+        message="This will permanently remove this text block from your premium store. This cannot be undone."
+        confirmLabel="Delete block"
+        confirmColor="#ef4444"
+        onConfirm={() => confirmDelBlock && deleteBlock(confirmDelBlock)}
+        onCancel={() => setConfirmDelBlock(null)}
+      />
 
       {/* Status bar */}
       <div style={{
@@ -578,7 +593,7 @@ const ManagePage = ({ shop, onShopUpdate }) => {
                         </div>
                         <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
                           <button onClick={() => openEdit(b)} style={smallBtn("#eff6ff", "#2563eb")}>Edit</button>
-                          <button onClick={() => deleteBlock(b.id)} style={smallBtn("#fef2f2", "#ef4444")}>Delete</button>
+                          <button onClick={() => setConfirmDelBlock(b.id)} style={smallBtn("#fef2f2", "#ef4444")}>Delete</button>
                         </div>
                       </div>
                     </div>

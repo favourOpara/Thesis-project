@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ShopCard from "./ShopCard";
 
@@ -6,10 +7,11 @@ const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const MostVisitedStores = () => {
   const [shops, setShops] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`${BASE}/api/shops/?ordering=-visit_count`)
-      .then(res => setShops(res.data.slice(0, 6)))
+      .then(res => setShops(res.data.slice(0, 4)))
       .catch(() => {});
   }, []);
 
@@ -36,6 +38,27 @@ const MostVisitedStores = () => {
           gap: "20px",
         }}>
           {shops.map(shop => <ShopCard key={shop.id} shop={shop} />)}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: "32px" }}>
+          <button
+            onClick={() => navigate("/browse")}
+            style={{
+              padding: "10px 32px",
+              borderRadius: "8px",
+              border: "2px solid #3b7bf8",
+              background: "transparent",
+              color: "#3b7bf8",
+              fontWeight: 600,
+              fontSize: "14px",
+              cursor: "pointer",
+              transition: "background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#3b7bf8"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#3b7bf8"; }}
+          >
+            Show More
+          </button>
         </div>
       </div>
     </section>

@@ -305,13 +305,15 @@ const ShopPage = () => {
   const hasSocials = shop.whatsapp || shop.instagram || shop.website;
   const bannerBg = shop.banner_url
     ? { backgroundImage: `url(${shop.banner_url})`, backgroundSize: "cover", backgroundPosition: "center" }
-    : { background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #7c3aed 100%)" };
+    : shop.banner_color
+      ? { background: shop.banner_color }
+      : { background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #7c3aed 100%)" };
 
   return (
     <>
       <Header />
 
-      <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: "hidden" }}>
 
         {/* ══════════════════════════════
             CLOSED BANNER
@@ -337,9 +339,13 @@ const ShopPage = () => {
         ══════════════════════════════ */}
         <div style={{
           ...bannerBg,
-          height: "220px",
+          minHeight: isMobile ? "120px" : "140px",
           marginTop: shop.store_status === "closed" ? "0" : "56px",
           position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: shop.tagline ? "0 20px 28px" : "0",
         }}>
           <div style={{
             position: "absolute", inset: 0,
@@ -368,6 +374,21 @@ const ShopPage = () => {
             </svg>
             Browse Other Stores
           </Link>
+
+          {/* Store name + tagline inside banner */}
+          {shop.tagline && (
+            <div style={{ position: "relative", zIndex: 5, maxWidth: "680px" }}>
+              <p style={{
+                margin: "4px 0 0",
+                fontSize: isMobile ? "13px" : "14.5px",
+                color: "rgba(255,255,255,0.88)",
+                lineHeight: 1.5,
+                textShadow: "0 1px 4px rgba(0,0,0,0.45)",
+              }}>
+                {shop.tagline}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ══════════════════════════════
@@ -617,36 +638,69 @@ const ShopPage = () => {
               setActiveCategory(cat);
               setTimeout(() => document.getElementById("shop-products")?.scrollIntoView({ behavior: "smooth" }), 80);
             };
-            const prodIdx = sBlocks.findIndex(b => b.block_type === "products");
-            const productsBlock = prodIdx >= 0 ? sBlocks[prodIdx] : null;
-            const blocksBeforeProds = prodIdx >= 0 ? sBlocks.slice(0, prodIdx) : [];
-            const blocksAfterProds  = prodIdx >= 0 ? sBlocks.slice(prodIdx + 1) : [];
-            // Map products block layout to CSS grid-template-columns
-            const prodGridTemplate = (() => {
-              const l = productsBlock?.layout;
-              if (l === "1col") return "1fr";
-              if (l === "2col") return "repeat(2, 1fr)";
-              if (l === "3col") return "repeat(3, 1fr)";
-              return "repeat(auto-fill, minmax(220px, 1fr))"; // auto / null / unrecognised
-            })();
+
+            /* ── style_config → CSS ── */
+            const DFLT_STYLE = {
+              padding_top: 0, padding_bottom: 0, padding_x: 0,
+              full_width: false, bg_color: "", text_color: "",
+              font_family: "", font_size: 0, font_weight: "",
+              letter_spacing: 0, line_height: 0, border_radius: 0,
+              visibility: "all", condition: "always",
+            };
+            const resolveBlockStyle = (block) => {
+              const sc = { ...DFLT_STYLE, ...(block.style_config || {}) };
+              const css = {};
+              if (sc.padding_top > 0)       css.paddingTop       = `${sc.padding_top}px`;
+              if (sc.padding_bottom > 0)    css.paddingBottom    = `${sc.padding_bottom}px`;
+              if (sc.padding_x > 0)         { css.paddingLeft = `${sc.padding_x}px`; css.paddingRight = `${sc.padding_x}px`; }
+              if (sc.bg_color)              css.backgroundColor  = sc.bg_color;
+              if (sc.text_color)            css.color            = sc.text_color;
+              if (sc.font_family)           css.fontFamily       = sc.font_family;
+              if (sc.font_size > 0)         css.fontSize         = `${sc.font_size}px`;
+              if (sc.font_weight)           css.fontWeight       = sc.font_weight;
+              if (sc.letter_spacing !== 0)  css.letterSpacing    = `${sc.letter_spacing}px`;
+              if (sc.line_height > 0)       css.lineHeight       = sc.line_height;
+              if (sc.border_radius > 0)     { css.borderRadius = `${sc.border_radius}px`; css.overflow = "hidden"; }
+              if (sc.full_width) {
+                css.marginLeft  = "calc(-50vw + 50%)";
+                css.marginRight = "calc(-50vw + 50%)";
+                css.width       = "100vw";
+                css.boxSizing   = "border-box";
+              }
+              return { css, sc };
+            };
+
+            const wrapBlock = (block, content) => {
+              if (!content) return null;
+              const { css, sc } = resolveBlockStyle(block);
+              // Visibility / draft filtering
+              if (sc.condition === "draft") return null;
+              if (sc.visibility === "desktop" && isMobile) return null;
+              if (sc.visibility === "mobile"  && !isMobile) return null;
+              if (Object.keys(css).length === 0) return content;
+              return <div style={css}>{content}</div>;
+            };
+
+            // Tracks how many products have been consumed by earlier products blocks
+            let productOffset = 0;
 
             const renderImgGrid = (block) => {
               const fh = FIXED_HEIGHT_LAYOUTS.has(block.layout);
               return (
-                <div style={{ marginTop: "24px", marginBottom: "8px" }}>
+                <div style={{ marginTop: "10px", marginBottom: "4px" }}>
                   <div style={{ display: "grid", gridTemplateColumns: GRID_TEMPLATES[block.layout] || "1fr 1fr", gap: "6px", ...(fh ? { height: "320px" } : {}) }}>
                     {(block.images || []).slice().sort((a, b) => a.display_order - b.display_order).map(img => {
                       const cl = !!img.linked_category;
                       return (
                         <div key={img.id} onClick={cl ? () => onCatClick(img.linked_category) : undefined}
-                          style={{ position: "relative", overflow: "hidden", borderRadius: "8px", cursor: cl ? "pointer" : "default", ...(fh ? {} : { aspectRatio: "16 / 7" }) }}>
+                          style={{ position: "relative", overflow: "hidden", borderRadius: "8px", cursor: cl ? "pointer" : "default", ...(fh ? {} : { aspectRatio: block.layout === "3col" ? "1/1" : "16/9" }) }}>
                           <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
                             onMouseEnter={e => { if (cl) e.currentTarget.style.transform = "scale(1.03)"; }}
                             onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }} />
                           {cl && (
                             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.55))", padding: "18px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <span style={{ color: "#fff", fontWeight: 700, fontSize: "13px", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{img.linked_category}</span>
-                              <span style={{ color: "#fff", fontSize: "11px", background: "rgba(255,255,255,0.2)", padding: "3px 10px", borderRadius: "99px", fontWeight: 600 }}>Shop →</span>
+                              <span style={{ color: "#fff", fontWeight: 700, fontSize: "13px", textShadow: "0 1px 4px rgba(0,0,0,0.5)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: "6px" }}>{img.linked_category}</span>
+                              <span style={{ color: "#fff", fontSize: "11px", background: "rgba(255,255,255,0.2)", padding: "3px 10px", borderRadius: "99px", fontWeight: 600, flexShrink: 0 }}>Shop →</span>
                             </div>
                           )}
                         </div>
@@ -658,7 +712,7 @@ const ShopPage = () => {
             };
 
             const renderTxtBlock = (block) => (
-              <div style={{ marginTop: "20px", background: "#fff", border: "1px solid #e2e8f0", borderLeft: "4px solid #2563eb", borderRadius: "10px", padding: "18px 22px" }}>
+              <div style={{ marginTop: "8px", background: "#fff", border: "1px solid #e2e8f0", borderLeft: "4px solid #2563eb", borderRadius: "10px", padding: "18px 22px" }}>
                 {block.text_title && <div style={{ fontWeight: 700, fontSize: "15px", color: "#0f172a", marginBottom: "6px" }}>{block.text_title}</div>}
                 {block.text_content && <div style={{ fontSize: "13.5px", color: "#475569", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.text_content}</div>}
               </div>
@@ -725,19 +779,58 @@ const ShopPage = () => {
               return <div style={{ marginTop: "24px", height: "1px", background: "#e2e8f0", borderRadius: "1px" }} />;
             };
 
-            const renderBlock = (b) => {
-              if (b.block_type === "text")         return renderTxtBlock(b);
-              if (b.block_type === "image_grid")   return renderImgGrid(b);
-              if (b.block_type === "banner")       return renderBanner(b);
-              if (b.block_type === "announcement") return renderAnnouncement(b);
-              if (b.block_type === "video")        return renderVideo(b);
-              if (b.block_type === "divider")      return renderDivider(b);
-              return null;
+            const renderProductsChunk = (block, slice, hasMore) => {
+              const l = block.layout;
+              const gridTemplate = l === "1col" ? "1fr"
+                : l === "2col" ? "repeat(2, 1fr)"
+                : l === "3col" ? "repeat(3, 1fr)"
+                : l === "4col" ? "repeat(4, 1fr)"
+                : slice.length === 1 ? "repeat(1, minmax(0, 420px))"
+                : slice.length === 2 ? "repeat(2, 1fr)"
+                : "repeat(auto-fill, minmax(200px, 1fr))";
+              return (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: gridTemplate, gap: "20px", alignItems: "stretch", justifyContent: slice.length === 1 ? "center" : undefined }} className="shop-product-grid">
+                    {slice.map(p => <ProductCard key={p.id} product={p} />)}
+                  </div>
+                  {hasMore && (
+                    <div style={{ textAlign: "center", marginTop: "28px" }}>
+                      <button onClick={() => setShowMoreProducts(prev => !prev)}
+                        style={{ padding: "10px 32px", background: showMoreProducts ? "#f1f5f9" : "#0f172a", color: showMoreProducts ? "#374151" : "#fff", border: "none", borderRadius: "9px", fontWeight: 700, fontSize: "13.5px", cursor: "pointer", transition: "background 0.15s" }}>
+                        {showMoreProducts ? "Show Less" : "Show More"}
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
             };
 
-            const renderSideBlocks = (blocks) => blocks.map(b => (
-              <React.Fragment key={`sb-${b.id}`}>{renderBlock(b)}</React.Fragment>
-            ));
+            const renderBlock = (b) => {
+              if (b.block_type === "products") {
+                const limit = b.style_config?.products_limit || 0;
+                const allRemaining = visibleProducts.slice(productOffset);
+                let slice, hasMore = false;
+                if (limit > 0) {
+                  slice = allRemaining.slice(0, limit);
+                  productOffset += limit;
+                } else {
+                  const INITIAL = isMobile ? 8 : 12;
+                  hasMore = !showMoreProducts && allRemaining.length > INITIAL;
+                  slice = hasMore ? allRemaining.slice(0, INITIAL) : allRemaining;
+                  productOffset += allRemaining.length;
+                }
+                if (slice.length === 0) return null;
+                return wrapBlock(b, <div style={{ marginTop: "16px" }}>{renderProductsChunk(b, slice, hasMore)}</div>);
+              }
+              let content = null;
+              if (b.block_type === "text")              content = renderTxtBlock(b);
+              else if (b.block_type === "image_grid")   content = renderImgGrid(b);
+              else if (b.block_type === "banner")       content = renderBanner(b);
+              else if (b.block_type === "announcement") content = renderAnnouncement(b);
+              else if (b.block_type === "video")        content = renderVideo(b);
+              else if (b.block_type === "divider")      content = renderDivider(b);
+              return wrapBlock(b, content);
+            };
 
             const catPageContent = (() => {
               if (shop.layout_mode !== "categories" || activeCategory === "All") return null;
@@ -749,222 +842,66 @@ const ShopPage = () => {
             })();
 
             return (
-              <>
-                {renderSideBlocks(blocksBeforeProds)}
-                <div id="shop-products" style={{ marginTop: "32px", paddingBottom: "60px" }}>
+              <div id="shop-products" style={{ marginTop: "32px", paddingBottom: "60px" }}>
 
-            {/* Category tabs — only in categories layout mode */}
-            {shop.layout_mode === "categories" && categories.length > 2 && (
-              <div style={{
-                display: "flex", gap: "0", overflowX: "auto",
-                borderBottom: "1.5px solid #e2e8f0",
-                marginBottom: "24px",
-                WebkitOverflowScrolling: "touch",
-                scrollbarWidth: "none",
-              }}>
-                {categories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => { setActiveCategory(cat); setSearch(""); }}
-                    style={{
-                      padding: "10px 18px",
-                      background: "none", border: "none",
-                      borderBottom: `2px solid ${activeCategory === cat ? "#2563eb" : "transparent"}`,
-                      marginBottom: "-1.5px",
-                      color: activeCategory === cat ? "#2563eb" : "#64748b",
-                      fontWeight: activeCategory === cat ? 600 : 400,
-                      fontSize: "13.5px", cursor: "pointer",
-                      transition: "all 0.15s", whiteSpace: "nowrap",
-                      outline: "none",
-                    }}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Category page custom blocks (shown when a category tab is active) */}
-            {catPageContent}
-
-            {/* Products header + search */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              gap: "12px", marginBottom: "20px", flexWrap: "wrap",
-            }}>
-              <h2 style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", margin: 0, flexShrink: 0 }}>
-                {activeCategory === "All" ? "All Products" : activeCategory}
-                <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: "14px", marginLeft: "8px" }}>
-                  ({visibleProducts.length})
-                </span>
-              </h2>
-              {/* Search */}
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <svg
-                  width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
-                >
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search products…"
-                  style={{
-                    paddingLeft: "32px", paddingRight: search ? "30px" : "12px",
-                    paddingTop: "7px", paddingBottom: "7px",
-                    border: "1.5px solid #e2e8f0", borderRadius: "8px",
-                    fontSize: "13px", color: "#0f172a", background: "#fff",
-                    outline: "none", width: "200px", transition: "border-color 0.15s",
-                    fontFamily: "inherit",
-                  }}
-                  onFocus={e => { e.target.style.borderColor = "#2563eb"; }}
-                  onBlur={e => { e.target.style.borderColor = "#e2e8f0"; }}
-                />
-                {search && (
-                  <button
-                    onClick={() => setSearch("")}
-                    style={{
-                      position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)",
-                      background: "none", border: "none", cursor: "pointer", padding: "2px",
-                      color: "#94a3b8", display: "flex", alignItems: "center",
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Build mixed content: text blocks interleaved with products */}
-            {(() => {
-              if (visibleProducts.length === 0) return (
-                <div style={{
-                  textAlign: "center", padding: "80px 20px",
-                  background: "#fff", borderRadius: "16px",
-                  border: "1px solid #f1f5f9",
-                }}>
-                  <div style={{
-                    width: "64px", height: "64px", borderRadius: "16px",
-                    background: "#f1f5f9", display: "flex", alignItems: "center",
-                    justifyContent: "center", margin: "0 auto 16px", color: "#94a3b8",
-                  }}>
-                    <PkgIcon />
-                  </div>
-                  <h4 style={{ fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>
-                    {search ? "No products match your search" : "No products yet"}
-                  </h4>
-                  <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
-                    {search
-                      ? `No results for "${search}". Try a different term.`
-                      : "This store hasn't listed any products yet. Check back soon."}
-                  </p>
-                </div>
-              );
-
-              // Index text blocks by insert_after position (premium only)
-              const blocksByPos = {};
-              if (shop.is_premium) {
-                (shop.text_blocks || []).forEach(block => {
-                  const pos = block.insert_after;
-                  if (!blocksByPos[pos]) blocksByPos[pos] = [];
-                  blocksByPos[pos].push(block);
-                });
-              }
-
-              // Build mixed array — slice products based on Show More state
-              const PRODUCTS_INITIAL = isMobile ? 4 : 7;
-              const productsToShow = showMoreProducts ? visibleProducts : visibleProducts.slice(0, PRODUCTS_INITIAL);
-              const mixed = [];
-              (blocksByPos[0] || []).forEach(b => mixed.push({ type: "block", data: b }));
-              productsToShow.forEach((product, i) => {
-                mixed.push({ type: "product", data: product });
-                (blocksByPos[i + 1] || []).forEach(b => mixed.push({ type: "block", data: b }));
-              });
-
-              // If seller hasn't set a fixed column count, auto-size by product count
-              const effectiveGridTemplate = (() => {
-                if (prodGridTemplate !== "repeat(auto-fill, minmax(220px, 1fr))") {
-                  // Seller explicitly chose a column count
-                  return prodGridTemplate;
-                }
-                const n = visibleProducts.length;
-                if (n === 1) return "repeat(1, minmax(0, 420px))"; // 1 product: narrow centred card
-                if (n === 2) return "repeat(2, 1fr)";
-                if (n === 3) return "repeat(3, 1fr)";
-                return "repeat(auto-fill, minmax(220px, 1fr))"; // 4+ → responsive
-              })();
-
-              return (
-                <>
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: effectiveGridTemplate,
-                    gap: "20px",
-                    alignItems: "stretch",
-                    justifyContent: visibleProducts.length === 1 ? "center" : undefined,
-                  }} className="shop-product-grid">
-                    {mixed.map((item, idx) => {
-                      if (item.type === "product") {
-                        return <ProductCard key={item.data.id} product={item.data} />;
-                      }
-                      // Full-width text block
-                      const block = item.data;
-                      return (
-                        <div key={`block-${block.id}`} style={{
-                          gridColumn: "1 / -1",
-                          background: "#fff",
-                          border: "1px solid #e2e8f0",
-                          borderLeft: `3px solid ${block.tile_color || "#0f172a"}`,
-                          borderRadius: "10px",
-                          padding: "16px 20px",
-                        }}>
-                          {block.title && (
-                            <div style={{
-                              fontWeight: 700, fontSize: "14px", color: "#0f172a",
-                              marginBottom: "5px", letterSpacing: "-0.01em",
-                            }}>
-                              {block.title}
-                            </div>
-                          )}
-                          <div style={{
-                            fontSize: "13.5px", color: "#475569",
-                            lineHeight: 1.7, whiteSpace: "pre-wrap",
-                          }}>
-                            {block.content}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {visibleProducts.length > PRODUCTS_INITIAL && (
-                    <div style={{ textAlign: "center", marginTop: "28px" }}>
-                      <button
-                        onClick={() => setShowMoreProducts(p => !p)}
-                        style={{
-                          padding: "10px 32px",
-                          background: showMoreProducts ? "#f1f5f9" : "#0f172a",
-                          color: showMoreProducts ? "#374151" : "#fff",
-                          border: "none", borderRadius: "9px",
-                          fontWeight: 700, fontSize: "13.5px", cursor: "pointer",
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        {showMoreProducts ? "Show Less" : `Show More (${visibleProducts.length - PRODUCTS_INITIAL} more)`}
+                {/* Category tabs */}
+                {shop.layout_mode === "categories" && categories.length > 2 && (
+                  <div style={{ display: "flex", gap: "0", overflowX: "auto", borderBottom: "1.5px solid #e2e8f0", marginBottom: "24px", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+                    {categories.map(cat => (
+                      <button key={cat} onClick={() => { setActiveCategory(cat); setSearch(""); }}
+                        style={{ padding: "10px 18px", background: "none", border: "none", borderBottom: `2px solid ${activeCategory === cat ? "#2563eb" : "transparent"}`, marginBottom: "-1.5px", color: activeCategory === cat ? "#2563eb" : "#64748b", fontWeight: activeCategory === cat ? 600 : 400, fontSize: "13.5px", cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap", outline: "none" }}>
+                        {cat}
                       </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
+                    ))}
+                  </div>
+                )}
 
-                {renderSideBlocks(blocksAfterProds)}
-              </>
+                {/* Category page custom blocks */}
+                {catPageContent}
+
+                {/* Products header + search */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
+                  <h2 style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", margin: 0, flexShrink: 0 }}>
+                    {activeCategory === "All" ? "All Products" : activeCategory}
+                    <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: "14px", marginLeft: "8px" }}>({visibleProducts.length})</span>
+                  </h2>
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…"
+                      style={{ paddingLeft: "32px", paddingRight: search ? "30px" : "12px", paddingTop: "7px", paddingBottom: "7px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", width: "200px", transition: "border-color 0.15s", fontFamily: "inherit" }}
+                      onFocus={e => { e.target.style.borderColor = "#2563eb"; }}
+                      onBlur={e => { e.target.style.borderColor = "#e2e8f0"; }} />
+                    {search && (
+                      <button onClick={() => setSearch("")} style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "2px", color: "#94a3b8", display: "flex", alignItems: "center" }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Empty state */}
+                {visibleProducts.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "80px 20px", background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9" }}>
+                    <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#94a3b8" }}>
+                      <PkgIcon />
+                    </div>
+                    <h4 style={{ fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>
+                      {search ? "No products match your search" : "No products yet"}
+                    </h4>
+                    <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
+                      {search ? `No results for "${search}". Try a different term.` : "This store hasn't listed any products yet. Check back soon."}
+                    </p>
+                  </div>
+                )}
+
+                {/* All blocks in order — products blocks consume from productOffset sequentially */}
+                {visibleProducts.length > 0 && sBlocks.map(b => (
+                  <React.Fragment key={`bl-${b.id}`}>{renderBlock(b)}</React.Fragment>
+                ))}
+
+              </div>
             );
           })()}
 

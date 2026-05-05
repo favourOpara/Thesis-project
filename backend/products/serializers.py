@@ -136,7 +136,7 @@ class ShopSerializer(serializers.ModelSerializer):
             'whatsapp', 'instagram', 'website',
             'visit_count', 'product_count', 'preview_images', 'categories',
             'tagline', 'layout_mode', 'sort_order', 'store_status', 'store_status_message',
-            'products_position',
+            'products_position', 'banner_color',
             'is_premium', 'premium_since', 'premium_cancelled_at', 'premium_expires_at', 'store_video_url', 'store_video_file', 'store_video_file_url', 'text_blocks',
             'content_sections',
             'store_blocks', 'category_pages',

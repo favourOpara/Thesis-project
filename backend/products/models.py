@@ -37,6 +37,11 @@ class Shop(models.Model):
         null=True, blank=True,
         help_text="Access continues until this date after cancellation (end of paid billing period)"
     )
+    banner_color = models.CharField(
+        max_length=30, blank=True, null=True,
+        help_text="Solid or gradient color used as banner when no image is uploaded"
+    )
+
     store_video_url = models.URLField(
         blank=True, null=True,
         help_text="YouTube or Vimeo URL for the store promo video"

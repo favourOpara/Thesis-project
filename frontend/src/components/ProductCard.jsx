@@ -75,9 +75,7 @@ const ProductCard = ({ product }) => {
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
-                transform: hovered ? "scale(1.05)" : "scale(1)",
-                transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
+                objectFit: "contain",
               }}
             />
 

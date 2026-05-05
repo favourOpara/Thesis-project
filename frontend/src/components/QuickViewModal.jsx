@@ -160,7 +160,7 @@ const QuickViewModal = ({ product, onClose }) => {
         .qv-main-img img {
           width: 100%;
           height: 100% !important;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
         }
         .qv-thumb-strip {
@@ -353,7 +353,7 @@ const QuickViewModal = ({ product, onClose }) => {
                     transition: "border-color 0.15s",
                   }}>
                     <img src={img} alt="" onError={e => { e.target.src = "/OIP.png"; }}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                   </div>
                 ))}
               </div>

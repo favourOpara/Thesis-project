@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSellerCtx, ac, BASE, IconExternal } from "../components/SellerLayout";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 /* ─────────────────────────────────────────────────────────
    BLOCK TYPE METADATA  (label, description, accent colour)
@@ -56,18 +57,30 @@ const DEFAULT_STYLE = {
   font_family: "", font_size: 0, font_weight: "",
   letter_spacing: 0, line_height: 0,
   border_radius: 0,
-  visibility: "all",   // "all" | "desktop" | "mobile"
-  condition: "always", // "always" | "draft"
+  visibility: "all",        // "all" | "desktop" | "mobile"
+  condition: "always",      // "always" | "draft"
+  products_limit: 0,        // 0 = show all remaining; >0 = show exactly N products in this block
 };
 
 /* ─────────────────────────────────────────────────────────
    STYLE PANEL  (per-block deep customisation)
    Controlled component — all state lives in parent.
 ───────────────────────────────────────────────────────── */
+/* What each block type supports in the style panel */
+const STYLE_CAPS = {
+  products:     { sidePad: false, fullWidth: false, typo: false, bg: false, radius: false },
+  text:         { sidePad: true,  fullWidth: true,  typo: true,  bg: true,  radius: true  },
+  image_grid:   { sidePad: false, fullWidth: true,  typo: false, bg: false, radius: true  },
+  banner:       { sidePad: false, fullWidth: true,  typo: false, bg: false, radius: true  },
+  announcement: { sidePad: true,  fullWidth: true,  typo: true,  bg: true,  radius: true  },
+  video:        { sidePad: false, fullWidth: true,  typo: false, bg: false, radius: true  },
+  divider:      { sidePad: false, fullWidth: false, typo: false, bg: false, radius: false },
+};
+
 const StylePanel = ({ blockType, styleConfig, onUpdate }) => {
   const sc = { ...DEFAULT_STYLE, ...(styleConfig || {}) };
   const upd = (key, val) => onUpdate({ ...sc, [key]: val });
-  const showTypo = !["divider", "image_grid", "banner"].includes(blockType);
+  const caps = STYLE_CAPS[blockType] || STYLE_CAPS.text;
 
   const SH = ({ label, first }) => (
     <div style={{ fontSize: "10px", fontWeight: 700, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", marginTop: first ? "0" : "16px", paddingTop: first ? "0" : "14px", borderTop: first ? "none" : "1px solid #dbeafe" }}>
@@ -150,16 +163,18 @@ const StylePanel = ({ blockType, styleConfig, onUpdate }) => {
       <SH label="Spacing" first />
       <Row label="Top padding"><Slider k="padding_top" min={0} max={80} step={4} /></Row>
       <Row label="Bottom padding"><Slider k="padding_bottom" min={0} max={80} step={4} /></Row>
-      <Row label="Side padding"><Slider k="padding_x" min={0} max={60} step={4} /></Row>
-      <Row label="Full width"><Toggle k="full_width" /><span style={{ fontSize: "11px", color: "#94a3b8" }}>Stretch edge-to-edge</span></Row>
+      {caps.sidePad && <Row label="Side padding"><Slider k="padding_x" min={0} max={60} step={4} /></Row>}
+      {caps.fullWidth && (
+        <Row label="Full width"><Toggle k="full_width" /><span style={{ fontSize: "11px", color: "#94a3b8" }}>Stretch edge-to-edge</span></Row>
+      )}
 
-      {/* ── TYPOGRAPHY ── */}
-      {showTypo && (
+      {/* ── TYPOGRAPHY (text + announcement only) ── */}
+      {caps.typo && (
         <>
           <SH label="Typography" />
           <Row label="Font family">
             <Sel k="font_family" opts={[
-              { v: "",           l: "Default (store font)" },
+              { v: "",           l: "Default" },
               { v: "sans-serif", l: "Sans-serif" },
               { v: "serif",      l: "Serif" },
               { v: "monospace",  l: "Monospace" },
@@ -169,12 +184,11 @@ const StylePanel = ({ blockType, styleConfig, onUpdate }) => {
           <Row label="Font weight">
             <Sel k="font_weight" opts={[
               { v: "",    l: "Default" },
-              { v: "300", l: "Light (300)" },
-              { v: "400", l: "Regular (400)" },
-              { v: "500", l: "Medium (500)" },
-              { v: "600", l: "Semi-bold (600)" },
-              { v: "700", l: "Bold (700)" },
-              { v: "800", l: "Extra bold (800)" },
+              { v: "300", l: "Light" },
+              { v: "400", l: "Regular" },
+              { v: "600", l: "Semi-bold" },
+              { v: "700", l: "Bold" },
+              { v: "800", l: "Extra bold" },
             ]} />
           </Row>
           <Row label="Line height"><Slider k="line_height" min={0} max={3} step={0.1} unit="" zeroLabel="auto" /></Row>
@@ -184,14 +198,18 @@ const StylePanel = ({ blockType, styleConfig, onUpdate }) => {
       )}
 
       {/* ── APPEARANCE ── */}
-      <SH label="Appearance" />
-      <Row label="Background"><Swatch k="bg_color" /></Row>
-      <Row label="Corner radius"><Slider k="border_radius" min={0} max={32} step={2} /></Row>
+      {(caps.bg || caps.radius) && (
+        <>
+          <SH label="Appearance" />
+          {caps.bg && <Row label="Background"><Swatch k="bg_color" /></Row>}
+          {caps.radius && <Row label="Corner radius"><Slider k="border_radius" min={0} max={32} step={2} /></Row>}
+        </>
+      )}
 
       {/* ── VISIBILITY ── */}
       <SH label="Visibility" />
       <Row label="Show on">
-        <Chips k="visibility" opts={[{ v: "all", l: "All" }, { v: "desktop", l: "Desktop only" }, { v: "mobile", l: "Mobile only" }]} />
+        <Chips k="visibility" opts={[{ v: "all", l: "All" }, { v: "desktop", l: "Desktop" }, { v: "mobile", l: "Mobile" }]} />
       </Row>
       <Row label="Status">
         <Chips k="condition" opts={[{ v: "always", l: "Live" }, { v: "draft", l: "Draft (hidden)" }]} />
@@ -451,6 +469,11 @@ const SellerStoreBuilder = () => {
   const [newCatBlock, setNewCatBlock] = useState({ text_title: "", text_content: "", layout: "2col", images: [] });
   const blockImgRef    = useRef();
   const catBlockImgRef = useRef();
+  const [stylingBlockId,    setStylingBlockId]    = useState(null);
+  const [stylingCatBlockId, setStylingCatBlockId] = useState(null);
+  const styleTimerRef = useRef(null);
+  const [confirmDel,    setConfirmDel]    = useState(null); // { blockId, label } | null
+  const [confirmCatDel, setConfirmCatDel] = useState(null); // { pageId, blockId, label } | null
 
   // ── Page title + topbar ──
   useEffect(() => {
@@ -473,14 +496,7 @@ const SellerStoreBuilder = () => {
       axios.get(`${BASE}/api/shops/${shop.slug}/category-pages/`, ac()),
     ]).then(([blocksRes, pagesRes]) => {
       const raw = blocksRes.data;
-      let seenProducts = false;
-      const deduped = raw.filter(b => {
-        if (b.block_type === "products") {
-          if (seenProducts) return false;
-          seenProducts = true;
-        }
-        return true;
-      });
+      const deduped = raw; // multiple products blocks are now allowed
       setCatPages(pagesRes.data);
       if (deduped.length === 0) {
         axios.post(`${BASE}/api/shops/${shop.slug}/store-blocks/`, { block_type: "products", order: 0 }, ac())
@@ -514,6 +530,7 @@ const SellerStoreBuilder = () => {
     try {
       await axios.delete(`${BASE}/api/shops/${shop.slug}/store-blocks/${blockId}/`, ac());
       setStoreBlocks(prev => prev.filter(b => b.id !== blockId));
+      setConfirmDel(null);
     } catch { toast.error("Could not remove block."); }
   };
 
@@ -593,6 +610,7 @@ const SellerStoreBuilder = () => {
     try {
       await axios.delete(`${BASE}/api/shops/${shop.slug}/category-pages/${pageId}/blocks/${blockId}/`, ac());
       setCatPages(prev => prev.map(p => p.id === pageId ? { ...p, blocks: p.blocks.filter(b => b.id !== blockId) } : p));
+      setConfirmCatDel(null);
     } catch { toast.error("Could not remove block."); }
   };
 
@@ -620,6 +638,31 @@ const SellerStoreBuilder = () => {
     setter(s => ({ ...s, images: [...s.images, ...slots] }));
   };
 
+  // ── Per-block style (debounced PATCH, optimistic update) ──
+  const patchBlockStyle = (blockId, newStyleConfig) => {
+    setStoreBlocks(prev => prev.map(b => b.id === blockId ? { ...b, style_config: newStyleConfig } : b));
+    clearTimeout(styleTimerRef.current);
+    styleTimerRef.current = setTimeout(async () => {
+      try {
+        await axios.patch(`${BASE}/api/shops/${shop.slug}/store-blocks/${blockId}/`, { style_config: newStyleConfig }, ac());
+      } catch { toast.error("Could not save style."); }
+    }, 400);
+  };
+
+  const patchCatBlockStyle = (pageId, blockId, newStyleConfig) => {
+    setCatPages(prev => prev.map(p =>
+      p.id === pageId
+        ? { ...p, blocks: p.blocks.map(b => b.id === blockId ? { ...b, style_config: newStyleConfig } : b) }
+        : p
+    ));
+    clearTimeout(styleTimerRef.current);
+    styleTimerRef.current = setTimeout(async () => {
+      try {
+        await axios.patch(`${BASE}/api/shops/${shop.slug}/category-pages/${pageId}/blocks/${blockId}/`, { style_config: newStyleConfig }, ac());
+      } catch { toast.error("Could not save style."); }
+    }, 400);
+  };
+
   // ── No shop yet ──
   if (!shop) return (
     <div style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -627,36 +670,57 @@ const SellerStoreBuilder = () => {
     </div>
   );
 
-  const ADDABLE_TYPES = ["text", "image_grid", "banner", "announcement", "video", "divider"];
+  const ADDABLE_TYPES = ["products", "text", "image_grid", "banner", "announcement", "video", "divider"];
 
   /* ── helper: block card ── */
-  const BlockCard = ({ block, idx, total, onMoveUp, onMoveDown, onDelete, configPanel }) => {
-    const meta = BLOCK_TYPE_META[block.block_type] || BLOCK_TYPE_META.text;
-    const isFirst = idx === 0, isLast = idx === total - 1;
+  const BlockCard = ({ block, idx, total, onMoveUp, onMoveDown, onDelete }) => {
+    const meta        = BLOCK_TYPE_META[block.block_type] || BLOCK_TYPE_META.text;
+    const isFirst     = idx === 0, isLast = idx === total - 1;
     const isConfiguring = configuringBlockId === block.id;
+    const isStyling   = stylingBlockId === block.id;
+    const hasStyle    = Object.keys(block.style_config || {}).length > 0;
+    const isDraft     = (block.style_config || {}).condition === "draft";
+
+    // shared icon button style
+    const iconBtn = (active, activeColor = "#2563eb") => ({
+      width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center",
+      borderRadius: "7px", border: `1.5px solid ${active ? activeColor : "#e2e8f0"}`,
+      background: active ? (activeColor === "#2563eb" ? "#eff6ff" : "#fff0f0") : "#fff",
+      cursor: "pointer", color: active ? activeColor : "#64748b", transition: "all 0.12s",
+    });
+
     return (
-      <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", marginBottom: "8px", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", overflow: "hidden", transition: "box-shadow 0.15s" }}
+      <div style={{ border: `1px solid ${isDraft ? "#fecaca" : "#e2e8f0"}`, borderRadius: "12px", marginBottom: "8px", background: isDraft ? "#fff8f8" : "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", overflow: "hidden", transition: "box-shadow 0.15s" }}
         onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.09)"; }}
         onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)"; }}
       >
         <div style={{ display: "flex", alignItems: "stretch" }}>
-          <div style={{ width: "4px", background: meta.accent, flexShrink: 0 }} />
+          <div style={{ width: "4px", background: isDraft ? "#fca5a5" : meta.accent, flexShrink: 0 }} />
           <div style={{ flex: 1, padding: "13px 15px", display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
             <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: meta.bg, display: "flex", alignItems: "center", justifyContent: "center", color: meta.accent, flexShrink: 0 }}>
               {meta.icon}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>{meta.label}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>{meta.label}</div>
+                {isDraft && <span style={{ fontSize: "10px", fontWeight: 700, color: "#ef4444", background: "#fee2e2", borderRadius: "4px", padding: "1px 6px" }}>DRAFT</span>}
+                {hasStyle && !isDraft && <span style={{ fontSize: "10px", fontWeight: 600, color: "#2563eb", background: "#eff6ff", borderRadius: "4px", padding: "1px 6px" }}>styled</span>}
+              </div>
               <div style={{ fontSize: "12px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {block.block_type === "text"         && (block.text_title || block.text_content?.slice(0, 45) || meta.desc)}
                 {block.block_type === "image_grid"   && (block.images?.length ? `${block.images.length} image${block.images.length !== 1 ? "s" : ""} · ${block.layout}` : meta.desc)}
-                {block.block_type === "products"     && (block.layout ? `${block.layout === "1col" ? "1 column" : block.layout === "2col" ? "2 columns" : block.layout === "3col" ? "3 columns" : "auto"} grid` : "Auto grid")}
+                {block.block_type === "products" && (() => {
+                  const lim = block.style_config?.products_limit || 0;
+                  const cols = block.layout === "2col" ? "2 col" : block.layout === "3col" ? "3 col" : block.layout === "4col" ? "4 col" : "auto";
+                  return lim > 0 ? `${lim} products · ${cols}` : `All remaining · ${cols}`;
+                })()}
                 {block.block_type === "announcement" && (block.text_content?.slice(0, 45) || meta.desc)}
                 {block.block_type === "banner"       && (block.text_title || meta.desc)}
                 {block.block_type === "video"        && (block.text_content?.slice(0, 45) || meta.desc)}
                 {block.block_type === "divider"      && (block.layout || "line")}
               </div>
             </div>
+
             {block.block_type === "image_grid" && block.images?.length > 0 && (
               <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
                 {block.images.slice(0, 3).map(img => (
@@ -664,14 +728,21 @@ const SellerStoreBuilder = () => {
                 ))}
               </div>
             )}
+
             <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+              {/* ⚙ Products grid config */}
               {block.block_type === "products" && (
-                <button type="button" title="Configure grid"
-                  onClick={() => setConfiguringBlockId(isConfiguring ? null : block.id)}
-                  style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "7px", border: `1.5px solid ${isConfiguring ? "#2563eb" : "#e2e8f0"}`, background: isConfiguring ? "#eff6ff" : "#fff", cursor: "pointer", color: isConfiguring ? "#2563eb" : "#64748b", transition: "all 0.12s" }}>
+                <button type="button" title="Configure grid" onClick={() => setConfiguringBlockId(isConfiguring ? null : block.id)} style={iconBtn(isConfiguring)}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 </button>
               )}
+              {/* 🎨 Style panel toggle */}
+              <button type="button" onClick={() => setStylingBlockId(isStyling ? null : block.id)}
+                style={{ height: "28px", padding: "0 10px", display: "flex", alignItems: "center", gap: "5px", borderRadius: "7px", border: `1.5px solid ${isStyling ? "#2563eb" : "#e2e8f0"}`, background: isStyling ? "#eff6ff" : "#fff", cursor: "pointer", color: isStyling ? "#2563eb" : "#374151", fontSize: "12px", fontWeight: 600, transition: "all 0.12s" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                Style
+              </button>
+              {/* ↑↓ Reorder */}
               <button type="button" onClick={onMoveUp} disabled={isFirst} title="Move up"
                 style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "7px", border: "1.5px solid #e2e8f0", background: isFirst ? "#f8fafc" : "#fff", cursor: isFirst ? "default" : "pointer", color: isFirst ? "#d1d5db" : "#374151", transition: "all 0.12s" }}
                 onMouseEnter={e => { if (!isFirst) { e.currentTarget.style.background = "#0f172a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f172a"; } }}
@@ -684,7 +755,8 @@ const SellerStoreBuilder = () => {
                 onMouseLeave={e => { e.currentTarget.style.background = isLast ? "#f8fafc" : "#fff"; e.currentTarget.style.color = isLast ? "#d1d5db" : "#374151"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
-              {block.block_type !== "products" && (
+              {/* 🗑 Delete */}
+              {(block.block_type !== "products" || storeBlocks.filter(b => b.block_type === "products").length > 1) && (
                 <button type="button" onClick={onDelete} title="Remove"
                   style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "7px", border: "1.5px solid #fecaca", background: "#fff5f5", cursor: "pointer", color: "#ef4444", marginLeft: "4px", transition: "all 0.12s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#ef4444"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#ef4444"; }}
@@ -695,34 +767,74 @@ const SellerStoreBuilder = () => {
             </div>
           </div>
         </div>
-        {/* Inline grid config for products block */}
-        {block.block_type === "products" && isConfiguring && (
-          <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 15px 14px 19px", background: "#fafcff" }}>
-            <p style={{ margin: "0 0 10px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Product Grid Columns</p>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {[
-                { value: null,    label: "Auto",  hint: "Fills to width" },
-                { value: "1col",  label: "1 col", hint: "Full-width list" },
-                { value: "2col",  label: "2 col", hint: "Side by side" },
-                { value: "3col",  label: "3 col", hint: "Compact grid" },
-              ].map(opt => {
-                const sel = (block.layout || null) === opt.value;
-                return (
-                  <button key={String(opt.value)} type="button"
-                    onClick={() => patchBlockLayout(block.id, opt.value)}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "8px 14px", borderRadius: "9px", border: `2px solid ${sel ? "#2563eb" : "#e2e8f0"}`, background: sel ? "#eff6ff" : "#fff", cursor: "pointer", transition: "all 0.12s" }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = "#93c5fd"; e.currentTarget.style.background = "#f0f9ff"; } }}
-                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; } }}
-                  >
-                    <span style={{ fontSize: "12.5px", fontWeight: sel ? 700 : 600, color: sel ? "#2563eb" : "#374151" }}>{opt.label}</span>
-                    <span style={{ fontSize: "10px", color: sel ? "#3b82f6" : "#94a3b8" }}>{opt.hint}</span>
-                  </button>
-                );
-              })}
+
+        {/* ── Products grid config ── */}
+        {block.block_type === "products" && isConfiguring && (() => {
+          const perPage = (block.style_config || {}).products_limit || 0;
+          return (
+            <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 15px 18px 19px", background: "#fafcff" }}>
+              {/* Columns */}
+              <p style={{ margin: "0 0 10px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Columns per row</p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" }}>
+                {[
+                  { value: null,   label: "Auto",  hint: "Responsive" },
+                  { value: "2col", label: "2 col", hint: "Side by side" },
+                  { value: "3col", label: "3 col", hint: "Compact" },
+                  { value: "4col", label: "4 col", hint: "Dense" },
+                ].map(opt => {
+                  const sel = (block.layout || null) === opt.value;
+                  return (
+                    <button key={String(opt.value)} type="button" onClick={() => patchBlockLayout(block.id, opt.value)}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "8px 14px", borderRadius: "9px", border: `2px solid ${sel ? "#2563eb" : "#e2e8f0"}`, background: sel ? "#eff6ff" : "#fff", cursor: "pointer", transition: "all 0.12s" }}
+                      onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = "#93c5fd"; e.currentTarget.style.background = "#f0f9ff"; } }}
+                      onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; } }}>
+                      <span style={{ fontSize: "12.5px", fontWeight: sel ? 700 : 600, color: sel ? "#2563eb" : "#374151" }}>{opt.label}</span>
+                      <span style={{ fontSize: "10px", color: sel ? "#3b82f6" : "#94a3b8" }}>{opt.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Products in this section */}
+              <p style={{ margin: "0 0 6px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Products in this section</p>
+              <p style={{ margin: "0 0 10px", fontSize: "11.5px", color: "#64748b" }}>
+                How many products this block shows. The next products block picks up where this one leaves off.
+              </p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {[
+                  { v: 0,  l: "All remaining" },
+                  { v: 2,  l: "2" },
+                  { v: 3,  l: "3" },
+                  { v: 4,  l: "4" },
+                  { v: 6,  l: "6" },
+                  { v: 8,  l: "8" },
+                  { v: 12, l: "12" },
+                  { v: 16, l: "16" },
+                ].map(opt => {
+                  const sel = perPage === opt.v;
+                  return (
+                    <button key={opt.v} type="button"
+                      onClick={() => patchBlockStyle(block.id, { ...(block.style_config || {}), products_limit: opt.v })}
+                      style={{ padding: "7px 14px", borderRadius: "9px", border: `2px solid ${sel ? "#2563eb" : "#e2e8f0"}`, background: sel ? "#eff6ff" : "#fff", cursor: "pointer", fontSize: "12.5px", fontWeight: sel ? 700 : 600, color: sel ? "#2563eb" : "#374151", transition: "all 0.12s" }}
+                      onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = "#93c5fd"; e.currentTarget.style.background = "#f0f9ff"; } }}
+                      onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; } }}>
+                      {opt.l}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          );
+        })()}
+
+        {/* ── Style panel ── */}
+        {isStyling && (
+          <StylePanel
+            blockType={block.block_type}
+            styleConfig={block.style_config || {}}
+            onUpdate={newSC => patchBlockStyle(block.id, newSC)}
+          />
         )}
-        {configPanel}
       </div>
     );
   };
@@ -730,6 +842,25 @@ const SellerStoreBuilder = () => {
   return (
     <div>
       <ToastContainer position="bottom-center" />
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        title="Remove section?"
+        message={`This will permanently delete the "${confirmDel?.label}" section from your store. This cannot be undone.`}
+        confirmLabel="Delete section"
+        confirmColor="#ef4444"
+        onConfirm={() => confirmDel && deleteBlock(confirmDel.blockId)}
+        onCancel={() => setConfirmDel(null)}
+      />
+      <ConfirmDialog
+        open={!!confirmCatDel}
+        title="Remove section?"
+        message={`This will permanently delete the "${confirmCatDel?.label}" section from this category page. This cannot be undone.`}
+        confirmLabel="Delete section"
+        confirmColor="#ef4444"
+        onConfirm={() => confirmCatDel && deleteCatBlock(confirmCatDel.pageId, confirmCatDel.blockId)}
+        onCancel={() => setConfirmCatDel(null)}
+      />
 
       {/* ── Page header ── */}
       <div style={{ marginBottom: "28px" }}>
@@ -757,7 +888,7 @@ const SellerStoreBuilder = () => {
           <BlockCard key={block.id} block={block} idx={idx} total={storeBlocks.length}
             onMoveUp={() => moveBlock(idx, -1)}
             onMoveDown={() => moveBlock(idx, 1)}
-            onDelete={() => deleteBlock(block.id)}
+            onDelete={() => setConfirmDel({ blockId: block.id, label: BLOCK_TYPE_META[block.block_type]?.label || "block" })}
           />
         ))}
 
@@ -843,43 +974,67 @@ const SellerStoreBuilder = () => {
                     {page?.blocks?.map((block, bIdx) => {
                       const bm = BLOCK_TYPE_META[block.block_type] || BLOCK_TYPE_META.text;
                       const bFirst = bIdx === 0, bLast = bIdx === page.blocks.length - 1;
+                      const cbKey = `${page.id}-${block.id}`;
+                      const cbStyling = stylingCatBlockId === cbKey;
+                      const cbHasStyle = Object.keys(block.style_config || {}).length > 0;
+                      const cbDraft = (block.style_config || {}).condition === "draft";
                       return (
-                        <div key={block.id} style={{ display: "flex", alignItems: "stretch", border: "1px solid #e2e8f0", borderRadius: "10px", marginBottom: "8px", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", overflow: "hidden" }}>
-                          <div style={{ width: "3px", background: bm.accent, flexShrink: 0 }} />
-                          <div style={{ flex: 1, padding: "10px 13px", display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: bm.bg, display: "flex", alignItems: "center", justifyContent: "center", color: bm.accent, flexShrink: 0 }}>{bm.icon}</div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>{bm.label}</div>
-                              <div style={{ fontSize: "11.5px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {block.block_type === "text" ? (block.text_title || block.text_content?.slice(0, 40) || "—") : (block.images?.length ? `${block.images.length} image${block.images.length !== 1 ? "s" : ""} · ${block.layout}` : bm.desc)}
+                        <div key={block.id} style={{ border: `1px solid ${cbDraft ? "#fecaca" : "#e2e8f0"}`, borderRadius: "10px", marginBottom: "8px", background: cbDraft ? "#fff8f8" : "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                          <div style={{ display: "flex", alignItems: "stretch" }}>
+                            <div style={{ width: "3px", background: cbDraft ? "#fca5a5" : bm.accent, flexShrink: 0 }} />
+                            <div style={{ flex: 1, padding: "10px 13px", display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: bm.bg, display: "flex", alignItems: "center", justifyContent: "center", color: bm.accent, flexShrink: 0 }}>{bm.icon}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "2px" }}>
+                                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>{bm.label}</div>
+                                  {cbDraft && <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#ef4444", background: "#fee2e2", borderRadius: "3px", padding: "1px 5px" }}>DRAFT</span>}
+                                  {cbHasStyle && !cbDraft && <span style={{ fontSize: "9.5px", fontWeight: 600, color: "#2563eb", background: "#eff6ff", borderRadius: "3px", padding: "1px 5px" }}>styled</span>}
+                                </div>
+                                <div style={{ fontSize: "11.5px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {block.block_type === "text" ? (block.text_title || block.text_content?.slice(0, 40) || "—") : (block.images?.length ? `${block.images.length} image${block.images.length !== 1 ? "s" : ""} · ${block.layout}` : bm.desc)}
+                                </div>
                               </div>
-                            </div>
-                            {block.block_type === "image_grid" && block.images?.length > 0 && (
-                              <div style={{ display: "flex", gap: "3px" }}>
-                                {block.images.slice(0, 2).map(img => <img key={img.id} src={img.image_url} alt="" style={{ width: "34px", height: "24px", objectFit: "cover", borderRadius: "4px" }} />)}
+                              {block.block_type === "image_grid" && block.images?.length > 0 && (
+                                <div style={{ display: "flex", gap: "3px" }}>
+                                  {block.images.slice(0, 2).map(img => <img key={img.id} src={img.image_url} alt="" style={{ width: "34px", height: "24px", objectFit: "cover", borderRadius: "4px" }} />)}
+                                </div>
+                              )}
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                                {/* 🎨 Style */}
+                                <button type="button" onClick={() => setStylingCatBlockId(cbStyling ? null : cbKey)}
+                                  style={{ height: "26px", padding: "0 8px", display: "flex", alignItems: "center", gap: "4px", borderRadius: "6px", border: `1.5px solid ${cbStyling ? "#2563eb" : "#e2e8f0"}`, background: cbStyling ? "#eff6ff" : "#fff", cursor: "pointer", color: cbStyling ? "#2563eb" : "#374151", fontSize: "11px", fontWeight: 600, transition: "all 0.12s" }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                                  Style
+                                </button>
+                                <button type="button" onClick={() => moveCatBlock(page.id, bIdx, -1)} disabled={bFirst}
+                                  style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #e2e8f0", background: bFirst ? "#f8fafc" : "#fff", cursor: bFirst ? "default" : "pointer", color: bFirst ? "#d1d5db" : "#374151", transition: "all 0.12s" }}
+                                  onMouseEnter={e => { if (!bFirst) { e.currentTarget.style.background = "#0f172a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f172a"; } }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = bFirst ? "#f8fafc" : "#fff"; e.currentTarget.style.color = bFirst ? "#d1d5db" : "#374151"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                </button>
+                                <button type="button" onClick={() => moveCatBlock(page.id, bIdx, 1)} disabled={bLast}
+                                  style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #e2e8f0", background: bLast ? "#f8fafc" : "#fff", cursor: bLast ? "default" : "pointer", color: bLast ? "#d1d5db" : "#374151", transition: "all 0.12s" }}
+                                  onMouseEnter={e => { if (!bLast) { e.currentTarget.style.background = "#0f172a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f172a"; } }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = bLast ? "#f8fafc" : "#fff"; e.currentTarget.style.color = bLast ? "#d1d5db" : "#374151"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <button type="button" onClick={() => setConfirmCatDel({ pageId: page.id, blockId: block.id, label: BLOCK_TYPE_META[block.block_type]?.label || "block" })}
+                                  style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #fecaca", background: "#fff5f5", cursor: "pointer", color: "#ef4444", marginLeft: "3px", transition: "all 0.12s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = "#ef4444"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#ef4444"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = "#fff5f5"; e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#fecaca"; }}>
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                               </div>
-                            )}
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                              <button type="button" onClick={() => moveCatBlock(page.id, bIdx, -1)} disabled={bFirst}
-                                style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #e2e8f0", background: bFirst ? "#f8fafc" : "#fff", cursor: bFirst ? "default" : "pointer", color: bFirst ? "#d1d5db" : "#374151", transition: "all 0.12s" }}
-                                onMouseEnter={e => { if (!bFirst) { e.currentTarget.style.background = "#0f172a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f172a"; } }}
-                                onMouseLeave={e => { e.currentTarget.style.background = bFirst ? "#f8fafc" : "#fff"; e.currentTarget.style.color = bFirst ? "#d1d5db" : "#374151"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                              </button>
-                              <button type="button" onClick={() => moveCatBlock(page.id, bIdx, 1)} disabled={bLast}
-                                style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #e2e8f0", background: bLast ? "#f8fafc" : "#fff", cursor: bLast ? "default" : "pointer", color: bLast ? "#d1d5db" : "#374151", transition: "all 0.12s" }}
-                                onMouseEnter={e => { if (!bLast) { e.currentTarget.style.background = "#0f172a"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f172a"; } }}
-                                onMouseLeave={e => { e.currentTarget.style.background = bLast ? "#f8fafc" : "#fff"; e.currentTarget.style.color = bLast ? "#d1d5db" : "#374151"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                              </button>
-                              <button type="button" onClick={() => deleteCatBlock(page.id, block.id)}
-                                style={{ width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1.5px solid #fecaca", background: "#fff5f5", cursor: "pointer", color: "#ef4444", marginLeft: "3px", transition: "all 0.12s" }}
-                                onMouseEnter={e => { e.currentTarget.style.background = "#ef4444"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#ef4444"; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = "#fff5f5"; e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#fecaca"; }}>
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                              </button>
                             </div>
                           </div>
+                          {/* Cat block style panel */}
+                          {cbStyling && (
+                            <StylePanel
+                              blockType={block.block_type}
+                              styleConfig={block.style_config || {}}
+                              onUpdate={newSC => patchCatBlockStyle(page.id, block.id, newSC)}
+                            />
+                          )}
                         </div>
                       );
                     })}

@@ -136,6 +136,8 @@ const SellerSettings = () => {
   const [nameMissing, setNameMissing] = useState(false);
   const [logo,   setLogo]   = useState(null);
   const [banner, setBanner] = useState(null);
+  const [bannerType, setBannerType] = useState(shop?.banner_url ? "image" : shop?.banner_color ? "color" : "image");
+  const [bannerColor, setBannerColor] = useState(shop?.banner_color || "#1e3a5f");
   const [saving, setSaving] = useState(false);
   const logoRef   = useRef();
   const bannerRef = useRef();
@@ -209,8 +211,13 @@ const SellerSettings = () => {
       if (userFields.includes(k)) return; // handled separately
       if (v) fd.append(k, v);
     });
-    if (logo)   fd.append("logo", logo);
-    if (banner) fd.append("banner_image", banner);
+    if (logo) fd.append("logo", logo);
+    if (bannerType === "image") {
+      if (banner) fd.append("banner_image", banner);
+      fd.append("banner_color", ""); // clear any saved color
+    } else {
+      fd.append("banner_color", bannerColor);
+    }
 
     try {
       // Save shop data
@@ -333,40 +340,47 @@ const SellerSettings = () => {
               onChange={e => setLogo(e.target.files[0])} />
           </div>
           <div>
-            <label className="sd-label">Banner Image</label>
-            <div className="sd-upload-zone" onClick={() => bannerRef.current.click()}
-              style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <PreviewImage file={banner} existing={shop?.banner_url}
-                style={{ height: "60px", width: "100%", borderRadius: "6px" }} />
+            <label className="sd-label">Banner</label>
+
+            {/* Toggle: Image vs Color */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              {[{ v: "image", l: "Upload image" }, { v: "color", l: "Use color" }].map(opt => (
+                <button key={opt.v} type="button" onClick={() => setBannerType(opt.v)}
+                  style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `2px solid ${bannerType === opt.v ? "#2563eb" : "#e2e8f0"}`, background: bannerType === opt.v ? "#eff6ff" : "#fff", color: bannerType === opt.v ? "#2563eb" : "#374151", fontWeight: bannerType === opt.v ? 700 : 500, fontSize: "13px", cursor: "pointer", transition: "all 0.12s" }}>
+                  {opt.l}
+                </button>
+              ))}
             </div>
-            <input ref={bannerRef} type="file" accept="image/*" style={{ display: "none" }}
-              onChange={e => setBanner(e.target.files[0])} />
-            {/* Banner guidance */}
-            <div style={{
-              marginTop: "8px",
-              background: "#fffbeb",
-              border: "1px solid #fde68a",
-              borderRadius: "8px",
-              padding: "10px 12px",
-              display: "flex",
-              gap: "9px",
-              alignItems: "flex-start",
-            }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}>
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <div>
-                <p style={{ margin: "0 0 5px", fontSize: "12px", fontWeight: 700, color: "#92400e" }}>
-                  Use a landscape (wide) image
+
+            {bannerType === "image" ? (
+              <>
+                <div className="sd-upload-zone" onClick={() => bannerRef.current.click()}
+                  style={{ minHeight: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <PreviewImage file={banner} existing={shop?.banner_url}
+                    style={{ height: "60px", width: "100%", borderRadius: "6px" }} />
+                </div>
+                <input ref={bannerRef} type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={e => setBanner(e.target.files[0])} />
+                <p style={{ margin: "6px 0 0", fontSize: "11.5px", color: "#94a3b8" }}>
+                  Ideal dimensions: 1200 × 300 px or wider. Landscape images work best.
                 </p>
-                <ul style={{ margin: 0, padding: "0 0 0 14px", fontSize: "11.5px", color: "#78350f", lineHeight: 1.65 }}>
-                  <li>Your banner displays as a <strong>wide, short strip</strong> — landscape photos fill it perfectly.</li>
-                  <li><strong>Portrait images (taller than wide)</strong> will appear heavily cropped and look off.</li>
-                  <li>Ideal dimensions: <strong>1200 × 300 px</strong> or any image at least <strong>4× wider than it is tall</strong>.</li>
-                  <li>Good sources: a wide product flat-lay, a store interior shot, or a branded graphic.</li>
-                </ul>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                  <input type="color" value={bannerColor} onChange={e => setBannerColor(e.target.value)}
+                    style={{ width: "48px", height: "40px", borderRadius: "8px", border: "1.5px solid #e2e8f0", cursor: "pointer", padding: "2px 3px" }} />
+                  <input type="text" value={bannerColor} onChange={e => setBannerColor(e.target.value)}
+                    placeholder="#1e3a5f"
+                    style={{ flex: 1, padding: "8px 12px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#374151", outline: "none", fontFamily: "monospace" }} />
+                </div>
+                {/* Preview */}
+                <div style={{ height: "48px", borderRadius: "8px", background: bannerColor, border: "1px solid #e2e8f0" }} />
+                <p style={{ margin: "6px 0 0", fontSize: "11.5px", color: "#94a3b8" }}>
+                  This color will be used as your store banner background.
+                </p>
+              </>
+            )}
           </div>
         </div>
 

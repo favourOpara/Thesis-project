@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.conf import settings
 import requests as http_requests
+import json
 
 from .models import (
     Shop, Category, Product, ProductImage, StoreTextBlock,
@@ -820,6 +821,9 @@ class ShopViewSet(viewsets.ModelViewSet):
                 setattr(block, field, request.data[field] or None)
         if 'order' in request.data:
             block.order = request.data['order']
+        if 'style_config' in request.data:
+            sc = request.data['style_config']
+            block.style_config = json.loads(sc) if isinstance(sc, str) else sc
         block.save()
         new_images = request.FILES.getlist('images')
         if new_images:
@@ -905,6 +909,9 @@ class ShopViewSet(viewsets.ModelViewSet):
                 setattr(block, field, request.data[field] or None)
         if 'order' in request.data:
             block.order = request.data['order']
+        if 'style_config' in request.data:
+            sc = request.data['style_config']
+            block.style_config = json.loads(sc) if isinstance(sc, str) else sc
         block.save()
         new_images = request.FILES.getlist('images')
         if new_images:
