@@ -345,7 +345,7 @@ const ShopPage = () => {
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          padding: shop.tagline ? "0 20px 28px" : "0",
+          padding: "0",
         }}>
           {/* Dark scrim — only for image banners so color banners aren't washed out */}
           {shop.banner_url && (
@@ -378,20 +378,6 @@ const ShopPage = () => {
             Browse Other Stores
           </Link>
 
-          {/* Store name + tagline inside banner */}
-          {shop.tagline && (
-            <div style={{ position: "relative", zIndex: 5, maxWidth: "680px" }}>
-              <p style={{
-                margin: "4px 0 0",
-                fontSize: isMobile ? "13px" : "14.5px",
-                color: shop.banner_url ? "rgba(255,255,255,0.88)" : "#fff",
-                lineHeight: 1.5,
-                textShadow: shop.banner_url ? "0 1px 4px rgba(0,0,0,0.45)" : "none",
-              }}>
-                {shop.tagline}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* ══════════════════════════════
@@ -714,23 +700,44 @@ const ShopPage = () => {
               );
             };
 
-            const renderTxtBlock = (block) => (
-              <div style={{ marginTop: "8px", background: "#fff", border: "1px solid #e2e8f0", borderLeft: "4px solid #2563eb", borderRadius: "10px", padding: "18px 22px" }}>
-                {block.text_title && <div style={{ fontWeight: 700, fontSize: "15px", color: "#0f172a", marginBottom: "6px" }}>{block.text_title}</div>}
-                {block.text_content && <div style={{ fontSize: "13.5px", color: "#475569", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.text_content}</div>}
-              </div>
-            );
+            const renderTxtBlock = (block) => {
+              const sc = block.style_config || {};
+              const isPlain = sc.text_style === "plain";
+              const bgColor = sc.text_bg_color; // "" = no color, undefined/null = default white
+              const hasBlock = !isPlain;
+              const bg = hasBlock ? (bgColor === "" ? "transparent" : (bgColor || "#ffffff")) : undefined;
+              const showBorder = hasBlock && (!bgColor || bgColor === "#ffffff" || bgColor === "#f8fafc");
+              return (
+                <div style={{
+                  marginTop: "8px",
+                  ...(hasBlock ? {
+                    background: bg,
+                    border: showBorder ? "1px solid #e2e8f0" : "none",
+                    borderLeft: showBorder ? "4px solid #2563eb" : bgColor && bgColor !== "" ? "4px solid rgba(0,0,0,0.12)" : "none",
+                    borderRadius: "10px",
+                    padding: "18px 22px",
+                  } : {
+                    padding: "8px 0",
+                  }),
+                }}>
+                  {block.text_title && <div style={{ fontWeight: 700, fontSize: "15px", color: "#0f172a", marginBottom: "6px" }}>{block.text_title}</div>}
+                  {block.text_content && <div style={{ fontSize: "13.5px", color: "#475569", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.text_content}</div>}
+                </div>
+              );
+            };
 
             const renderBanner = (block) => {
               const img = block.images?.[0];
-              if (!img) return null;
+              const isColor = block.style_config?.banner_type === "color";
+              const bgColor = block.style_config?.banner_bg_color;
+              if (!img && !isColor) return null;
               return (
-                <div style={{ marginTop: "20px", position: "relative", borderRadius: "12px", overflow: "hidden", aspectRatio: isMobile ? "3/1" : "5/1" }}>
-                  <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                <div style={{ marginTop: "20px", position: "relative", borderRadius: "12px", overflow: "hidden", aspectRatio: isMobile ? "3/1" : "5/1", background: isColor ? (bgColor || "#1e3a5f") : undefined }}>
+                  {img && <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
                   {(block.text_title || block.text_content) && (
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 32px" }}>
-                      {block.text_title && <div style={{ color: "#fff", fontWeight: 800, fontSize: "clamp(16px, 3vw, 26px)", textShadow: "0 2px 8px rgba(0,0,0,0.4)", marginBottom: "6px", maxWidth: "60%" }}>{block.text_title}</div>}
-                      {block.text_content && <div style={{ color: "rgba(255,255,255,0.88)", fontSize: "clamp(12px, 2vw, 15px)", textShadow: "0 1px 4px rgba(0,0,0,0.4)", maxWidth: "55%" }}>{block.text_content}</div>}
+                    <div style={{ position: "absolute", inset: 0, background: img ? "linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)" : "none", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 32px" }}>
+                      {block.text_title && <div style={{ color: "#fff", fontWeight: 800, fontSize: "clamp(16px, 3vw, 26px)", textShadow: img ? "0 2px 8px rgba(0,0,0,0.4)" : "none", marginBottom: "6px", maxWidth: "60%" }}>{block.text_title}</div>}
+                      {block.text_content && <div style={{ color: img ? "rgba(255,255,255,0.88)" : "#fff", fontSize: "clamp(12px, 2vw, 15px)", textShadow: img ? "0 1px 4px rgba(0,0,0,0.4)" : "none", maxWidth: "55%" }}>{block.text_content}</div>}
                     </div>
                   )}
                 </div>

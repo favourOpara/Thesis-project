@@ -222,61 +222,6 @@ const Profile = () => {
               />
             </Card>
 
-            {/* Danger zone — separated from sign out */}
-            <Card>
-              <ActionRow
-                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>}
-                label="Delete Account"
-                sublabel="Permanently remove your account and all data"
-                onClick={() => { setShowDeleteConfirm(true); setDeleteInput(""); }}
-                danger
-                last
-              />
-            </Card>
-
-            {/* Delete confirmation dialog */}
-            {showDeleteConfirm && (
-              <div style={{ background: "#fff", border: "1.5px solid #fecaca", borderRadius: "14px", padding: "20px", marginBottom: "16px" }}>
-                <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "8px" }}>
-                  Delete your account?
-                </div>
-                <p style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, margin: "0 0 14px" }}>
-                  This is permanent. Your profile, orders history, and any store data will be deleted and cannot be recovered.
-                </p>
-                <p style={{ fontSize: "13px", color: "#374151", margin: "0 0 8px", fontWeight: 500 }}>
-                  Type <strong>DELETE</strong> to confirm:
-                </p>
-                <input
-                  value={deleteInput}
-                  onChange={e => setDeleteInput(e.target.value)}
-                  placeholder="DELETE"
-                  style={{
-                    width: "100%", padding: "9px 12px", borderRadius: "8px", fontSize: "13.5px",
-                    border: "1.5px solid #fecaca", outline: "none", marginBottom: "12px",
-                    fontFamily: "monospace", boxSizing: "border-box",
-                  }}
-                />
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleteInput !== "DELETE" || deleting}
-                    style={{
-                      padding: "8px 20px", background: deleteInput === "DELETE" && !deleting ? "#b91c1c" : "#94a3b8",
-                      color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700,
-                      fontSize: "13px", cursor: deleteInput === "DELETE" && !deleting ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    {deleting ? "Deleting…" : "Delete my account"}
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* RIGHT COLUMN */}
@@ -352,6 +297,60 @@ const Profile = () => {
           </div>
 
         </div>
+
+        {/* ── Danger zone — always last, full width, far from sign out ── */}
+        <div style={{ marginTop: "48px", borderTop: "1px solid #fee2e2", paddingTop: "32px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 700, color: "#ef4444", textTransform: "uppercase", letterSpacing: "0.8px", margin: "0 0 12px" }}>
+            Danger Zone
+          </p>
+
+          {!showDeleteConfirm ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", background: "#fff5f5", border: "1px solid #fecaca", borderRadius: "12px", padding: "16px 20px" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: "13.5px", color: "#0f172a", marginBottom: "2px" }}>Delete Account</div>
+                <div style={{ fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.5 }}>Permanently remove your profile, order history, and all data. This cannot be undone.</div>
+              </div>
+              <button
+                onClick={() => { setShowDeleteConfirm(true); setDeleteInput(""); }}
+                style={{ padding: "8px 18px", background: "transparent", color: "#b91c1c", border: "1.5px solid #fecaca", borderRadius: "8px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                Delete Account
+              </button>
+            </div>
+          ) : (
+            <div style={{ background: "#fff5f5", border: "1.5px solid #fecaca", borderRadius: "12px", padding: "20px" }}>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#b91c1c", marginBottom: "8px" }}>Are you sure?</div>
+              <p style={{ fontSize: "13px", color: "#7f1d1d", lineHeight: 1.65, margin: "0 0 14px" }}>
+                This is permanent. Your profile, order history, and any store data will be deleted and cannot be recovered.
+              </p>
+              <p style={{ fontSize: "13px", color: "#374151", margin: "0 0 8px", fontWeight: 500 }}>
+                Type <strong>DELETE</strong> to confirm:
+              </p>
+              <input
+                value={deleteInput}
+                onChange={e => setDeleteInput(e.target.value)}
+                placeholder="DELETE"
+                style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", fontSize: "13.5px", border: "1.5px solid #fecaca", outline: "none", marginBottom: "12px", fontFamily: "monospace", boxSizing: "border-box" }}
+              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteInput !== "DELETE" || deleting}
+                  style={{ padding: "8px 20px", background: deleteInput === "DELETE" && !deleting ? "#b91c1c" : "#94a3b8", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: deleteInput === "DELETE" && !deleting ? "pointer" : "not-allowed" }}
+                >
+                  {deleting ? "Deleting…" : "Delete my account"}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{ padding: "8px 16px", background: "transparent", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: "8px", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

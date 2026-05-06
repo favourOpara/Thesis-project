@@ -68,7 +68,7 @@ const DEFAULT_STYLE = {
 ───────────────────────────────────────────────────────── */
 /* What each block type supports in the style panel */
 const STYLE_CAPS = {
-  products:     { sidePad: false, fullWidth: false, typo: false, bg: false, radius: false },
+  products:     { sidePad: false, fullWidth: false, typo: false, bg: true,  radius: false },
   text:         { sidePad: true,  fullWidth: true,  typo: true,  bg: true,  radius: true  },
   image_grid:   { sidePad: false, fullWidth: true,  typo: false, bg: false, radius: true  },
   banner:       { sidePad: false, fullWidth: true,  typo: false, bg: false, radius: true  },
@@ -285,7 +285,50 @@ const BlockAddForm = ({ blockType, draft, setDraft, imgRef, onSave, onCancel, bl
           <textarea className="sd-input" rows={4} value={draft.text_content}
             onChange={e => setDraft(s => ({ ...s, text_content: e.target.value }))}
             placeholder="Write something about your store, products, values…"
-            style={{ resize: "vertical" }} />
+            style={{ resize: "vertical", marginBottom: "16px" }} />
+
+          {/* Display style */}
+          <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Display Style</label>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+            {[{ v: "plain", l: "Plain text" }, { v: "block", l: "In a block" }].map(opt => (
+              <button key={opt.v} type="button"
+                onClick={() => setDraft(s => ({ ...s, text_style: opt.v }))}
+                style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `2px solid ${(draft.text_style || "block") === opt.v ? "#2563eb" : "#e2e8f0"}`, background: (draft.text_style || "block") === opt.v ? "#eff6ff" : "#fff", color: (draft.text_style || "block") === opt.v ? "#2563eb" : "#374151", fontWeight: (draft.text_style || "block") === opt.v ? 700 : 500, fontSize: "13px", cursor: "pointer", transition: "all 0.12s" }}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+
+          {(draft.text_style || "block") === "block" && (
+            <>
+              <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Block Background</label>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
+                {/* Preset swatches + No color */}
+                {["none", "#ffffff", "#f8fafc", "#eff6ff", "#fef9c3", "#fdf2f8", "#f0fdf4"].map(c => (
+                  <button key={c} type="button"
+                    onClick={() => setDraft(s => ({ ...s, text_bg_color: c === "none" ? "" : c }))}
+                    title={c === "none" ? "No background" : c}
+                    style={{
+                      width: "30px", height: "30px", borderRadius: "6px", cursor: "pointer", flexShrink: 0,
+                      border: `2px solid ${(c === "none" ? (draft.text_bg_color === "" || draft.text_bg_color == null) : draft.text_bg_color === c) ? "#2563eb" : "#e2e8f0"}`,
+                      background: c === "none" ? "linear-gradient(135deg, #fff 45%, #ef4444 45%, #ef4444 55%, #fff 55%)" : c,
+                    }} />
+                ))}
+              </div>
+              {/* Custom color */}
+              {draft.text_bg_color !== "" && draft.text_bg_color != null && (
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <input type="color" value={draft.text_bg_color || "#ffffff"}
+                    onChange={e => setDraft(s => ({ ...s, text_bg_color: e.target.value }))}
+                    style={{ width: "40px", height: "36px", borderRadius: "6px", border: "1.5px solid #e2e8f0", cursor: "pointer", padding: "2px 3px" }} />
+                  <input type="text" value={draft.text_bg_color || ""}
+                    onChange={e => setDraft(s => ({ ...s, text_bg_color: e.target.value }))}
+                    placeholder="#ffffff"
+                    style={{ flex: 1, padding: "7px 10px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "12px", fontFamily: "monospace", outline: "none" }} />
+                </div>
+              )}
+            </>
+          )}
         </>
       )}
 
@@ -336,23 +379,51 @@ const BlockAddForm = ({ blockType, draft, setDraft, imgRef, onSave, onCancel, bl
           <input className="sd-input-line" value={draft.text_content}
             onChange={e => setDraft(s => ({ ...s, text_content: e.target.value }))}
             placeholder="e.g. Free shipping on orders over ₦10,000" style={{ marginBottom: "16px" }} />
-          <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Banner Image <span style={{ color: "#ef4444" }}>*</span></label>
-          {draft.images[0] ? (
-            <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: "1px solid #e2e8f0", marginBottom: "8px" }}>
-              <img src={draft.images[0].url} alt="" style={{ width: "100%", aspectRatio: "3/1", objectFit: "cover", display: "block" }} />
-              <button type="button" onClick={() => setDraft(s => ({ ...s, images: [] }))}
-                style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.65)", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            </div>
+
+          {/* Banner type toggle */}
+          <label className="sd-label" style={{ display: "block", marginBottom: "8px" }}>Banner Background <span style={{ color: "#ef4444" }}>*</span></label>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+            {[{ v: "image", l: "Upload image" }, { v: "color", l: "Use color" }].map(opt => (
+              <button key={opt.v} type="button"
+                onClick={() => setDraft(s => ({ ...s, banner_type: opt.v }))}
+                style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `2px solid ${draft.banner_type === opt.v ? "#db2777" : "#e2e8f0"}`, background: draft.banner_type === opt.v ? "#fdf2f8" : "#fff", color: draft.banner_type === opt.v ? "#db2777" : "#374151", fontWeight: draft.banner_type === opt.v ? 700 : 500, fontSize: "13px", cursor: "pointer", transition: "all 0.12s" }}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+
+          {draft.banner_type === "image" ? (
+            draft.images[0] ? (
+              <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: "1px solid #e2e8f0", marginBottom: "8px" }}>
+                <img src={draft.images[0].url} alt="" style={{ width: "100%", aspectRatio: "3/1", objectFit: "cover", display: "block" }} />
+                <button type="button" onClick={() => setDraft(s => ({ ...s, images: [] }))}
+                  style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.65)", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+            ) : (
+              <div onClick={() => imgRef.current.click()}
+                style={{ aspectRatio: "3/1", border: "2px dashed #cbd5e1", borderRadius: "10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", gap: "4px", transition: "all 0.15s", marginBottom: "8px" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#db2777"; e.currentTarget.style.color = "#db2777"; e.currentTarget.style.background = "#fdf2f8"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "transparent"; }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span style={{ fontSize: "11px", fontWeight: 600 }}>Upload banner image</span>
+                <span style={{ fontSize: "10px", color: "#cbd5e1" }}>Recommended: wide/landscape (3:1)</span>
+              </div>
+            )
           ) : (
-            <div onClick={() => imgRef.current.click()}
-              style={{ aspectRatio: "3/1", border: "2px dashed #cbd5e1", borderRadius: "10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#94a3b8", gap: "4px", transition: "all 0.15s", marginBottom: "8px" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#db2777"; e.currentTarget.style.color = "#db2777"; e.currentTarget.style.background = "#fdf2f8"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "transparent"; }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span style={{ fontSize: "11px", fontWeight: 600 }}>Upload banner image</span>
-              <span style={{ fontSize: "10px", color: "#cbd5e1" }}>Recommended: wide/landscape (3:1)</span>
-            </div>
+            <>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                <input type="color" value={draft.banner_color || "#1e3a5f"}
+                  onChange={e => setDraft(s => ({ ...s, banner_color: e.target.value }))}
+                  style={{ width: "48px", height: "40px", borderRadius: "8px", border: "1.5px solid #e2e8f0", cursor: "pointer", padding: "2px 3px" }} />
+                <input type="text" value={draft.banner_color || "#1e3a5f"}
+                  onChange={e => setDraft(s => ({ ...s, banner_color: e.target.value }))}
+                  placeholder="#1e3a5f"
+                  style={{ flex: 1, padding: "8px 12px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#374151", outline: "none", fontFamily: "monospace" }} />
+              </div>
+              {/* Live preview */}
+              <div style={{ height: "60px", borderRadius: "10px", background: draft.banner_color || "#1e3a5f", border: "1px solid #e2e8f0", marginBottom: "8px" }} />
+            </>
           )}
         </>
       )}
@@ -465,8 +536,8 @@ const SellerStoreBuilder = () => {
   const [expandedCat,       setExpandedCat]        = useState(null);
   const [addingCatBlock,    setAddingCatBlock]     = useState(null);
   const [configuringBlockId, setConfiguringBlockId] = useState(null);
-  const [newBlock,    setNewBlock]    = useState({ text_title: "", text_content: "", layout: "2col", images: [] });
-  const [newCatBlock, setNewCatBlock] = useState({ text_title: "", text_content: "", layout: "2col", images: [] });
+  const [newBlock,    setNewBlock]    = useState({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" });
+  const [newCatBlock, setNewCatBlock] = useState({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" });
   const blockImgRef    = useRef();
   const catBlockImgRef = useRef();
   const [stylingBlockId,    setStylingBlockId]    = useState(null);
@@ -552,17 +623,18 @@ const SellerStoreBuilder = () => {
   const serializeBlock = (type, draft, order, fd) => {
     fd.append("block_type", type);
     fd.append("order", order);
-    if (type === "text")         { fd.append("text_title", draft.text_title || ""); fd.append("text_content", draft.text_content || ""); }
+    if (type === "text")         { fd.append("text_title", draft.text_title || ""); fd.append("text_content", draft.text_content || ""); fd.append("style_config", JSON.stringify({ text_style: draft.text_style || "block", text_bg_color: draft.text_bg_color ?? "#ffffff" })); }
     else if (type === "image_grid")   { fd.append("layout", draft.layout || "2col"); }
-    else if (type === "banner")       { fd.append("text_title", draft.text_title || ""); fd.append("text_content", draft.text_content || ""); }
+    else if (type === "banner")       { fd.append("text_title", draft.text_title || ""); fd.append("text_content", draft.text_content || ""); fd.append("style_config", JSON.stringify({ banner_type: draft.banner_type || "image", banner_bg_color: draft.banner_color || "" })); }
     else if (type === "announcement") { fd.append("text_content", draft.text_content || ""); fd.append("layout", draft.layout || "promo"); }
     else if (type === "video")        { fd.append("text_content", draft.text_content || ""); fd.append("text_title", draft.text_title || ""); }
     else if (type === "divider")      { fd.append("layout", draft.layout || "line"); }
   };
 
   const handleAddBlock = async () => {
-    if (addingBlock === "image_grid"   && !newBlock.images.length)        { toast.error("Upload at least one image."); return; }
-    if (addingBlock === "banner"       && !newBlock.images.length)        { toast.error("Upload a banner image."); return; }
+    if (addingBlock === "image_grid"   && !newBlock.images.length)                                           { toast.error("Upload at least one image."); return; }
+    if (addingBlock === "banner" && newBlock.banner_type === "image" && !newBlock.images.length)           { toast.error("Upload a banner image."); return; }
+    if (addingBlock === "banner" && newBlock.banner_type === "color" && !newBlock.banner_color)            { toast.error("Pick a banner color."); return; }
     if (addingBlock === "announcement" && !newBlock.text_content.trim())  { toast.error("Enter an announcement message."); return; }
     if (addingBlock === "video"        && !newBlock.text_content.trim())  { toast.error("Enter a video URL."); return; }
     setBlockSaving(true);
@@ -571,7 +643,7 @@ const SellerStoreBuilder = () => {
       serializeBlock(addingBlock, newBlock, storeBlocks.length, fd);
       const r = await axios.post(`${BASE}/api/shops/${shop.slug}/store-blocks/`, fd, ac());
       setStoreBlocks(prev => [...prev, r.data]);
-      setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] });
+      setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" });
       setAddingBlock(null);
       toast.success("Block added.");
     } catch { toast.error("Could not save block."); }
@@ -588,8 +660,9 @@ const SellerStoreBuilder = () => {
   };
 
   const handleAddCatBlock = async (catName) => {
-    if (addingCatBlock === "image_grid"   && !newCatBlock.images.length)       { toast.error("Upload at least one image."); return; }
-    if (addingCatBlock === "banner"       && !newCatBlock.images.length)       { toast.error("Upload a banner image."); return; }
+    if (addingCatBlock === "image_grid"   && !newCatBlock.images.length)                                              { toast.error("Upload at least one image."); return; }
+    if (addingCatBlock === "banner" && newCatBlock.banner_type === "image" && !newCatBlock.images.length)          { toast.error("Upload a banner image."); return; }
+    if (addingCatBlock === "banner" && newCatBlock.banner_type === "color" && !newCatBlock.banner_color)           { toast.error("Pick a banner color."); return; }
     if (addingCatBlock === "announcement" && !newCatBlock.text_content.trim()) { toast.error("Enter an announcement message."); return; }
     if (addingCatBlock === "video"        && !newCatBlock.text_content.trim()) { toast.error("Enter a video URL."); return; }
     setBlockSaving(true);
@@ -599,7 +672,7 @@ const SellerStoreBuilder = () => {
       serializeBlock(addingCatBlock, newCatBlock, (page.blocks || []).length, fd);
       const r = await axios.post(`${BASE}/api/shops/${shop.slug}/category-pages/${page.id}/blocks/`, fd, ac());
       setCatPages(prev => prev.map(p => p.id === page.id ? { ...p, blocks: [...p.blocks, r.data] } : p));
-      setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] });
+      setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" });
       setAddingCatBlock(null);
       toast.success("Block added.");
     } catch { toast.error("Could not save block."); }
@@ -901,7 +974,7 @@ const SellerStoreBuilder = () => {
                 const m = BLOCK_TYPE_META[type];
                 return (
                   <button key={type} type="button"
-                    onClick={() => { setAddingBlock(type); setNewBlock({ text_title: "", text_content: "", layout: type === "announcement" ? "promo" : type === "divider" ? "line" : "2col", images: [] }); }}
+                    onClick={() => { setAddingBlock(type); setNewBlock({ text_title: "", text_content: "", layout: type === "announcement" ? "promo" : type === "divider" ? "line" : "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" }); }}
                     style={{ padding: "12px 14px", borderRadius: "11px", border: "2px dashed #e2e8f0", background: "#fff", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = m.accent; e.currentTarget.style.background = m.bg; e.currentTarget.style.borderStyle = "solid"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderStyle = "dashed"; }}
@@ -919,7 +992,7 @@ const SellerStoreBuilder = () => {
         ) : (
           <BlockAddForm blockType={addingBlock} draft={newBlock} setDraft={setNewBlock} imgRef={blockImgRef}
             onSave={handleAddBlock}
-            onCancel={() => { setAddingBlock(null); setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+            onCancel={() => { setAddingBlock(null); setNewBlock({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" }); }}
             blockSaving={blockSaving} shopCategories={shopCategories} onImageAdd={handleBlockImageAdd}
           />
         )}
@@ -1046,7 +1119,7 @@ const SellerStoreBuilder = () => {
                             const bm = BLOCK_TYPE_META[type];
                             return (
                               <button key={type} type="button"
-                                onClick={() => { setAddingCatBlock(type); setNewCatBlock({ text_title: "", text_content: "", layout: type === "announcement" ? "promo" : type === "divider" ? "line" : "2col", images: [] }); }}
+                                onClick={() => { setAddingCatBlock(type); setNewCatBlock({ text_title: "", text_content: "", layout: type === "announcement" ? "promo" : type === "divider" ? "line" : "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" }); }}
                                 style={{ padding: "10px 12px", borderRadius: "9px", border: "2px dashed #e2e8f0", background: "#fff", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
                                 onMouseEnter={e => { e.currentTarget.style.borderColor = bm.accent; e.currentTarget.style.background = bm.bg; e.currentTarget.style.borderStyle = "solid"; }}
                                 onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderStyle = "dashed"; }}
@@ -1061,7 +1134,7 @@ const SellerStoreBuilder = () => {
                     ) : (
                       <BlockAddForm blockType={addingCatBlock} draft={newCatBlock} setDraft={setNewCatBlock} imgRef={catBlockImgRef}
                         onSave={() => handleAddCatBlock(catName)}
-                        onCancel={() => { setAddingCatBlock(null); setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [] }); }}
+                        onCancel={() => { setAddingCatBlock(null); setNewCatBlock({ text_title: "", text_content: "", layout: "2col", images: [], banner_type: "image", banner_color: "#1e3a5f", text_style: "block", text_bg_color: "#ffffff" }); }}
                         blockSaving={blockSaving} shopCategories={shopCategories} onImageAdd={handleBlockImageAdd}
                       />
                     )}
