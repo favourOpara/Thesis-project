@@ -339,7 +339,7 @@ const ShopPage = () => {
         ══════════════════════════════ */}
         <div style={{
           ...bannerBg,
-          minHeight: isMobile ? "85px" : "105px",
+          minHeight: isMobile ? "120px" : "140px",
           marginTop: shop.store_status === "closed" ? "0" : "56px",
           position: "relative",
           display: "flex",
@@ -725,7 +725,7 @@ const ShopPage = () => {
               const img = block.images?.[0];
               if (!img) return null;
               return (
-                <div style={{ marginTop: "20px", position: "relative", borderRadius: "12px", overflow: "hidden", aspectRatio: "3/1" }}>
+                <div style={{ marginTop: "20px", position: "relative", borderRadius: "12px", overflow: "hidden", aspectRatio: isMobile ? "3/1" : "5/1" }}>
                   <img src={img.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   {(block.text_title || block.text_content) && (
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 32px" }}>
@@ -925,6 +925,23 @@ const ShopPage = () => {
                 {visibleProducts.length > 0 && sBlocks.map(b => (
                   <React.Fragment key={`bl-${b.id}`}>{renderBlock(b)}</React.Fragment>
                 ))}
+
+                {/* Fallback: store has no builder blocks (or no products block) — render all products in a default grid */}
+                {visibleProducts.length > 0 && !sBlocks.some(b => b.block_type === "products") && (
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px", alignItems: "stretch" }} className="shop-product-grid">
+                    {(showMoreProducts ? visibleProducts : visibleProducts.slice(0, isMobile ? 8 : 12)).map(p => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                    {!showMoreProducts && visibleProducts.length > (isMobile ? 8 : 12) && (
+                      <div style={{ gridColumn: "1 / -1", textAlign: "center", marginTop: "8px" }}>
+                        <button onClick={() => setShowMoreProducts(true)}
+                          style={{ padding: "10px 32px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "9px", fontWeight: 700, fontSize: "13.5px", cursor: "pointer" }}>
+                          Show More
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               </div>
             );

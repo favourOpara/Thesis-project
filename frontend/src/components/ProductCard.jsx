@@ -63,7 +63,7 @@ const ProductCard = ({ product }) => {
           {/* Image */}
           <div style={{
             position: "relative",
-            height: "150px",
+            aspectRatio: "4/3",
             overflow: "hidden",
             background: "#f8fafc",
             flexShrink: 0,
