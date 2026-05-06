@@ -339,7 +339,7 @@ const ShopPage = () => {
         ══════════════════════════════ */}
         <div style={{
           ...bannerBg,
-          minHeight: isMobile ? "120px" : "140px",
+          minHeight: isMobile ? "85px" : "105px",
           marginTop: shop.store_status === "closed" ? "0" : "56px",
           position: "relative",
           display: "flex",
@@ -347,10 +347,13 @@ const ShopPage = () => {
           justifyContent: "flex-end",
           padding: shop.tagline ? "0 20px 28px" : "0",
         }}>
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.45) 100%)",
-          }} />
+          {/* Dark scrim — only for image banners so color banners aren't washed out */}
+          {shop.banner_url && (
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.45) 100%)",
+            }} />
+          )}
           {/* Browse other stores — top-right of banner */}
           <Link
             to="/browse"
@@ -381,9 +384,9 @@ const ShopPage = () => {
               <p style={{
                 margin: "4px 0 0",
                 fontSize: isMobile ? "13px" : "14.5px",
-                color: "rgba(255,255,255,0.88)",
+                color: shop.banner_url ? "rgba(255,255,255,0.88)" : "#fff",
                 lineHeight: 1.5,
-                textShadow: "0 1px 4px rgba(0,0,0,0.45)",
+                textShadow: shop.banner_url ? "0 1px 4px rgba(0,0,0,0.45)" : "none",
               }}>
                 {shop.tagline}
               </p>
@@ -781,8 +784,30 @@ const ShopPage = () => {
 
             const renderProductsChunk = (block, slice, hasMore) => {
               const l = block.layout;
-              const gridTemplate = l === "1col" ? "1fr"
-                : l === "2col" ? "repeat(2, 1fr)"
+              // For 1col: stack vertically but cap each card at natural card width
+              // so it doesn't stretch full-page-width
+              if (l === "1col") {
+                return (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                      {slice.map(p => (
+                        <div key={p.id} style={{ width: "100%", maxWidth: "260px" }}>
+                          <ProductCard product={p} />
+                        </div>
+                      ))}
+                    </div>
+                    {hasMore && (
+                      <div style={{ textAlign: "center", marginTop: "28px" }}>
+                        <button onClick={() => setShowMoreProducts(prev => !prev)}
+                          style={{ padding: "10px 32px", background: showMoreProducts ? "#f1f5f9" : "#0f172a", color: showMoreProducts ? "#374151" : "#fff", border: "none", borderRadius: "9px", fontWeight: 700, fontSize: "13.5px", cursor: "pointer", transition: "background 0.15s" }}>
+                          {showMoreProducts ? "Show Less" : "Show More"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              }
+              const gridTemplate = l === "2col" ? "repeat(2, 1fr)"
                 : l === "3col" ? "repeat(3, 1fr)"
                 : l === "4col" ? "repeat(4, 1fr)"
                 : slice.length === 1 ? "repeat(1, minmax(0, 420px))"

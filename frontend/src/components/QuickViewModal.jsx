@@ -160,7 +160,7 @@ const QuickViewModal = ({ product, onClose }) => {
         .qv-main-img img {
           width: 100%;
           height: 100% !important;
-          object-fit: contain;
+          object-fit: cover;
           display: block;
         }
         .qv-thumb-strip {

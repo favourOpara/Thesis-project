@@ -217,6 +217,7 @@ const SellerSettings = () => {
       fd.append("banner_color", ""); // clear any saved color
     } else {
       fd.append("banner_color", bannerColor);
+      fd.append("clear_banner_image", "1"); // tell backend to remove existing image
     }
 
     try {

@@ -96,6 +96,16 @@ class ShopViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        # When seller switches to color banner mode, clear any existing banner image
+        if self.request.data.get('clear_banner_image') in ('1', 'true', True):
+            if instance.banner_image:
+                instance.banner_image.delete(save=False)
+            instance.banner_image = None
+            instance.save(update_fields=['banner_image'])
+        serializer.save()
+
     @action(detail=False, methods=['get'], url_path='mine', permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
         try:
